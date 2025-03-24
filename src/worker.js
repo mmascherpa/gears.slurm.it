@@ -22,12 +22,15 @@ onmessage = function(e) {
 		if( action === "ENCRYPT" ) {
 				aes.encrypt(file, passw).then((r) => {
 					postMessage(["ENCRYPT", r, fileName + ".aes"]);
+				}).catch((error) => {
+					postMessage(["ERROR", "Encryption failed: " + error.message]);
 				});
 		} else {
 			aes.decrypt(file, passw).then((r) => {
 				postMessage(["DECRYPT", r, fileName.split('.').slice(0, -1).join('.')]);
+			}).catch((error) => {
+				postMessage(["ERROR", "Decryption failed: " + error.message]);
 			});
 		}
 	}
-
 }

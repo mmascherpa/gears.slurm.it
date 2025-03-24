@@ -1,116 +1,196 @@
 <template>
-    <div class="aes-file-enc">
-      <h2>AES File Encryption</h2>
-      <input type="password" v-model="password" placeholder="Enter password" />
-      <input type="file" @change="handleFileUpload" />
-      <button @click="encryptFile">Encrypt File</button>
-      <button @click="decryptFile">Decrypt File</button>
-      
-      <div v-if="csvData.length">
-        <h3>CSV Preview</h3>
-        <table border="1">
-          <thead>
-            <tr>
-              <th v-for="(header, index) in csvHeaders" :key="index">{{ header }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(row, rowIndex) in csvData" :key="rowIndex">
-              <td v-for="(cell, cellIndex) in row" :key="cellIndex">{{ cell }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </template>
-  
-  <script>
-  export default {
+<v-container>
+    <h1 class="text-h4 mb-4">AES File Encryption</h1>
+
+    <v-row no-gutters>
+        <v-col>
+            <v-text-field
+                v-model="password"
+                label="Password"
+                type="password"
+                variant="outlined"
+                placeholder="Enter encryption password"
+            ></v-text-field>
+        </v-col>
+        <v-col cols="1" align="center">
+            <v-btn
+                flat
+                icon 
+                @click="clearAll"
+                v-show="password || file"
+            >
+                <v-icon icon='mdi-close-octagon-outline' />
+            </v-btn>
+        </v-col>
+    </v-row>
+
+    <v-row no-gutters>
+        <v-col cols="6">
+            <v-file-input
+                v-model="file"
+                label="Select file to encrypt/decrypt"
+                variant="outlined"
+                show-size
+                @change="handleFileUpload"
+            ></v-file-input>
+        </v-col>
+        <v-col cols="2" class="ma-2">
+            <v-btn
+                :disabled="!isFormValid"
+                @click="encryptFile"
+                color="primary"
+            >Encrypt</v-btn>
+        </v-col>
+        <v-col cols="2" class="ma-2">
+            <v-btn
+                :disabled="!isFormValid"
+                @click="decryptFile"
+                color="primary"
+            >Decrypt</v-btn>
+        </v-col>
+    </v-row>
+
+    <v-row v-if="error" no-gutters>
+        <v-col>
+            <v-alert
+                type="error"
+                variant="tonal"
+                closable
+                @click:close="error = ''"
+            >
+                {{ error }}
+            </v-alert>
+        </v-col>
+    </v-row>
+
+    <v-row v-if="csvData.length" no-gutters>
+        <v-col>
+            <h2 class="text-h5 mb-4">CSV Preview</h2>
+            <v-table>
+                <thead>
+                    <tr>
+                        <th v-for="(header, index) in csvHeaders" :key="index">{{ header }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(row, rowIndex) in csvData" :key="rowIndex">
+                        <td v-for="(cell, cellIndex) in row" :key="cellIndex">{{ cell }}</td>
+                    </tr>
+                </tbody>
+            </v-table>
+        </v-col>
+    </v-row>
+</v-container>
+</template>
+
+<script>
+export default {
     data() {
-      return {
-        password: '',
-        file: null,
-        worker: null,
-        csvData: [],
-        csvHeaders: []
-      };
+        return {
+            password: '',
+            file: null,
+            worker: null,
+            csvData: [],
+            csvHeaders: [],
+            error: ''
+        };
+    },
+    computed: {
+        isFormValid() {
+            return this.password.trim() !== '' && this.file && this.file.length > 0;
+        }
     },
     methods: {
-      handleFileUpload(event) {
-        this.file = event.target.files[0];
-        if (this.file && this.file.type === "text/csv") {
-          this.previewCSV();
+        clearAll() {
+            this.password = '';
+            this.file = null;
+            this.csvData = [];
+            this.csvHeaders = [];
+            this.error = '';
+        },
+        handleFileUpload(files) {
+            if (files && files.length > 0) {
+                const selectedFile = files[0];
+                if (selectedFile.type === "text/csv") {
+                    this.previewCSV();
+                }
+            }
+            this.error = ''; // Clear any previous errors when a new file is selected
+        },
+        setupWorker() {
+            if (this.worker) this.worker.terminate();
+            this.worker = new Worker("/src/worker.js");
+            this.worker.onmessage = this.handleWorkerResponse;
+        },
+        handleWorkerResponse(event) {
+            const [action, data, fileName] = event.data;
+            
+            if (action === "ERROR") {
+                this.error = data;
+                return;
+            }
+
+            this.downloadFile(data, fileName);
+            if (fileName.endsWith(".csv")) {
+                this.displayDecryptedCSV(data);
+            }
+            // Clear the form fields after successful operation
+            this.password = '';
+            this.file = null;
+            this.csvData = [];
+            this.csvHeaders = [];
+            this.error = '';
+        },
+        encryptFile() {
+            if (!this.file || !this.password) return alert("File and password required");
+            this.error = ''; // Clear any previous errors
+            this.setupWorker();
+            this.worker.postMessage(["ENCRYPT", this.file[0], this.password, this.file[0].name]);
+        },
+        decryptFile() {
+            if (!this.file || !this.password) return alert("File and password required");
+            this.error = ''; // Clear any previous errors
+            this.setupWorker();
+            this.worker.postMessage(["DECRYPT", this.file[0], this.password, this.file[0].name]);
+        },
+        downloadFile(data, name) {
+            let blob = new Blob([data], { type: "application/octet-stream" });
+            let a = document.createElement("a");
+            document.body.appendChild(a);
+            a.style.display = "none";
+            let url = window.URL.createObjectURL(blob);
+            a.href = url;
+            a.download = name;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            a.remove();
+        },
+        previewCSV() {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const text = event.target.result;
+                this.parseCSV(text);
+            };
+            reader.readAsText(this.file[0]);
+        },
+        displayDecryptedCSV(data) {
+            const text = new TextDecoder().decode(data);
+            this.parseCSV(text);
+        },
+        parseCSV(text) {
+            const rows = text.split("\n").map(row => row.split(","));
+            this.csvHeaders = rows[0] || [];
+            this.csvData = rows.slice(1);
         }
-      },
-      setupWorker() {
-        if (this.worker) this.worker.terminate();
-        this.worker = new Worker("/src/worker.js");
-        this.worker.onmessage = this.handleWorkerResponse;
-      },
-      handleWorkerResponse(event) {
-        const [action, data, fileName] = event.data;
-        this.downloadFile(data, fileName);
-        if (fileName.endsWith(".csv")) {
-          this.displayDecryptedCSV(data);
-        }
-      },
-      encryptFile() {
-        if (!this.file || !this.password) return alert("File and password required");
-        this.setupWorker();
-        this.worker.postMessage(["ENCRYPT", this.file, this.password, this.file.name]);
-      },
-      decryptFile() {
-        if (!this.file || !this.password) return alert("File and password required");
-        this.setupWorker();
-        this.worker.postMessage(["DECRYPT", this.file, this.password, this.file.name]);
-      },
-      downloadFile(data, name) {
-        let blob = new Blob([data], { type: "application/octet-stream" });
-        let a = document.createElement("a");
-        document.body.appendChild(a);
-        a.style.display = "none";
-        let url = window.URL.createObjectURL(blob);
-        a.href = url;
-        a.download = name;
-        a.click();
-        window.URL.revokeObjectURL(url);
-        a.remove();
-      },
-      previewCSV() {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const text = event.target.result;
-          this.parseCSV(text);
-        };
-        reader.readAsText(this.file);
-      },
-      displayDecryptedCSV(data) {
-        const text = new TextDecoder().decode(data);
-        this.parseCSV(text);
-      },
-      parseCSV(text) {
-        const rows = text.split("\n").map(row => row.split(","));
-        this.csvHeaders = rows[0] || [];
-        this.csvData = rows.slice(1);
-      }
     }
-  };
-  </script>
-  
-  <style>
-  .aes-file-enc {
-    padding: 20px;
-    border: 1px solid #ccc;
-    display: inline-block;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-  }
-  th, td {
-    border: 1px solid black;
-    padding: 5px;
-  }
-  </style>
+};
+</script>
+
+<style scoped>
+.v-table {
+    background-color: var(--v-surface-variant);
+    border-radius: 4px;
+    overflow: hidden;
+}
+</style>
   
