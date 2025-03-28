@@ -7,7 +7,6 @@
                 <v-card
                     class="mx-auto"
                     height="200"
-                    @click="navigateTo(item.route)"
                     :to="item.route"
                     hover
                     elevation="2"
