@@ -119,7 +119,7 @@ export default {
         },
         setupWorker() {
             if (this.worker) this.worker.terminate();
-            this.worker = new Worker("/src/worker.js");
+            this.worker = new Worker('/worker.js');
             this.worker.onmessage = this.handleWorkerResponse;
         },
         handleWorkerResponse(event) {
@@ -137,8 +137,6 @@ export default {
             // Clear the form fields after successful operation
             this.password = '';
             this.file = null;
-            this.csvData = [];
-            this.csvHeaders = [];
             this.error = '';
         },
         encryptFile() {

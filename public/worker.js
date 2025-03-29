@@ -1,11 +1,11 @@
 let cdnPath = "https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/";
-let libPath = "libs/";
+let libPath = "/libs/";
 
 self.importScripts(
 	cdnPath + "core.min.js",
 	cdnPath + "enc-utf16.min.js",
 	libPath + "enc-uint8array.min.js",
-	libPath + "aes_crypt.min.js",
+	libPath + "aes_crypt.min.js"
 );
 
 onmessage = function(e) {
