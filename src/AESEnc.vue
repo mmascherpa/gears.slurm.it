@@ -66,14 +66,26 @@
     <v-row v-if="csvData.length" no-gutters>
         <v-col>
             <h2 class="text-h5 mb-4">CSV Preview</h2>
-            <v-table>
+            <v-row no-gutters>
+                <v-col cols="4">
+                    <v-text-field
+                        v-model="searchQuery"
+                        label="Search"
+                        variant="outlined"
+                        prepend-inner-icon="mdi-magnify"
+                        class="mb-4"
+                        hide-details
+                    ></v-text-field>
+                </v-col>
+            </v-row>
+            <v-table density="compact" class="csv-table">
                 <thead>
                     <tr>
-                        <th v-for="(header, index) in csvHeaders" :key="index">{{ header }}</th>
+                        <th v-for="(header, index) in csvHeaders" :key="index" class="text-left">{{ header }}</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="(row, rowIndex) in csvData" :key="rowIndex">
+                    <tr v-for="(row, rowIndex) in filteredCsvData" :key="rowIndex">
                         <td v-for="(cell, cellIndex) in row" :key="cellIndex">{{ cell }}</td>
                     </tr>
                 </tbody>
@@ -92,12 +104,20 @@ export default {
             worker: null,
             csvData: [],
             csvHeaders: [],
-            error: ''
+            error: '',
+            searchQuery: ''
         };
     },
     computed: {
         isFormValid() {
             return this.password.trim() !== '' && this.file && this.file.length > 0;
+        },
+        filteredCsvData() {
+            if (!this.searchQuery) return this.csvData;
+            const query = this.searchQuery.toLowerCase();
+            return this.csvData.filter(row => 
+                row.some(cell => cell.toLowerCase().includes(query))
+            );
         }
     },
     methods: {
@@ -189,6 +209,25 @@ export default {
     background-color: var(--v-surface-variant);
     border-radius: 4px;
     overflow: hidden;
+}
+
+.csv-table {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.csv-table :deep(th) {
+    background-color: var(--v-surface-variant);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.csv-table :deep(td) {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
 }
 </style>
   
