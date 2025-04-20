@@ -177,7 +177,7 @@ export default {
             if (files && files.length > 0) {
                 const selectedFile = files[0];
                 if (selectedFile.type === "text/csv") {
-                    this.previewCSV();
+                    this.decodeCSV(this.file[0]);
                 }
             }
             this.error = ''; // Clear any previous errors when a new file is selected
@@ -225,17 +225,13 @@ export default {
             window.URL.revokeObjectURL(url);
             a.remove();
         },
-        previewCSV() {
+        decodeCSV() {
             const reader = new FileReader();
             reader.onload = (event) => {
                 const text = event.target.result;
                 this.parseCSV(text);
             };
             reader.readAsText(this.file[0]);
-        },
-        displayDecryptedCSV(data) {
-            const text = new TextDecoder().decode(data);
-            this.parseCSV(text);
         },
         parseCSV(text) {
             const rows = text.split("\n").map(row => row.split(","));
