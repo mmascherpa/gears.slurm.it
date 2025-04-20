@@ -166,6 +166,7 @@ export default {
         clearAll() {
             this.password = '';
             this.passwordConfirm = '';
+            this.plainText = '';
             this.file = null;
             this.csvData = [];
             this.csvHeaders = [];
@@ -203,10 +204,10 @@ export default {
             this.setupWorker();
             let fileData = null
             let fileName = null
-            if (this.isFilePopulated) {
+            if (this.isPlaintextPopulated) {
                 fileData = new Blob([this.plainText], {type: 'text/txt'});
                 fileName = 'plaintext.txt'
-            } else {
+            } else if (this.isFilePopulated) {
                 fileData = this.file[0]
                 fileName = this.file[0].name
             }
