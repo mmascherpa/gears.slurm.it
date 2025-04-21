@@ -20,6 +20,7 @@ const drawer = ref(false);
     <v-list-item to="/base64enc" title="Base64 Encoder"></v-list-item>
     <v-list-item to="/base64dec" title="Base64 Decoder"></v-list-item>
     <v-list-item to="/aesenc" title="AES Encrypt"></v-list-item>
+    <v-list-item to="/aesdec" title="AES Decrypt"></v-list-item>
     <v-list-item to="/about" title="About"></v-list-item>
 </v-navigation-drawer>
 

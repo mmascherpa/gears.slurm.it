@@ -8,6 +8,8 @@ import About from './About.vue'
 import Home from './Home.vue'
 import Base64Enc from './Base64Enc.vue'
 import Base64Dec from './Base64Dec.vue'
+import AESEnc from './AESEnc.vue'
+import AESDec from './AESDec.vue'
 
 // 2. Define some routes
 // Each route should map to a component.
@@ -17,6 +19,7 @@ const routes = [
   { path: '/base64enc', component: Base64Enc },
   { path: '/base64dec', component: Base64Dec },
   { path: '/aesenc', component: AESEnc },
+  { path: '/aesdec', component: AESDec },
   { path: '/about', component: About },
 ]
 
@@ -38,7 +41,6 @@ import { md2 } from 'vuetify/blueprints'
 import '@mdi/font/css/materialdesignicons.css'
 import { aliases, mdi } from 'vuetify/iconsets/mdi'
 import {slurmTheme} from './theme.js'
-import AESEnc from './AESEnc.vue'
 
 const vuetify = createVuetify({
   components,

@@ -51,6 +51,11 @@ export default {
                     route: '/aesenc'
                 },
                 {
+                    title: 'AES Decryption',
+                    icon: 'mdi-lock-open',
+                    route: '/aesdec'
+                },
+                {
                     title: 'About',
                     icon: 'mdi-information',
                     route: '/about'
