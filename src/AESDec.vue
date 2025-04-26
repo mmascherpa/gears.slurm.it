@@ -49,20 +49,20 @@
     </v-col>
 </v-row>
 
-<v-row v-if="isOutputPopulated" align="center" no-gutters class="ma-2">
-  <v-col cols="1">
-    <v-btn
-      flat
-      icon 
-      @click="clearOutputs"
-      >
-      <v-icon icon='mdi-close-octagon-outline' />
-    </v-btn>
-  </v-col>
-  <v-col cols="11" class="pa-1">
-    <v-divider :thickness="2" class="border-opacity-25"></v-divider>
-  </v-col>
-</v-row>
+<v-card v-if="isOutputPopulated" variant="tonal">
+    <v-card-title>
+      <v-spacer></v-spacer>
+          <v-icon
+            @click="clearOutputs"
+            color="primary-darken-1"
+            style="cursor: pointer;"
+          >
+            mdi-close
+          </v-icon>
+
+    </v-card-title>
+
+    <v-card-text>
 
 <v-row v-if="plainText" no-gutters> 
         <v-col>
@@ -78,7 +78,6 @@
 
 <v-row v-if="csvData.length" no-gutters>
     <v-col>
-        <h2 class="text-h5 mb-4">CSV Preview</h2>
         <v-row no-gutters>
             <v-col cols="4">
                 <v-text-field
@@ -105,6 +104,10 @@
         </v-table>
     </v-col>
 </v-row>
+
+</v-card-text>
+</v-card>
+
 </v-container>
 </template>
 
