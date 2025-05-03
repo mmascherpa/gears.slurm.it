@@ -4,24 +4,13 @@
 
         <v-row>
             <v-col cols="12" sm="6" md="4" lg="3" v-for="(item, index) in menuItems" :key="index">
-                <v-card
-                    class="mx-auto"
-                    height="200"
-                    :to="item.route"
-                    hover
-                    elevation="2"
-                    variant="outlined"
-                >
+                <v-card class="mx-auto" height="200" :to="item.route" hover elevation="2" variant="outlined">
                     <v-card-item>
                         <v-card-title class="text-center text-h5 mb-4">
                             {{ item.title }}
                         </v-card-title>
                         <div class="d-flex justify-center">
-                            <v-icon
-                                :icon="item.icon"
-                                size="64"
-                                color="primary"
-                            ></v-icon>
+                            <v-icon :icon="item.icon" size="64" color="primary"></v-icon>
                         </div>
                     </v-card-item>
                 </v-card>

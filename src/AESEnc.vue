@@ -1,124 +1,81 @@
 <template>
-<v-container>
-  
-  <h1 class="text-h4 mb-4">AES File Encryption</h1>
+    <v-container>
 
-  <v-row no-gutters>
-    <v-col class="mr-2">
-      <v-text-field
-        v-model="password"
-        label="Password"
-        type="password"
-        variant="outlined"
-        placeholder="Enter encryption password"
-      ></v-text-field>
-    </v-col>
-    <v-col class="ml-2">
-      <v-text-field
-        v-model="passwordConfirm"
-        label="Confirm password"
-        type="password"
-        variant="outlined"
-        placeholder="Confirm encryption password"
-      ></v-text-field>
-    </v-col>
-  </v-row>
+        <h1 class="text-h4 mb-4">AES File Encryption</h1>
 
-  <v-row no-gutters>
-    <v-col>
-      <v-textarea
-        label="Plain Text"
-        v-model="plainText"
-        :disabled="!isPasswordConfirmed || isFilePopulated"
-        variant="outlined"
-        placeholder="Enter your plain text here"
-      ></v-textarea>
-    </v-col>
-    <v-col cols="1" align="center">
-      <v-btn
-        flat
-        icon 
-        @click="pasteFromClipboard" 
-        :disabled="!isPasswordConfirmed"
-        v-show="!plainText">
-        <v-icon icon='mdi-content-paste' />
-      </v-btn>
-      <v-btn
-        flat
-        icon 
-        @click="plainText=''" 
-        v-show="!!plainText">
-          <v-icon icon='mdi-close-octagon-outline' />
-      </v-btn>
-    </v-col>
-  </v-row>
-
-  <v-row no-gutters>
-    <v-col cols="6">
-      <v-file-input
-            v-model="file"
-            label="Select file to encrypt"
-            variant="outlined"
-            show-size
-            @change="handleFileUpload"
-            :disabled="!isPasswordConfirmed || isPlaintextPopulated"
-      ></v-file-input>
-    </v-col>
-
-    <v-col cols="2" class="ma-2">
-        <v-btn
-            :disabled="!isPasswordConfirmed || !(isFilePopulated || isPlaintextPopulated)"
-            @click="encryptFile"
-        >
-            <v-icon left>mdi-lock</v-icon>
-            Encrypt
-        </v-btn>
-    </v-col>
-</v-row>
-
-<v-row v-if="error" no-gutters>
-    <v-col>
-        <v-alert
-            type="error"
-            variant="tonal"
-            closable
-            @click:close="error = ''"
-        >
-            {{ error }}
-        </v-alert>
-    </v-col>
-</v-row>
-
-<v-row v-if="csvData.length" no-gutters>
-    <v-col>
-        <h2 class="text-h5 mb-4">CSV Preview</h2>
         <v-row no-gutters>
-            <v-col cols="4">
-                <v-text-field
-                    v-model="searchQuery"
-                    label="Search"
-                    variant="outlined"
-                    prepend-inner-icon="mdi-magnify"
-                    class="mb-4"
-                    hide-details
-                ></v-text-field>
+            <v-col class="mr-2">
+                <v-text-field v-model="password" label="Password" type="password" variant="outlined"
+                    placeholder="Enter encryption password"></v-text-field>
+            </v-col>
+            <v-col class="ml-2">
+                <v-text-field v-model="passwordConfirm" label="Confirm password" type="password" variant="outlined"
+                    placeholder="Confirm encryption password"></v-text-field>
             </v-col>
         </v-row>
-        <v-table density="compact" class="csv-table">
-            <thead>
-                <tr>
-                    <th v-for="(header, index) in csvHeaders" :key="index" class="text-left">{{ header }}</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="(row, rowIndex) in filteredCsvData" :key="rowIndex">
-                    <td v-for="(cell, cellIndex) in row" :key="cellIndex">{{ cell }}</td>
-                </tr>
-            </tbody>
-        </v-table>
-    </v-col>
-</v-row>
-</v-container>
+
+        <v-row no-gutters>
+            <v-col>
+                <v-textarea label="Plain Text" v-model="plainText" :disabled="!isPasswordConfirmed || isFilePopulated"
+                    variant="outlined" placeholder="Enter your plain text here"></v-textarea>
+            </v-col>
+            <v-col cols="1" align="center">
+                <v-btn flat icon @click="pasteFromClipboard" :disabled="!isPasswordConfirmed" v-show="!plainText">
+                    <v-icon icon='mdi-content-paste' />
+                </v-btn>
+                <v-btn flat icon @click="plainText = ''" v-show="!!plainText">
+                    <v-icon icon='mdi-close-octagon-outline' />
+                </v-btn>
+            </v-col>
+        </v-row>
+
+        <v-row no-gutters>
+            <v-col cols="6">
+                <v-file-input v-model="file" label="Select file to encrypt" variant="outlined" show-size
+                    @change="handleFileUpload" :disabled="!isPasswordConfirmed || isPlaintextPopulated"></v-file-input>
+            </v-col>
+
+            <v-col cols="2" class="ma-2">
+                <v-btn :disabled="!isPasswordConfirmed || !(isFilePopulated || isPlaintextPopulated)"
+                    @click="encryptFile">
+                    <v-icon left>mdi-lock</v-icon>
+                    Encrypt
+                </v-btn>
+            </v-col>
+        </v-row>
+
+        <v-row v-if="error" no-gutters>
+            <v-col>
+                <v-alert type="error" variant="tonal" closable @click:close="error = ''">
+                    {{ error }}
+                </v-alert>
+            </v-col>
+        </v-row>
+
+        <v-row v-if="csvData.length" no-gutters>
+            <v-col>
+                <h2 class="text-h5 mb-4">CSV Preview</h2>
+                <v-row no-gutters>
+                    <v-col cols="4">
+                        <v-text-field v-model="searchQuery" label="Search" variant="outlined"
+                            prepend-inner-icon="mdi-magnify" class="mb-4" hide-details></v-text-field>
+                    </v-col>
+                </v-row>
+                <v-table density="compact" class="csv-table">
+                    <thead>
+                        <tr>
+                            <th v-for="(header, index) in csvHeaders" :key="index" class="text-left">{{ header }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(row, rowIndex) in filteredCsvData" :key="rowIndex">
+                            <td v-for="(cell, cellIndex) in row" :key="cellIndex">{{ cell }}</td>
+                        </tr>
+                    </tbody>
+                </v-table>
+            </v-col>
+        </v-row>
+    </v-container>
 </template>
 
 <script>
@@ -143,7 +100,7 @@ export default {
         },
         isFilePopulated() {
             return !!this.file && !!this.file[0];
-            
+
         },
         isPlaintextPopulated() {
             return this.plainText.trim() != '';
@@ -151,7 +108,7 @@ export default {
         filteredCsvData() {
             if (!this.searchQuery) return this.csvData;
             const query = this.searchQuery.toLowerCase();
-            return this.csvData.filter(row => 
+            return this.csvData.filter(row =>
                 row.some(cell => cell.toLowerCase().includes(query))
             );
         }
@@ -189,15 +146,15 @@ export default {
         },
         handleWorkerResponse(event) {
             const [action, data, fileName] = event.data;
-            
+
             if (action === "ERROR") {
                 this.error = data;
                 return;
             }
-            
+
             this.downloadFile(data, fileName);
             this.clearAll();
-        }, 
+        },
         encryptFile() {
             if (!this.isPasswordConfirmed || !this.isFilePopulated && !this.isPlaintextPopulated) return alert("Invalid inputs");;
             this.error = ''; // Clear any previous errors
@@ -205,7 +162,7 @@ export default {
             let fileData = null
             let fileName = null
             if (this.isPlaintextPopulated) {
-                fileData = new Blob([this.plainText], {type: 'text/txt'});
+                fileData = new Blob([this.plainText], { type: 'text/txt' });
                 fileName = 'plaintext.txt'
             } else if (this.isFilePopulated) {
                 fileData = this.file[0]
@@ -268,4 +225,3 @@ export default {
     max-width: 200px;
 }
 </style>
-  
