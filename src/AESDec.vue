@@ -157,11 +157,13 @@ export default {
             window.URL.revokeObjectURL(url);
             a.remove();
         },
-        parseCSV(data) {
-            const text = new TextDecoder().decode(data);
+        parseCSV(inputData) {
+            const text = new TextDecoder().decode(inputData);
             const rows = text.split("\n").map(row => row.split(","));
 
-            this.tableHeaders, this.tableData = this.convertToTableData(rows[0] || [], rows.slice(1));
+            const {headers, data} = this.convertToTableData(rows[0] || [], rows.slice(1));
+            this.tableHeaders = headers;
+            this.tableData = data;
         },
 
         convertToTableData(headersArray, rowsArray) {
@@ -172,14 +174,14 @@ export default {
             }));
 
             // Map each row to an object using headersArray as keys
-            const items = rowsArray.map(row => {
+            const data = rowsArray.map(row => {
                 const obj = {};
                 headersArray.forEach((key, i) => {
                     obj[key] = row[i];
                 });
                 return obj;
             });
-            return { headers, items };
+            return { headers, data};
         },
 
         capitalize(word) {
