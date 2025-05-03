@@ -11,8 +11,8 @@
 
         <v-row no-gutters>
             <v-col cols="6">
-                <v-file-input v-model="file" label="Select file to dencrypt" variant="outlined" show-size
-                    :disabled="!isPasswordPopulated"></v-file-input>
+                <v-file-input v-model="file" label="Select file to dencrypt" variant="outlined"
+                    show-size></v-file-input>
             </v-col>
 
             <v-col cols="2" class="ma-2">
@@ -32,7 +32,7 @@
         </v-row>
 
         <v-card v-if="isOutputPopulated" variant="tonal">
-            <v-card-title>
+            <v-card-title class="d-flex justify-end">
                 <v-spacer></v-spacer>
                 <v-icon @click="clearOutputs" color="primary-darken-1" style="cursor: pointer;">
                     mdi-close
@@ -161,7 +161,7 @@ export default {
             const text = new TextDecoder().decode(inputData);
             const rows = text.split("\n").map(row => row.split(","));
 
-            const {headers, data} = this.convertToTableData(rows[0] || [], rows.slice(1));
+            const { headers, data } = this.convertToTableData(rows[0] || [], rows.slice(1));
             this.tableHeaders = headers;
             this.tableData = data;
         },
@@ -181,7 +181,7 @@ export default {
                 });
                 return obj;
             });
-            return { headers, data};
+            return { headers, data };
         },
 
         capitalize(word) {
@@ -190,4 +190,3 @@ export default {
     }
 };
 </script>
-

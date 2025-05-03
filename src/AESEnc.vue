@@ -53,7 +53,7 @@
         </v-row>
 
         <v-card v-if="isOutputPopulated" variant="tonal">
-            <v-card-title>
+            <v-card-title class="d-flex justify-end">
                 <v-spacer></v-spacer>
                 <v-icon @click="clearOutputs" color="primary-darken-1" style="cursor: pointer;">
                     mdi-close
