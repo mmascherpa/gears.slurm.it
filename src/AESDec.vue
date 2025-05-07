@@ -3,19 +3,19 @@
         <h1 class="text-h4 mb-4">AES File Decryption</h1>
 
         <v-row no-gutters>
-            <v-col cols="6">
+            <v-col cols="12" sm="6">
                 <v-text-field v-model="password" label="Password" type="password" variant="outlined"
                     placeholder="Enter encryption password"></v-text-field>
             </v-col>
         </v-row>
 
         <v-row no-gutters>
-            <v-col cols="6">
-                <v-file-input v-model="file" label="Select file to dencrypt" variant="outlined"
+            <v-col cols="12" sm="6">
+                <v-file-input v-model="file" label="Select file to decrypt" variant="outlined"
                     show-size></v-file-input>
             </v-col>
 
-            <v-col cols="2" class="ma-2">
+            <v-col class="ma-2" cols="8" sm="4">
                 <v-btn :disabled="!isPasswordPopulated || !isFilePopulated" @click="decryptFile">
                     <v-icon left>mdi-lock-open</v-icon>
                     Decrypt

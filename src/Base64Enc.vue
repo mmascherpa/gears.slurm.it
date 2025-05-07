@@ -4,11 +4,11 @@
     <h1 class="text-h4 mb-4">Base64 Encoder</h1>
 
     <v-row no-gutters>
-      <v-col>
+      <v-col class="flex-grow-1">
         <v-textarea label="Plain Text" v-model="plainText" @input="updateEncodedText()" variant="outlined"
           placeholder="Enter your plain text here"></v-textarea>
       </v-col>
-      <v-col cols="1" align="center">
+      <v-col class="ml-2" cols="auto">
         <v-btn flat icon @click="pasteFromClipboard" v-show="!plainText">
           <v-icon icon='mdi-content-paste' />
         </v-btn>
@@ -19,12 +19,13 @@
     </v-row>
 
     <v-row no-gutters>
-      <v-col>
+      <v-col class="flex-grow-1">
         <v-textarea v-model="encodedText" bg-color="primary" variant="outlined" readonly
           placeholder="Base64 encoded text will appear here"></v-textarea>
       </v-col>
-      <v-col cols="1" align="center">
-        <v-progress-circular v-if="isLoading" color="primary" indeterminate :size="50" :width="8"></v-progress-circular>
+      <v-col class="ml-2" cols="auto">
+        <v-btn v-if="!isLoading && !plainText" color="transparent" flat icon></v-btn>
+        <v-progress-circular v-if="isLoading" color="primary" indeterminate :size="48" :width="8"></v-progress-circular>
         <v-btn v-if="!isLoading" flat icon @click="copyToClipboard" v-show="!!encodedText">
           <v-icon icon='mdi-content-copy' />
         </v-btn>
@@ -32,10 +33,10 @@
     </v-row>
 
     <v-row no-gutters>
-      <v-col cols="6">
+      <v-col cols="8" sm="6">
         <v-file-input v-model="plainFile" label="Encode a file" variant="outlined" show-size></v-file-input>
       </v-col>
-      <v-col cols="2" class="ma-2">
+      <v-col cols="8" sm="4" class="ma-sm-2">
         <v-btn :disabled="plainFile.length == 0" @click="encodeFile">Encode</v-btn>
       </v-col>
     </v-row>

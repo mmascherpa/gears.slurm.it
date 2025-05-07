@@ -4,23 +4,23 @@
         <h1 class="text-h4 mb-4">AES File Encryption</h1>
 
         <v-row no-gutters>
-            <v-col class="mr-2">
+            <v-col cols="12" sm="6" class="pr-sm-1">
                 <v-text-field v-model="password" label="Password" type="password" variant="outlined"
                     placeholder="Enter encryption password"></v-text-field>
             </v-col>
-            <v-col class="ml-2">
+            <v-col cols="12" sm="6" class="pl-sm-1">
                 <v-text-field v-model="passwordConfirm" label="Confirm password" type="password" variant="outlined"
                     placeholder="Confirm encryption password"></v-text-field>
             </v-col>
         </v-row>
 
         <v-row no-gutters>
-            <v-col>
+            <v-col class="flex-grow-1">
                 <v-textarea label="Plain Text" v-model="plainText" :disabled="isFilePopulated"
                     variant="outlined" placeholder="Enter your plain text here"></v-textarea>
             </v-col>
-            <v-col cols="1" align="center">
-                <v-btn flat icon @click="pasteFromClipboard" :disabled="!isPasswordConfirmed" v-show="!plainText">
+            <v-col class="ml-2" cols="auto">
+                <v-btn flat icon @click="pasteFromClipboard" v-show="!plainText">
                     <v-icon icon='mdi-content-paste' />
                 </v-btn>
                 <v-btn flat icon @click="plainText = ''" v-show="!!plainText">
@@ -30,12 +30,12 @@
         </v-row>
 
         <v-row no-gutters>
-            <v-col cols="6">
+            <v-col cols="12" sm="6">
                 <v-file-input v-model="file" label="Select file to encrypt" variant="outlined" show-size
                     @change="handleFileUpload" :disabled="isPlaintextPopulated"></v-file-input>
             </v-col>
 
-            <v-col cols="2" class="ma-2">
+            <v-col cols="8" sm="4" class="ma-sm-2">
                 <v-btn :disabled="!isPasswordConfirmed || !(isFilePopulated || isPlaintextPopulated)"
                     @click="encryptFile">
                     <v-icon left>mdi-lock</v-icon>
