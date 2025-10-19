@@ -1,10 +1,15 @@
-const CACHE_NAME = 'slurm-tools-v1';
+const CACHE_NAME = 'slurm-cache-test-01';
 const urlsToCache = [
     '/',
     '/index.html',
     '/manifest.json',
     '/icons/icon-192x192.png',
-    '/icons/icon-512x512.png'
+    '/icons/icon-512x512.png',
+    'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/core.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/enc-utf16.min.js',
+    '/libs/enc-uint8array.min.js',
+    '/libs/aes_crypt.min.js'
+
 ];
 
 self.addEventListener('install', event => {
