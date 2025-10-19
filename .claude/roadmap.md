@@ -132,6 +132,42 @@ Slurm Tools is a privacy-focused Progressive Web Application providing client-si
 
 ---
 
+## Phase 3.5: Offline Functionality & Code Quality (Priority: CRITICAL)
+
+**Status**: ✅ Completed (2025-10-19)
+**Actual Effort**: ~5 hours
+
+### Features
+
+- [x] **Service Worker Offline Caching** (2 hours) - Priority 1
+  - ✅ Fixed service worker to cache Vite-generated assets with hashed filenames
+  - ✅ Created automated build script (update-sw-cache.js) for post-build SW updates
+  - ✅ Fixed CORS caching preventing CDN resources from being cached
+  - ✅ Added `clients.claim()` for immediate service worker activation
+  - ✅ Fixed null reference bug in accept header check
+  - **Benefit**: 100% offline functionality, automatic cache updates
+
+- [x] **Error Message Improvements** (1 hour) - Priority 1
+  - ✅ Fixed "Decryption failed: undefined" error message
+  - ✅ Added user-friendly error messages ("Wrong password" instead of undefined)
+  - ✅ Improved worker error handling for string vs Error object exceptions
+  - **Benefit**: Clear, actionable error messages for users
+
+- [x] **Code Refactoring - Shared Utilities** (2 hours) - Priority 2
+  - ✅ Created src/utils/fileDownload.js (19 lines)
+  - ✅ Created src/utils/csvParser.js (67 lines)
+  - ✅ Refactored AESEnc.vue and AESDec.vue to use shared utilities
+  - ✅ Eliminated ~80 lines of duplicate code
+  - **Benefit**: Better maintainability, DRY principles
+
+- [x] **Documentation** (1 hour) - Priority 2
+  - ✅ Created comprehensive OFFLINE-FUNCTIONALITY.md guide
+  - ✅ Updated .claude/structure.md with new utilities and patterns
+  - ✅ Updated .claude/memory.md with new coding patterns
+  - **Benefit**: Clear documentation for future development
+
+---
+
 ## Phase 4: Security & Validation (Priority: HIGH)
 
 **Status**: ⚪ Not Started
@@ -350,8 +386,8 @@ Slurm Tools is a privacy-focused Progressive Web Application providing client-si
 
 ## Progress Summary
 
-**Total Planned Features**: 45
-**Completed**: 13 ✅
+**Total Planned Features**: 49
+**Completed**: 17 ✅
 **In Progress**: 0 🔄
 **Planned**: 32 📋
 
@@ -359,6 +395,7 @@ Slurm Tools is a privacy-focused Progressive Web Application providing client-si
 - Phase 1 (Code Cleanup): ✅ 100% (5/5 features completed)
 - Phase 2 (UI Modernization): ✅ 100% (3/3 features completed)
 - Phase 3 (UX Enhancements): ✅ 100% (3/3 features completed)
+- Phase 3.5 (Offline & Code Quality): ✅ 100% (4/4 features completed)
 - Phase 4 (Security): 0% (0/4 features completed)
 - Phase 5 (Testing): 0% (0/4 features completed)
 - Phase 6 (Additional UX): 0% (0/5 features completed)
@@ -394,11 +431,12 @@ Slurm Tools is a privacy-focused Progressive Web Application providing client-si
 - ✅ Phase 1: Code Cleanup & Quality (5/5 features)
 - ✅ Phase 2: UI Modernization (3/3 features)
 - ✅ Phase 3: UX Enhancements (3/3 features)
+- ✅ Phase 3.5: Offline Functionality & Code Quality (4/4 features)
 
 **Recommended Next Steps**:
 1. **Password Strength Indicator** (Phase 4, 2 hours) - Improve security UX
 2. **File Size Validation** (Phase 4, 1 hour) - Prevent browser crashes
-3. **Self-Hosted CryptoJS** (Phase 4, 1.5 hours) - Eliminate external dependency
+3. **Self-Hosted CryptoJS** (Phase 4, 1.5 hours) - Eliminate external dependency (partially addressed by Phase 3.5 CORS caching)
 
 Or assess user priorities for additional features from Phase 6+ based on feedback.
 
@@ -434,6 +472,14 @@ Or assess user priorities for additional features from Phase 6+ based on feedbac
   - Added max-width container for better readability
   - Improved page transitions and button hover effects
 
+- **2025-10-19**: Completed Phase 3.5 - Offline Functionality & Code Quality (Commit: 334ca44)
+  - Fixed service worker to properly cache all Vite-generated assets
+  - Created automated build script for SW cache list updates
+  - Fixed CORS caching for CDN crypto libraries (enables full offline functionality)
+  - Added user-friendly error messages for AES operations
+  - Refactored AES components with shared utilities (eliminated 80 lines duplication)
+  - Created comprehensive offline functionality documentation
+
 ### Key Insights
 - **Well-structured foundation**: Current codebase is clean and focused
 - **Scope management**: Avoiding feature creep by maintaining privacy/offline-first principles
@@ -447,4 +493,4 @@ Or assess user priorities for additional features from Phase 6+ based on feedbac
 - [Code Structure](.claude/structure.md) - Current codebase organization
 - [Main Application Files](../) - Link to main code files
 
-Last Updated: 2025-10-19 (Completed Phases 1-3, updated progress)
+Last Updated: 2025-10-19 (Completed Phases 1-3.5, updated progress)
