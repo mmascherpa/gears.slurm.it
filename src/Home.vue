@@ -1,22 +1,45 @@
 <template>
-    <v-container>
-        <h1 class="text-h4 mb-6">Welcome to Slurm Tools</h1>
+    <div>
+        <div class="text-center mb-8">
+            <v-icon icon="mdi-shield-key" size="64" color="primary" class="mb-4"></v-icon>
+            <h1 class="text-h3 font-weight-bold mb-2">Slurm Tools</h1>
+            <p class="text-h6 text-medium-emphasis mb-4">
+                Privacy-focused cryptographic utilities that work entirely in your browser
+            </p>
+            <v-chip variant="tonal" color="success" size="small" class="mr-2">
+                <v-icon start icon="mdi-shield-check"></v-icon>
+                100% Client-Side
+            </v-chip>
+            <v-chip variant="tonal" color="info" size="small">
+                <v-icon start icon="mdi-wifi-off"></v-icon>
+                Works Offline
+            </v-chip>
+        </div>
 
-        <v-row>
-            <v-col cols="12" sm="6" md="4" lg="3" v-for="(item, index) in menuItems" :key="index">
-                <v-card class="mx-auto" height="200" :to="item.route" hover elevation="2" variant="outlined">
-                    <v-card-item>
-                        <v-card-title class="text-center text-h5 mb-4">
-                            {{ item.title }}
-                        </v-card-title>
-                        <div class="d-flex justify-center">
-                            <v-icon :icon="item.icon" size="64" color="primary"></v-icon>
+        <v-row class="mb-6">
+            <v-col cols="12" sm="6" md="6" v-for="(item, index) in menuItems" :key="index">
+                <v-card
+                    :to="item.route"
+                    hover
+                    class="tool-card"
+                    :class="item.featured ? 'featured-card' : ''"
+                    height="100%">
+                    <v-card-text class="pa-6">
+                        <div class="d-flex align-center mb-3">
+                            <v-avatar :color="item.color" size="48" class="mr-4">
+                                <v-icon :icon="item.icon" size="28" color="white"></v-icon>
+                            </v-avatar>
+                            <div>
+                                <h3 class="text-h6 font-weight-bold">{{ item.title }}</h3>
+                                <p class="text-caption text-medium-emphasis mb-0">{{ item.category }}</p>
+                            </div>
                         </div>
-                    </v-card-item>
+                        <p class="text-body-2 text-medium-emphasis">{{ item.description }}</p>
+                    </v-card-text>
                 </v-card>
             </v-col>
         </v-row>
-    </v-container>
+    </div>
 </template>
 
 <script>
@@ -27,27 +50,44 @@ export default {
                 {
                     title: 'Base64 Encoder',
                     icon: 'mdi-arrow-down-bold-box',
-                    route: '/base64enc'
+                    route: '/base64enc',
+                    category: 'Encoding Tool',
+                    color: 'secondary',
+                    description: 'Convert text or files to Base64 format for safe transmission and storage.'
                 },
                 {
                     title: 'Base64 Decoder',
                     icon: 'mdi-arrow-up-bold-box',
-                    route: '/base64dec'
+                    route: '/base64dec',
+                    category: 'Encoding Tool',
+                    color: 'secondary-darken-1',
+                    description: 'Decode Base64 encoded text or files back to their original format.'
                 },
                 {
                     title: 'AES Encryption',
                     icon: 'mdi-lock',
-                    route: '/aesenc'
+                    route: '/aesenc',
+                    category: 'Security Tool',
+                    color: 'primary',
+                    featured: true,
+                    description: 'Encrypt files with password protection using AES algorithm for maximum security.'
                 },
                 {
                     title: 'AES Decryption',
                     icon: 'mdi-lock-open',
-                    route: '/aesdec'
+                    route: '/aesdec',
+                    category: 'Security Tool',
+                    color: 'primary-darken-1',
+                    featured: true,
+                    description: 'Decrypt password-protected AES encrypted files securely in your browser.'
                 },
                 {
                     title: 'About',
                     icon: 'mdi-information',
-                    route: '/about'
+                    route: '/about',
+                    category: 'Information',
+                    color: 'grey',
+                    description: 'Learn more about Slurm Tools and our privacy-first approach.'
                 }
             ]
         }
@@ -56,24 +96,19 @@ export default {
 </script>
 
 <style scoped>
-.v-card {
+.tool-card {
     cursor: pointer;
-    transition: all 0.2s;
-    border: 1px solid var(--v-border-color);
-    background-color: var(--v-surface-variant);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(var(--v-border-color), 0.12);
 }
 
-.v-card:hover {
-    transform: translateY(-5px);
-    border-color: var(--v-primary-base);
-    background-color: var(--v-surface);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+.tool-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+    border-color: rgb(var(--v-theme-primary));
 }
 
-.v-card-item {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+.featured-card {
+    border-left: 4px solid rgb(var(--v-theme-success));
 }
 </style>

@@ -1,74 +1,140 @@
 <template>
-    <v-container>
-        <h1 class="text-h4 mb-4">AES File Decryption</h1>
+    <div>
+        <div class="d-flex align-center mb-6">
+            <v-avatar color="primary-darken-1" size="48" class="mr-4">
+                <v-icon icon="mdi-lock-open" size="28" color="white"></v-icon>
+            </v-avatar>
+            <div>
+                <h1 class="text-h4 font-weight-bold">AES Decryption</h1>
+                <p class="text-body-2 text-medium-emphasis mb-0">Decrypt password-protected AES encrypted files</p>
+            </div>
+        </div>
 
-        <v-row no-gutters>
-            <v-col cols="12" sm="6">
-                <v-text-field v-model="password" label="Password" type="password" variant="outlined"
-                    placeholder="Enter encryption password"></v-text-field>
-            </v-col>
-        </v-row>
+        <v-alert v-if="error" type="error" variant="tonal" closable @click:close="error = ''" class="mb-4">
+            {{ error }}
+        </v-alert>
 
-        <v-row no-gutters>
-            <v-col cols="12" sm="6">
-                <v-file-input v-model="file" label="Select file to decrypt" variant="outlined"
-                    show-size></v-file-input>
-            </v-col>
-
-            <v-col class="ma-2" cols="8" sm="4">
-                <v-btn :disabled="!isPasswordPopulated || !isFilePopulated" @click="decryptFile">
-                    <v-icon left>mdi-lock-open</v-icon>
-                    Decrypt
-                </v-btn>
-            </v-col>
-        </v-row>
-
-        <v-row v-if="error" no-gutters>
-            <v-col>
-                <v-alert type="error" variant="tonal" closable @click:close="error = ''">
-                    {{ error }}
-                </v-alert>
-            </v-col>
-        </v-row>
-
-        <v-card v-if="isOutputPopulated" variant="tonal">
-            <v-card-title class="d-flex justify-end">
-                <v-spacer></v-spacer>
-                <v-icon @click="clearOutputs" color="primary-darken-1" style="cursor: pointer;">
-                    mdi-close
-                </v-icon>
-
+        <v-card class="mb-4" elevation="2">
+            <v-card-title class="bg-surface-variant">
+                <v-icon icon="mdi-key" class="mr-2"></v-icon>
+                Enter Password
             </v-card-title>
-
-            <v-card-text>
-
-                <v-row v-if="plainText" no-gutters>
-                    <v-col>
-                        <v-textarea v-model="plainText" bg-color="primary" variant="outlined" readonly
-                            placeholder="Decoded text"></v-textarea>
+            <v-card-text class="pa-4">
+                <v-row>
+                    <v-col cols="12" sm="6">
+                        <v-text-field
+                            v-model="password"
+                            label="Decryption Password"
+                            type="password"
+                            variant="outlined"
+                            placeholder="Enter the password used for encryption"
+                            prepend-inner-icon="mdi-lock-open"
+                            hide-details>
+                        </v-text-field>
                     </v-col>
                 </v-row>
+            </v-card-text>
+        </v-card>
 
-                <v-row v-if="tableData.length" no-gutters>
-                    <v-col cols="4">
-                        <v-text-field v-model="search" label="Search" prepend-inner-icon="mdi-magnify"
-                            variant="outlined" hide-details single-line></v-text-field>
+        <v-card class="mb-4" elevation="2">
+            <v-card-title class="bg-surface-variant">
+                <v-icon icon="mdi-file-lock" class="mr-2"></v-icon>
+                Encrypted File
+            </v-card-title>
+            <v-card-text class="pa-4">
+                <v-row align="center">
+                    <v-col cols="12" sm="8">
+                        <v-file-input
+                            v-model="file"
+                            label="Select encrypted file (.aes)"
+                            variant="outlined"
+                            show-size
+                            prepend-icon=""
+                            prepend-inner-icon="mdi-paperclip"
+                            accept=".aes"
+                            hide-details>
+                        </v-file-input>
+                    </v-col>
+                    <v-col cols="12" sm="4">
+                        <v-btn
+                            :disabled="!isPasswordPopulated || !isFilePopulated"
+                            @click="decryptFile"
+                            color="primary-darken-1"
+                            size="large"
+                            block>
+                            <v-icon start>mdi-lock-open</v-icon>
+                            Decrypt
+                        </v-btn>
                     </v-col>
                 </v-row>
-                <v-row v-if="tableData.length" no-gutters>
+            </v-card-text>
+        </v-card>
+
+        <v-card v-if="plainText" variant="tonal" elevation="2" class="mb-4">
+            <v-card-title class="d-flex align-center">
+                <v-icon icon="mdi-text" class="mr-2"></v-icon>
+                Decrypted Text
+                <v-spacer></v-spacer>
+                <v-btn icon size="small" variant="text" @click="clearOutputs">
+                    <v-icon>mdi-close</v-icon>
+                </v-btn>
+            </v-card-title>
+            <v-card-text class="pa-4">
+                <v-textarea
+                    v-model="plainText"
+                    variant="outlined"
+                    rows="6"
+                    readonly
+                    bg-color="grey-lighten-4"
+                    placeholder="Decrypted text"
+                    hide-details>
+                </v-textarea>
+            </v-card-text>
+        </v-card>
+
+        <v-card v-if="tableData.length" variant="tonal" elevation="2">
+            <v-card-title class="d-flex align-center">
+                <v-icon icon="mdi-table" class="mr-2"></v-icon>
+                CSV Preview
+                <v-spacer></v-spacer>
+                <v-btn icon size="small" variant="text" @click="clearOutputs">
+                    <v-icon>mdi-close</v-icon>
+                </v-btn>
+            </v-card-title>
+            <v-card-text class="pa-4">
+                <v-row class="mb-4">
+                    <v-col cols="12" md="4">
+                        <v-text-field
+                            v-model="search"
+                            label="Search"
+                            prepend-inner-icon="mdi-magnify"
+                            variant="outlined"
+                            hide-details
+                            single-line
+                            density="comfortable">
+                        </v-text-field>
+                    </v-col>
+                </v-row>
+                <v-row>
                     <v-col>
-                        <v-data-table :headers="tableHeaders" :items="tableData" :search="search" dense>
+                        <v-data-table
+                            :headers="tableHeaders"
+                            :items="tableData"
+                            :search="search"
+                            density="comfortable">
                             <template #no-data>
-                                No results to display.
+                                <div class="text-center pa-4">
+                                    <v-icon size="48" color="grey">mdi-table-off</v-icon>
+                                    <p class="text-body-2 text-medium-emphasis mt-2">No results to display</p>
+                                </div>
                             </template>
                         </v-data-table>
                     </v-col>
                 </v-row>
-
             </v-card-text>
         </v-card>
 
-    </v-container>
+    </div>
 </template>
 
 <script>

@@ -1,47 +1,115 @@
 <template>
-  <v-container>
+  <div>
+    <div class="d-flex align-center mb-6">
+      <v-avatar color="secondary-darken-1" size="48" class="mr-4">
+        <v-icon icon="mdi-arrow-up-bold-box" size="28" color="white"></v-icon>
+      </v-avatar>
+      <div>
+        <h1 class="text-h4 font-weight-bold">Base64 Decoder</h1>
+        <p class="text-body-2 text-medium-emphasis mb-0">Decode Base64 text or files back to original format</p>
+      </div>
+    </div>
 
-    <h1 class="text-h4 mb-4">Base64 Decoder</h1>
+    <v-card class="mb-4" elevation="2">
+      <v-card-title class="bg-surface-variant">
+        <v-icon icon="mdi-text" class="mr-2"></v-icon>
+        Text Decoding
+      </v-card-title>
+      <v-card-text class="pa-4">
+        <v-row no-gutters class="mb-4">
+          <v-col class="flex-grow-1">
+            <v-textarea
+              label="Base64 Encoded Text"
+              v-model="encodedText"
+              @input="updatePlainText()"
+              variant="outlined"
+              rows="4"
+              placeholder="Enter your Base64 encoded text here"
+              hide-details>
+            </v-textarea>
+          </v-col>
+          <v-col class="ml-2" cols="auto">
+            <v-tooltip text="Paste from clipboard" location="top">
+              <template v-slot:activator="{ props }">
+                <v-btn v-bind="props" flat icon @click="pasteFromClipboard" v-show="!encodedText">
+                  <v-icon icon='mdi-content-paste' />
+                </v-btn>
+              </template>
+            </v-tooltip>
+            <v-tooltip text="Clear text" location="top">
+              <template v-slot:activator="{ props }">
+                <v-btn v-bind="props" flat icon @click="encodedText = ''; updatePlainText(0)" v-show="!!encodedText">
+                  <v-icon icon='mdi-close-octagon-outline' />
+                </v-btn>
+              </template>
+            </v-tooltip>
+          </v-col>
+        </v-row>
 
-    <v-row no-gutters>
-      <v-col class="flex-grow-1">
-        <v-textarea label="Encoded Text" v-model="encodedText" @input="updatePlainText()" variant="outlined"
-          placeholder="Enter your b64-encoded text here"></v-textarea>
-      </v-col>
-      <v-col class="ml-2" cols="auto">
-        <v-btn flat icon @click="pasteFromClipboard" v-show="!encodedText">
-          <v-icon icon='mdi-content-paste' />
-        </v-btn>
-        <v-btn flat icon @click="encodedText = ''; updatePlainText(0)" v-show="!!encodedText">
-          <v-icon icon='mdi-close-octagon-outline' />
-        </v-btn>
-      </v-col>
-    </v-row>
+        <v-divider class="my-4"></v-divider>
 
-    <v-row no-gutters>
-      <v-col class="flex-grow-1">
-        <v-textarea v-model="plainText" bg-color="primary" variant="outlined" readonly
-          placeholder="Plain text will appear here"></v-textarea>
-      </v-col>
-      <v-col class="ml-2" cols="auto">
-        <v-btn v-if="!isLoading && !plainText" color="transparent" flat icon></v-btn>
-        <v-progress-circular v-if="isLoading" color="primary" indeterminate :size="48" :width="8"></v-progress-circular>
-        <v-btn v-if="!isLoading" flat icon @click="copyToClipboard" v-show="!!plainText">
-          <v-icon icon='mdi-content-copy' />
-        </v-btn>
-      </v-col>
-    </v-row>
+        <v-row no-gutters>
+          <v-col class="flex-grow-1">
+            <v-textarea
+              v-model="plainText"
+              label="Decoded Output"
+              variant="outlined"
+              rows="4"
+              readonly
+              bg-color="grey-lighten-4"
+              placeholder="Decoded plain text will appear here"
+              hide-details>
+            </v-textarea>
+          </v-col>
+          <v-col class="ml-2" cols="auto">
+            <v-btn v-if="!isLoading && !plainText" color="transparent" flat icon></v-btn>
+            <v-progress-circular v-if="isLoading" color="primary" indeterminate :size="48" :width="6"></v-progress-circular>
+            <v-tooltip text="Copy to clipboard" location="top">
+              <template v-slot:activator="{ props }">
+                <v-btn v-bind="props" v-if="!isLoading" flat icon @click="copyToClipboard" v-show="!!plainText">
+                  <v-icon icon='mdi-content-copy' />
+                </v-btn>
+              </template>
+            </v-tooltip>
+          </v-col>
+        </v-row>
+      </v-card-text>
+    </v-card>
 
-    <v-row no-gutters>
-      <v-col cols="8" sm="6">
-        <v-file-input v-model="encodedFile" label="Decode a file" variant="outlined" show-size></v-file-input>
-      </v-col>
-      <v-col cols="8" sm="4" class="ma-sm-2">
-        <v-btn :disabled="encodedFile.length == 0" @click="decodeFile">Decode</v-btn>
-      </v-col>
-    </v-row>
+    <v-card elevation="2">
+      <v-card-title class="bg-surface-variant">
+        <v-icon icon="mdi-file" class="mr-2"></v-icon>
+        File Decoding
+      </v-card-title>
+      <v-card-text class="pa-4">
+        <v-row align="center">
+          <v-col cols="12" sm="8">
+            <v-file-input
+              v-model="encodedFile"
+              label="Select a Base64 file to decode"
+              variant="outlined"
+              show-size
+              prepend-icon=""
+              prepend-inner-icon="mdi-paperclip"
+              hide-details>
+            </v-file-input>
+          </v-col>
+          <v-col cols="12" sm="4">
+            <v-btn
+              :disabled="encodedFile.length == 0"
+              @click="decodeFile"
+              color="primary"
+              size="large"
+              block>
+              <v-icon start>mdi-arrow-up-bold-box</v-icon>
+              Decode File
+            </v-btn>
+          </v-col>
+        </v-row>
+      </v-card-text>
+    </v-card>
 
-  </v-container>
+  </div>
 </template>
 
 <script>

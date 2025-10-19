@@ -1,88 +1,171 @@
 <template>
-    <v-container>
+    <div>
+        <div class="d-flex align-center mb-6">
+            <v-avatar color="primary" size="48" class="mr-4">
+                <v-icon icon="mdi-lock" size="28" color="white"></v-icon>
+            </v-avatar>
+            <div>
+                <h1 class="text-h4 font-weight-bold">AES Encryption</h1>
+                <p class="text-body-2 text-medium-emphasis mb-0">Secure your files with password-protected AES encryption</p>
+            </div>
+        </div>
 
-        <h1 class="text-h4 mb-4">AES File Encryption</h1>
+        <v-alert v-if="error" type="error" variant="tonal" closable @click:close="error = ''" class="mb-4">
+            {{ error }}
+        </v-alert>
 
-        <v-row no-gutters>
-            <v-col cols="12" sm="6" class="pr-sm-1">
-                <v-text-field v-model="password" label="Password" type="password" variant="outlined"
-                    placeholder="Enter encryption password"></v-text-field>
-            </v-col>
-            <v-col cols="12" sm="6" class="pl-sm-1">
-                <v-text-field v-model="passwordConfirm" label="Confirm password" type="password" variant="outlined"
-                    placeholder="Confirm encryption password"></v-text-field>
-            </v-col>
-        </v-row>
-
-        <v-row no-gutters>
-            <v-col class="flex-grow-1">
-                <v-textarea label="Plain Text" v-model="plainText" :disabled="isFilePopulated"
-                    variant="outlined" placeholder="Enter your plain text here"></v-textarea>
-            </v-col>
-            <v-col class="ml-2" cols="auto">
-                <v-btn flat icon @click="pasteFromClipboard" v-show="!plainText">
-                    <v-icon icon='mdi-content-paste' />
-                </v-btn>
-                <v-btn flat icon @click="plainText = ''" v-show="!!plainText">
-                    <v-icon icon='mdi-close-octagon-outline' />
-                </v-btn>
-            </v-col>
-        </v-row>
-
-        <v-row no-gutters>
-            <v-col cols="12" sm="6">
-                <v-file-input v-model="file" label="Select file to encrypt" variant="outlined" show-size
-                    @change="handleFileUpload" :disabled="isPlaintextPopulated"></v-file-input>
-            </v-col>
-
-            <v-col cols="8" sm="4" class="ma-sm-2">
-                <v-btn :disabled="!isPasswordConfirmed || !(isFilePopulated || isPlaintextPopulated)"
-                    @click="encryptFile">
-                    <v-icon left>mdi-lock</v-icon>
-                    Encrypt
-                </v-btn>
-            </v-col>
-        </v-row>
-
-        <v-row v-if="error" no-gutters>
-            <v-col>
-                <v-alert type="error" variant="tonal" closable @click:close="error = ''">
-                    {{ error }}
-                </v-alert>
-            </v-col>
-        </v-row>
-
-        <v-card v-if="isOutputPopulated" variant="tonal">
-            <v-card-title class="d-flex justify-end">
-                <v-spacer></v-spacer>
-                <v-icon @click="clearOutputs" color="primary-darken-1" style="cursor: pointer;">
-                    mdi-close
-                </v-icon>
-
+        <v-card class="mb-4" elevation="2">
+            <v-card-title class="bg-surface-variant">
+                <v-icon icon="mdi-key" class="mr-2"></v-icon>
+                Password Protection
             </v-card-title>
-
-            <v-card-text>
-
-                <v-row v-if="isOutputPopulated" no-gutters>
-                    <v-col cols="4">
-                        <v-text-field v-model="search" label="Search" prepend-inner-icon="mdi-magnify"
-                            variant="outlined" hide-details single-line></v-text-field>
+            <v-card-text class="pa-4">
+                <v-row>
+                    <v-col cols="12" sm="6">
+                        <v-text-field
+                            v-model="password"
+                            label="Password"
+                            type="password"
+                            variant="outlined"
+                            placeholder="Enter encryption password"
+                            prepend-inner-icon="mdi-lock"
+                            hide-details>
+                        </v-text-field>
+                    </v-col>
+                    <v-col cols="12" sm="6">
+                        <v-text-field
+                            v-model="passwordConfirm"
+                            label="Confirm Password"
+                            type="password"
+                            variant="outlined"
+                            placeholder="Confirm encryption password"
+                            prepend-inner-icon="mdi-lock-check"
+                            :error="password && passwordConfirm && password !== passwordConfirm"
+                            :success="isPasswordConfirmed"
+                            hide-details>
+                        </v-text-field>
                     </v-col>
                 </v-row>
-                <v-row v-if="isOutputPopulated" no-gutters>
+            </v-card-text>
+        </v-card>
+
+        <v-card class="mb-4" elevation="2">
+            <v-card-title class="bg-surface-variant">
+                <v-icon icon="mdi-text" class="mr-2"></v-icon>
+                Text Encryption
+            </v-card-title>
+            <v-card-text class="pa-4">
+                <v-row no-gutters>
+                    <v-col class="flex-grow-1">
+                        <v-textarea
+                            label="Plain Text"
+                            v-model="plainText"
+                            :disabled="isFilePopulated"
+                            variant="outlined"
+                            rows="4"
+                            placeholder="Enter your plain text here"
+                            hide-details>
+                        </v-textarea>
+                    </v-col>
+                    <v-col class="ml-2" cols="auto">
+                        <v-tooltip text="Paste from clipboard" location="top">
+                            <template v-slot:activator="{ props }">
+                                <v-btn v-bind="props" flat icon @click="pasteFromClipboard" v-show="!plainText && !isFilePopulated">
+                                    <v-icon icon='mdi-content-paste' />
+                                </v-btn>
+                            </template>
+                        </v-tooltip>
+                        <v-tooltip text="Clear text" location="top">
+                            <template v-slot:activator="{ props }">
+                                <v-btn v-bind="props" flat icon @click="plainText = ''" v-show="!!plainText">
+                                    <v-icon icon='mdi-close-octagon-outline' />
+                                </v-btn>
+                            </template>
+                        </v-tooltip>
+                    </v-col>
+                </v-row>
+            </v-card-text>
+        </v-card>
+
+        <v-card class="mb-4" elevation="2">
+            <v-card-title class="bg-surface-variant">
+                <v-icon icon="mdi-file" class="mr-2"></v-icon>
+                File Encryption
+            </v-card-title>
+            <v-card-text class="pa-4">
+                <v-row align="center">
+                    <v-col cols="12" sm="8">
+                        <v-file-input
+                            v-model="file"
+                            label="Select file to encrypt"
+                            variant="outlined"
+                            show-size
+                            @change="handleFileUpload"
+                            :disabled="isPlaintextPopulated"
+                            prepend-icon=""
+                            prepend-inner-icon="mdi-paperclip"
+                            hide-details>
+                        </v-file-input>
+                    </v-col>
+                    <v-col cols="12" sm="4">
+                        <v-btn
+                            :disabled="!isPasswordConfirmed || !(isFilePopulated || isPlaintextPopulated)"
+                            @click="encryptFile"
+                            color="primary"
+                            size="large"
+                            block>
+                            <v-icon start>mdi-lock</v-icon>
+                            Encrypt
+                        </v-btn>
+                    </v-col>
+                </v-row>
+            </v-card-text>
+        </v-card>
+
+        <v-card v-if="isOutputPopulated" variant="tonal" elevation="2">
+            <v-card-title class="d-flex align-center">
+                <v-icon icon="mdi-table" class="mr-2"></v-icon>
+                CSV Preview
+                <v-spacer></v-spacer>
+                <v-btn icon size="small" variant="text" @click="clearOutputs">
+                    <v-icon>mdi-close</v-icon>
+                </v-btn>
+            </v-card-title>
+
+            <v-card-text class="pa-4">
+                <v-row class="mb-4">
+                    <v-col cols="12" md="4">
+                        <v-text-field
+                            v-model="search"
+                            label="Search"
+                            prepend-inner-icon="mdi-magnify"
+                            variant="outlined"
+                            hide-details
+                            single-line
+                            density="comfortable">
+                        </v-text-field>
+                    </v-col>
+                </v-row>
+                <v-row>
                     <v-col>
-                        <v-data-table :headers="tableHeaders" :items="tableData" :search="search" dense>
+                        <v-data-table
+                            :headers="tableHeaders"
+                            :items="tableData"
+                            :search="search"
+                            density="comfortable">
                             <template #no-data>
-                                No results to display.
+                                <div class="text-center pa-4">
+                                    <v-icon size="48" color="grey">mdi-table-off</v-icon>
+                                    <p class="text-body-2 text-medium-emphasis mt-2">No results to display</p>
+                                </div>
                             </template>
                         </v-data-table>
                     </v-col>
                 </v-row>
-
             </v-card-text>
         </v-card>
 
-    </v-container>
+    </div>
 </template>
 
 <script>
