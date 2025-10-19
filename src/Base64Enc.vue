@@ -56,44 +56,85 @@ export default {
     };
   },
   methods: {
+    /**
+     * Encodes plain text to Base64 with debouncing to avoid excessive processing
+     * @param {number} timeout - Debounce delay in milliseconds (default: 350ms)
+     */
     updateEncodedText(timeout = 350) {
       this.isLoading = true;
       clearTimeout(this.updateTimeout);
       this.updateTimeout = setTimeout(() => {
-        this.encodedText = btoa(this.plainText);
-        this.isLoading = false;
-      }, timeout); // Debounce time (adjust as needed)
+        try {
+          this.encodedText = btoa(this.plainText);
+        } catch (error) {
+          console.error('Base64 encoding error:', error);
+          this.encodedText = 'Error: Unable to encode text. Please check for invalid characters.';
+        } finally {
+          this.isLoading = false;
+        }
+      }, timeout);
     },
+    /**
+     * Copies the Base64 encoded text to the system clipboard
+     */
     copyToClipboard() {
       navigator.clipboard.writeText(this.encodedText)
+        .catch(error => {
+          console.error('Clipboard write failed:', error);
+          alert('Failed to copy to clipboard. Please copy manually.');
+        });
     },
+    /**
+     * Pastes text from clipboard and triggers encoding
+     */
     pasteFromClipboard() {
       navigator.clipboard.readText()
         .then((clipboardText) => {
           this.plainText = clipboardText;
           this.updateEncodedText();
+        })
+        .catch(error => {
+          console.error('Clipboard read failed:', error);
+          alert('Failed to read from clipboard. Please paste manually.');
         });
     },
+    /**
+     * Encodes a file to Base64 and triggers download of the encoded result
+     * Uses FileReader API to read file as Data URL, extracts Base64 portion
+     */
     encodeFile() {
-      var reader = new FileReader();
-
-      // Use the javascript reader object to load the contents
-      // of the file in the v-model prop
-      reader.readAsDataURL(this.plainFile[0])
-      reader.onload = () => {
-        const dataUrl = reader.result;
-        // Extract base64 encoded string from data URL
-        const base64String = dataUrl.split(',')[1];
-        const dataLink = `data:text/plain;,${base64String}`;
-        const link = document.createElement('a');
-        link.href = dataLink;
-        link.download = `${this.plainFile[0].name}.b64.txt`;
-        link.style.display = 'none';
-
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+      if (!this.plainFile || !this.plainFile[0]) {
+        alert('Please select a file first.');
+        return;
       }
+
+      const reader = new FileReader();
+
+      reader.onerror = () => {
+        console.error('File read error:', reader.error);
+        alert('Failed to read file. Please try again.');
+      };
+
+      reader.onload = () => {
+        try {
+          const dataUrl = reader.result;
+          const base64String = dataUrl.split(',')[1];
+          const dataLink = `data:text/plain;,${base64String}`;
+          const link = document.createElement('a');
+          link.href = dataLink;
+          link.download = `${this.plainFile[0].name}.b64.txt`;
+          link.style.display = 'none';
+
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } catch (error) {
+          console.error('File encoding error:', error);
+          alert('Failed to encode file. Please try again.');
+        }
+      };
+
+      reader.readAsDataURL(this.plainFile[0]);
     }
   },
 };

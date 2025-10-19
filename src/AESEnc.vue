@@ -117,28 +117,44 @@ export default {
         }
     },
     methods: {
+        /**
+         * Pastes text from clipboard into the plainText field
+         */
         pasteFromClipboard() {
             navigator.clipboard.readText()
                 .then((clipboardText) => {
                     this.plainText = clipboardText;
                 });
         },
+        /**
+         * Clears all input fields (password, text, file)
+         */
         clearInputs() {
             this.password = '';
             this.passwordConfirm = '';
             this.plainText = '';
             this.file = null;
         },
+        /**
+         * Clears all output data (table, search, errors)
+         */
         clearOutputs() {
             this.tableData = [];
             this.tableHeaders = [];
             this.search = '';
             this.error = '';
         },
+        /**
+         * Clears both inputs and outputs
+         */
         clearAll() {
             this.clearInputs();
             this.clearOutputs();
         },
+        /**
+         * Handles file upload and CSV preview
+         * If the uploaded file is CSV, parses and displays it in the data table
+         */
         handleFileUpload() {
             let files = this.file
             if (files && files.length > 0) {
@@ -146,19 +162,27 @@ export default {
                 if (selectedFile.type === "text/csv") {
                     const reader = new FileReader()
                     reader.onload = (event) => {
-                        const text = reader.result; // file content as string
+                        const text = reader.result;
                         this.parseCSV(text)
                     };
                     reader.readAsText(selectedFile);
                 }
             }
-            this.error = ''; // Clear any previous errors when a new file is selected
+            this.error = '';
         },
+        /**
+         * Initializes Web Worker for background AES encryption
+         * Terminates existing worker if present to prevent memory leaks
+         */
         setupWorker() {
             if (this.worker) this.worker.terminate();
             this.worker = new Worker('/worker.js');
             this.worker.onmessage = this.handleWorkerResponse;
         },
+        /**
+         * Handles response from Web Worker after encryption
+         * @param {MessageEvent} event - Worker message containing action, data, and filename
+         */
         handleWorkerResponse(event) {
             const [action, data, fileName] = event.data;
 
@@ -170,6 +194,11 @@ export default {
             this.downloadFile(data, fileName);
             this.clearAll();
         },
+        /**
+         * Initiates AES file encryption using Web Worker
+         * Validates password confirmation and input (file or text) before proceeding
+         * Sends encryption task to worker thread to avoid blocking UI
+         */
         encryptFile() {
             if (!this.isPasswordConfirmed || !this.isFilePopulated && !this.isPlaintextPopulated) return alert("Invalid inputs");;
             this.error = ''; // Clear any previous errors

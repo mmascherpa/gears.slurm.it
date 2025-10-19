@@ -56,43 +56,85 @@ export default {
     };
   },
   methods: {
+    /**
+     * Decodes Base64 text to plain text with debouncing
+     * @param {number} timeout - Debounce delay in milliseconds (default: 350ms)
+     */
     updatePlainText(timeout = 350) {
       this.isLoading = true;
       clearTimeout(this.updateTimeout);
       this.updateTimeout = setTimeout(() => {
-        this.plainText = atob(this.encodedText);
-        this.isLoading = false;
-      }, timeout); // Debounce time (adjust as needed)
+        try {
+          this.plainText = atob(this.encodedText);
+        } catch (error) {
+          console.error('Base64 decoding error:', error);
+          this.plainText = 'Error: Invalid Base64 string. Please check your input.';
+        } finally {
+          this.isLoading = false;
+        }
+      }, timeout);
     },
+    /**
+     * Copies the decoded plain text to the system clipboard
+     */
     copyToClipboard() {
       navigator.clipboard.writeText(this.plainText)
+        .catch(error => {
+          console.error('Clipboard write failed:', error);
+          alert('Failed to copy to clipboard. Please copy manually.');
+        });
     },
+    /**
+     * Pastes Base64 text from clipboard and triggers decoding
+     */
     pasteFromClipboard() {
       navigator.clipboard.readText()
         .then((clipboardText) => {
           this.encodedText = clipboardText;
           this.updatePlainText();
+        })
+        .catch(error => {
+          console.error('Clipboard read failed:', error);
+          alert('Failed to read from clipboard. Please paste manually.');
         });
     },
+    /**
+     * Decodes a Base64 file and triggers download of the decoded result
+     * Uses FileReader API to read file, decodes Base64 content
+     */
     decodeFile() {
-      var reader = new FileReader();
-      // Use the javascript reader object to load the contents
-      // of the file in the v-model prop
-      reader.readAsDataURL(this.encodedFile[0])
-      reader.onload = () => {
-        const dataUrl = reader.result;
-        // Extract base64 encoded string from data URL
-        const plainString = atob(dataUrl.split(',')[1]);
-        const dataLink = `data:application/octet-stream;base64,${plainString}` //`data:${fileType.mime};,${plainString}`;
-        const link = document.createElement('a');
-        link.href = dataLink;
-        link.download = this.encodedFile[0].name.replace('.b64.txt', '');
-        link.style.display = 'none';
-
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+      if (!this.encodedFile || !this.encodedFile[0]) {
+        alert('Please select a file first.');
+        return;
       }
+
+      const reader = new FileReader();
+
+      reader.onerror = () => {
+        console.error('File read error:', reader.error);
+        alert('Failed to read file. Please try again.');
+      };
+
+      reader.onload = () => {
+        try {
+          const dataUrl = reader.result;
+          const plainString = atob(dataUrl.split(',')[1]);
+          const dataLink = `data:application/octet-stream;base64,${plainString}`;
+          const link = document.createElement('a');
+          link.href = dataLink;
+          link.download = this.encodedFile[0].name.replace('.b64.txt', '');
+          link.style.display = 'none';
+
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } catch (error) {
+          console.error('File decoding error:', error);
+          alert('Failed to decode file. Please ensure it contains valid Base64 data.');
+        }
+      };
+
+      reader.readAsDataURL(this.encodedFile[0]);
     }
   },
 };
