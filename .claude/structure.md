@@ -3,9 +3,9 @@
 ## Overview
 Slurm Tools is a Progressive Web Application providing cryptographic and encoding utilities (Base64 encode/decode, AES encrypt/decrypt) that works offline. Built with Vue 3, Vuetify, and modern PWA capabilities, the application features a clean component-based architecture with Web Workers for CPU-intensive operations.
 
-**Last Updated**: 2025-10-18
-**Total Files**: 86
-**Total Lines of Code**: ~2,220 lines
+**Last Updated**: 2025-10-19
+**Total Files**: 75 (cleaned up legacy components)
+**Total Lines of Code**: ~2,400 lines (added documentation and UX features)
 
 ---
 
@@ -32,49 +32,40 @@ slurm-spa/
 ### Source Directory (`/src/`)
 ```
 src/
-├── main.js                  # Application entry point (65 lines)
-├── theme.js                 # Vuetify theme configuration (43 lines)
-├── Slurm.vue               # Root layout component (35 lines)
-├── Home.vue                # Landing page with tool grid (79 lines)
-├── Base64Enc.vue           # Base64 encoder page (103 lines)
-├── Base64Dec.vue           # Base64 decoder page (102 lines)
-├── AESEnc.vue              # AES encryption page (233 lines)
-├── AESDec.vue              # AES decryption page (193 lines)
-├── About.vue               # About page
-├── App.vue                 # Legacy component (unused)
-├── assets/                 # Static assets and utilities
-│   ├── base.css            # Global CSS variables
-│   ├── main.css            # Global styles
-│   ├── logo.svg            # Vue logo
-│   └── util/               # Buffer utilities
-│       ├── util.js         # Stream/buffer operations
-│       └── support/        # Browser compatibility
-│           ├── isBuffer.js
-│           ├── isBufferBrowser.js
-│           └── types.js
-└── components/             # Reusable Vue components
-    ├── HelloWorld.vue      # Legacy component (unused)
-    ├── TheWelcome.vue      # Legacy component (unused)
-    ├── WelcomeItem.vue     # Legacy component (unused)
-    └── icons/              # Icon SVG components
-        ├── IconCommunity.vue
-        ├── IconDocumentation.vue
-        ├── IconEcosystem.vue
-        ├── IconSupport.vue
-        └── IconTooling.vue
+├── main.js                  # Application entry point (66 lines)
+├── theme.js                 # Vuetify theme with color palette (85 lines)
+├── Slurm.vue               # Root layout component (110 lines)
+├── Home.vue                # Landing page with tool grid (120 lines)
+├── Base64Enc.vue           # Base64 encoder page (250 lines)
+├── Base64Dec.vue           # Base64 decoder page (245 lines)
+├── AESEnc.vue              # AES encryption page (350 lines)
+├── AESDec.vue              # AES decryption page (270 lines)
+├── About.vue               # About page (comprehensive info)
+└── assets/                 # Static assets and utilities
+    ├── base.css            # Global CSS variables
+    ├── global-styles.css   # Global UX styles (NEW)
+    ├── logo.svg            # Vue logo
+    └── util/               # Buffer utilities
+        ├── util.js         # Stream/buffer operations
+        └── support/        # Browser compatibility
+            ├── isBuffer.js
+            ├── isBufferBrowser.js
+            └── types.js
 ```
 
 **Purpose**: Contains all Vue.js source code, components, and application logic.
 
 **Key Files**:
-- **main.js** (65 lines) - Application initialization, router setup, Vuetify configuration, Service Worker registration
-- **Slurm.vue** (35 lines) - Root layout with app bar and navigation drawer
-- **Home.vue** (79 lines) - Landing page with 5 tool cards in responsive grid
-- **Base64Enc.vue** (103 lines) - Text/file Base64 encoding with clipboard operations
-- **Base64Dec.vue** (102 lines) - Text/file Base64 decoding with clipboard operations
-- **AESEnc.vue** (233 lines) - Password-protected file encryption with Web Worker
-- **AESDec.vue** (193 lines) - Password-protected file decryption with CSV preview
-- **theme.js** (43 lines) - Custom Vuetify Material Design theme
+- **main.js** (66 lines) - Application initialization, router setup, Vuetify configuration, Service Worker registration
+- **theme.js** (85 lines) - Custom Vuetify theme with integrated color palette (sage, coffee, royal blue, deep blue)
+- **Slurm.vue** (110 lines) - Root layout with gradient app bar, navigation drawer, and responsive badge
+- **Home.vue** (120 lines) - Landing page with modernized tool cards in responsive grid
+- **Base64Enc.vue** (250 lines) - Text/file Base64 encoding with clipboard ops, snackbar feedback, monospace output
+- **Base64Dec.vue** (245 lines) - Text/file Base64 decoding with clipboard ops, snackbar feedback, monospace output
+- **AESEnc.vue** (350 lines) - Password-protected file encryption with Web Worker, CSV preview, snackbar feedback
+- **AESDec.vue** (270 lines) - Password-protected file decryption with CSV preview, snackbar feedback
+- **About.vue** - Comprehensive about page with privacy and security information
+- **global-styles.css** (NEW) - Global UX styles including monospace fonts, button animations, focus states
 
 ### Public Directory (`/public/`)
 ```
@@ -128,17 +119,22 @@ scripts/
 
 ### Slurm.vue (Root Layout)
 **File**: [src/Slurm.vue](src/Slurm.vue)
-**Lines**: ~35
+**Lines**: ~110
 **Purpose**: Application shell providing consistent layout with navigation
 
 **Key Features**:
-- Top app bar with title
-- Navigation drawer with route links
+- Gradient app bar with title and "Private & Offline" badge
+- Navigation drawer with organized sections (Encoding, Encryption, Information)
+- Material Design icons for all menu items
+- Responsive badge visibility (hidden on mobile)
+- Max-width container (1400px) for better readability
+- Smooth page transitions (250ms fade)
 - Router view for page content
 
 **Dependencies**:
 - Vue Router
-- Vuetify (v-app, v-navigation-drawer, v-app-bar)
+- Vuetify (v-app, v-navigation-drawer, v-app-bar, v-chip)
+- Material Design Icons
 
 **Used By**:
 - main.js (root component)
@@ -167,18 +163,27 @@ scripts/
 
 ### Base64Enc.vue (Base64 Encoder)
 **File**: [src/Base64Enc.vue](src/Base64Enc.vue)
-**Lines**: ~103
+**Lines**: ~250
 **Purpose**: Encode text or files to Base64 format
 
 **Key Methods/Functions**:
 - `encode()` - Converts input text to Base64 with 350ms debounce
 - `encodeFile()` - Reads file and encodes to Base64
-- `copyToClipboard()` - Copies result to clipboard
-- `pasteFromClipboard()` - Pastes text from clipboard
+- `copyToClipboard()` - Copies result to clipboard with snackbar feedback
+- `pasteFromClipboard()` - Pastes text from clipboard with snackbar feedback
+- `showSnackbar()` - Displays success/error messages to user
+
+**Key Features**:
+- Avatar header with icon and description
+- Monospace font for encoded output
+- Success/error snackbar notifications
+- Comprehensive JSDoc documentation
+- Enhanced error handling
 
 **Dependencies**:
 - Browser APIs: btoa, FileReader, Clipboard API
-- Vuetify components
+- Vuetify components (v-card, v-textarea, v-snackbar)
+- global-styles.css for monospace styling
 
 **Used By**:
 - Router (/base64enc route)
@@ -187,18 +192,27 @@ scripts/
 
 ### Base64Dec.vue (Base64 Decoder)
 **File**: [src/Base64Dec.vue](src/Base64Dec.vue)
-**Lines**: ~102
+**Lines**: ~245
 **Purpose**: Decode Base64 text or files to original format
 
 **Key Methods/Functions**:
 - `decode()` - Converts Base64 to original text with 350ms debounce
 - `decodeFile()` - Reads and decodes Base64 file
-- `copyToClipboard()` - Copies decoded result
-- `pasteFromClipboard()` - Pastes Base64 text
+- `copyToClipboard()` - Copies decoded result with snackbar feedback
+- `pasteFromClipboard()` - Pastes Base64 text with snackbar feedback
+- `showSnackbar()` - Displays success/error messages to user
+
+**Key Features**:
+- Avatar header with icon and description
+- Monospace font for Base64 input
+- Success/error snackbar notifications
+- Comprehensive JSDoc documentation
+- Enhanced error handling
 
 **Dependencies**:
 - Browser APIs: atob, FileReader, Clipboard API
-- Vuetify components
+- Vuetify components (v-card, v-textarea, v-snackbar)
+- global-styles.css for monospace styling
 
 **Used By**:
 - Router (/base64dec route)
@@ -207,21 +221,31 @@ scripts/
 
 ### AESEnc.vue (AES Encryption)
 **File**: [src/AESEnc.vue](src/AESEnc.vue)
-**Lines**: ~233
+**Lines**: ~350
 **Purpose**: Password-protected file encryption with CSV preview
 
 **Key Methods/Functions**:
 - `encryptFile()` - Validates password and initiates encryption via Web Worker
-- `handleWorkerMessage()` - Processes encryption results from worker
-- `downloadEncrypted()` - Triggers download of encrypted file
-- `parseCSV()` - Parses decrypted CSV for preview
-- `searchTable()` - Searches data table
+- `handleWorkerResponse()` - Processes encryption results from worker with snackbar feedback
+- `downloadFile()` - Triggers download of encrypted file
+- `parseCSV()` - Parses CSV for preview
+- `pasteFromClipboard()` - Pastes text with snackbar feedback
+- `showSnackbar()` - Displays success/error messages to user
+
+**Key Features**:
+- Avatar header with encryption icon
+- Password confirmation validation
+- CSV file preview with search
+- Success/error snackbar notifications for crypto ops
+- Comprehensive JSDoc documentation
+- Enhanced error handling
 
 **Dependencies**:
 - Web Worker (public/worker.js)
 - CryptoJS (from CDN)
 - file-type library
-- Vuetify data table
+- Vuetify data table, snackbar
+- Theme colors (primary = sage green)
 
 **Used By**:
 - Router (/aesenc route)
@@ -230,21 +254,30 @@ scripts/
 
 ### AESDec.vue (AES Decryption)
 **File**: [src/AESDec.vue](src/AESDec.vue)
-**Lines**: ~193
+**Lines**: ~270
 **Purpose**: Password-protected file decryption with CSV preview
 
 **Key Methods/Functions**:
 - `decryptFile()` - Initiates decryption via Web Worker
-- `handleWorkerMessage()` - Processes decryption results
-- `downloadDecrypted()` - Triggers download of decrypted file
+- `handleWorkerResponse()` - Processes decryption results with snackbar feedback
+- `downloadFile()` - Triggers download of decrypted file
 - `parseCSV()` - Parses CSV content for display
-- `searchTable()` - Filters data table
+- `showSnackbar()` - Displays success/error messages to user
+
+**Key Features**:
+- Avatar header with decryption icon
+- Password input with validation
+- CSV/text file preview with search
+- Success/error snackbar notifications for crypto ops
+- Comprehensive JSDoc documentation
+- Enhanced error handling
 
 **Dependencies**:
 - Web Worker (public/worker.js)
 - CryptoJS (from CDN)
 - file-type library
-- Vuetify data table
+- Vuetify data table, snackbar
+- Theme colors (primary-darken-1)
 
 **Used By**:
 - Router (/aesdec route)
@@ -273,14 +306,22 @@ scripts/
 
 ### theme.js (Vuetify Theme)
 **File**: [src/theme.js](src/theme.js)
-**Lines**: ~43
-**Purpose**: Custom Material Design theme configuration
+**Lines**: ~85
+**Purpose**: Custom Material Design theme configuration with integrated color palette
 
-**Theme Colors**:
-- Primary: Custom blue palette
-- Secondary: Grey palette
-- Accent: Deep orange
-- Error/Warning/Info/Success: Standard Material colors
+**Color Palette** (from Coolors):
+- **Sage** (#73877B): Primary color for encryption tools
+- **Coffee** (#402E2A): Dark brown accent
+- **Royal Blue** (#4464AD): Secondary color for encoding tools
+- **Deep Blue** (#3943B7): Deeper blue variant
+- **Silver** (#BDBBB6): Neutral gray
+- **Semantic colors**: Success, warning, error, info
+
+**Theme Structure**:
+- COLOR_PALETTE constant with all brand colors
+- Primary/secondary color mappings
+- Light theme configuration
+- Dark theme disabled (not implemented yet)
 
 **Dependencies**:
 - Vuetify themes API
@@ -530,17 +571,34 @@ AESEnc.vue/AESDec.vue
 ## Notes
 
 ### Recent Structural Changes
+- **2025-10-19**: Completed Phase 3 - UX Enhancements
+  - Added global-styles.css with monospace fonts, animations, focus states
+  - Implemented snackbar feedback system across all components
+  - Added max-width container and responsive design improvements
+
+- **2025-10-19**: Completed Phase 2 - UI Modernization
+  - Integrated custom color palette into theme.js
+  - Redesigned all components with avatar headers and modern cards
+  - Enhanced navigation drawer with organized sections
+  - Created comprehensive About page
+
+- **2025-10-19**: Completed Phase 1 - Code Cleanup
+  - Removed all legacy components (HelloWorld, TheWelcome, WelcomeItem, icons)
+  - Added comprehensive JSDoc comments to all key methods
+  - Improved error handling across all components
+  - Cleaned up .gitignore and committed Service Worker changes
+
 - **2025-10-18**: Layout improvements for small screens (commit a3b5812)
 - **Recent**: Updated deployment directory to `../slurm.it/`
 - **Recent**: Adopted v-data-table for CSV display in AES components
-- **Recent**: UI refinements and bug fixes
 
 ### Future Structural Considerations
-- May add TypeScript for type safety if project grows
-- Could extract shared Base64/AES logic into composables
-- Consider adding unit tests (currently no test infrastructure)
+- Add TypeScript for type safety (Phase 8 - when codebase grows)
+- Implement dark mode support (Phase 6)
+- Add password strength indicator (Phase 4)
+- Setup testing infrastructure with Vitest (Phase 5)
+- Could extract shared logic into composables
 - May need state management (Pinia) if more complex features added
-- Legacy components (HelloWorld, TheWelcome, etc.) should be removed
 
 ---
 
@@ -557,3 +615,5 @@ AESEnc.vue/AESDec.vue
 - Architecture layers change
 - File sizes grow significantly (>200 line change)
 - Organizational patterns evolve
+
+**Last Updated**: 2025-10-19 (Updated for completed Phases 1-3)
