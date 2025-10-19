@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+    <!-- Background -->
+    <rect width="32" height="32" rx="6" fill="#73877B"/>
+
+    <!-- Simple solid shield shape in white -->
+    <path d="M16 6 L9 8.5 L9 14 C9 18.5 11.8 22.5 16 24.5 C20.2 22.5 23 18.5 23 14 L23 8.5 Z"
+          fill="#FFFFFF"/>
+</svg>
