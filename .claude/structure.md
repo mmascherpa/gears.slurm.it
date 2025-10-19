@@ -38,12 +38,15 @@ src/
 ├── Home.vue                # Landing page with tool grid (120 lines)
 ├── Base64Enc.vue           # Base64 encoder page (250 lines)
 ├── Base64Dec.vue           # Base64 decoder page (245 lines)
-├── AESEnc.vue              # AES encryption page (350 lines)
-├── AESDec.vue              # AES decryption page (270 lines)
+├── AESEnc.vue              # AES encryption page (340 lines - refactored)
+├── AESDec.vue              # AES decryption page (250 lines - refactored)
 ├── About.vue               # About page (comprehensive info)
+├── utils/                  # Shared utility functions (NEW)
+│   ├── fileDownload.js     # File download helper (19 lines)
+│   └── csvParser.js        # CSV parsing utilities (67 lines)
 └── assets/                 # Static assets and utilities
     ├── base.css            # Global CSS variables
-    ├── global-styles.css   # Global UX styles (NEW)
+    ├── global-styles.css   # Global UX styles
     ├── logo.svg            # Vue logo
     └── util/               # Buffer utilities
         ├── util.js         # Stream/buffer operations
@@ -62,10 +65,12 @@ src/
 - **Home.vue** (120 lines) - Landing page with modernized tool cards in responsive grid
 - **Base64Enc.vue** (250 lines) - Text/file Base64 encoding with clipboard ops, snackbar feedback, monospace output
 - **Base64Dec.vue** (245 lines) - Text/file Base64 decoding with clipboard ops, snackbar feedback, monospace output
-- **AESEnc.vue** (350 lines) - Password-protected file encryption with Web Worker, CSV preview, snackbar feedback
-- **AESDec.vue** (270 lines) - Password-protected file decryption with CSV preview, snackbar feedback
+- **AESEnc.vue** (340 lines) - Password-protected file encryption with Web Worker, CSV preview, improved error handling
+- **AESDec.vue** (250 lines) - Password-protected file decryption with CSV preview, improved error handling
 - **About.vue** - Comprehensive about page with privacy and security information
-- **global-styles.css** (NEW) - Global UX styles including monospace fonts, button animations, focus states
+- **global-styles.css** - Global UX styles including monospace fonts, button animations, focus states
+- **utils/fileDownload.js** (NEW) - Shared file download utility
+- **utils/csvParser.js** (NEW) - Shared CSV parsing with input validation
 
 ### Public Directory (`/public/`)
 ```
@@ -73,8 +78,8 @@ public/
 ├── index.html              # HTML template
 ├── favicon.ico             # Browser favicon
 ├── manifest.json           # PWA manifest
-├── sw.js                   # Service Worker for offline caching
-├── worker.js               # Web Worker for AES operations
+├── sw.js                   # Service Worker for offline caching (97 lines - enhanced)
+├── worker.js               # Web Worker for AES operations (73 lines - enhanced)
 ├── icons/                  # PWA app icons
 │   ├── icon.svg
 │   ├── icon-192x192.png
@@ -87,8 +92,8 @@ public/
 **Purpose**: Static assets served directly to browser, PWA configuration, and worker scripts.
 
 **Key Files**:
-- **sw.js** - Service Worker implementing cache-first strategy for offline functionality
-- **worker.js** - Web Worker handling AES encryption/decryption on separate thread
+- **sw.js** (97 lines) - Service Worker with CORS caching, improved error handling, immediate activation
+- **worker.js** (73 lines) - Web Worker with user-friendly error messages for AES operations
 - **manifest.json** - PWA manifest defining app metadata, icons, and installability
 
 ### External Library (`/jsAesCrypt-main/`)
@@ -108,7 +113,8 @@ jsAesCrypt-main/
 ### Build Scripts (`/scripts/`)
 ```
 scripts/
-└── generate-icons.js       # PNG icon generation from SVG using Sharp
+├── generate-icons.js       # PNG icon generation from SVG using Sharp
+└── update-sw-cache.js      # Auto-updates SW cache with Vite asset hashes (NEW - 97 lines)
 ```
 
 **Purpose**: Build-time utilities for asset generation.
@@ -221,14 +227,13 @@ scripts/
 
 ### AESEnc.vue (AES Encryption)
 **File**: [src/AESEnc.vue](src/AESEnc.vue)
-**Lines**: ~350
+**Lines**: ~340
 **Purpose**: Password-protected file encryption with CSV preview
 
 **Key Methods/Functions**:
 - `encryptFile()` - Validates password and initiates encryption via Web Worker
-- `handleWorkerResponse()` - Processes encryption results from worker with snackbar feedback
-- `downloadFile()` - Triggers download of encrypted file
-- `parseCSV()` - Parses CSV for preview
+- `handleWorkerResponse()` - Processes encryption results with user-friendly error messages
+- `handleFileUploadCSV()` - Handles CSV preview using shared utility
 - `pasteFromClipboard()` - Pastes text with snackbar feedback
 - `showSnackbar()` - Displays success/error messages to user
 
@@ -236,12 +241,13 @@ scripts/
 - Avatar header with encryption icon
 - Password confirmation validation
 - CSV file preview with search
-- Success/error snackbar notifications for crypto ops
+- User-friendly error messages ("Password too long" not "undefined")
+- Refactored to use shared utilities (fileDownload, csvParser)
 - Comprehensive JSDoc documentation
-- Enhanced error handling
 
 **Dependencies**:
 - Web Worker (public/worker.js)
+- Shared utilities (utils/fileDownload.js, utils/csvParser.js)
 - CryptoJS (from CDN)
 - file-type library
 - Vuetify data table, snackbar
@@ -254,26 +260,25 @@ scripts/
 
 ### AESDec.vue (AES Decryption)
 **File**: [src/AESDec.vue](src/AESDec.vue)
-**Lines**: ~270
+**Lines**: ~250
 **Purpose**: Password-protected file decryption with CSV preview
 
 **Key Methods/Functions**:
 - `decryptFile()` - Initiates decryption via Web Worker
-- `handleWorkerResponse()` - Processes decryption results with snackbar feedback
-- `downloadFile()` - Triggers download of decrypted file
-- `parseCSV()` - Parses CSV content for display
+- `handleWorkerResponse()` - Processes decryption results with user-friendly error messages
 - `showSnackbar()` - Displays success/error messages to user
 
 **Key Features**:
 - Avatar header with decryption icon
 - Password input with validation
 - CSV/text file preview with search
-- Success/error snackbar notifications for crypto ops
+- User-friendly error messages ("Wrong password" not "Decryption failed: undefined")
+- Refactored to use shared utilities (fileDownload, csvParser)
 - Comprehensive JSDoc documentation
-- Enhanced error handling
 
 **Dependencies**:
 - Web Worker (public/worker.js)
+- Shared utilities (utils/fileDownload.js, utils/csvParser.js)
 - CryptoJS (from CDN)
 - file-type library
 - Vuetify data table, snackbar
@@ -440,6 +445,21 @@ AESEnc.vue/AESDec.vue
 
 ## Utility Functions / Helpers
 
+### Shared Utilities (NEW)
+**Directory**: [src/utils/](src/utils/)
+
+**fileDownload.js** (19 lines):
+- `downloadFile(data, name)` - Triggers browser download of binary data
+- Creates blob URL, initiates download, cleans up resources
+- Used by both AESEnc.vue and AESDec.vue
+
+**csvParser.js** (67 lines):
+- `parseCSV(input)` - Parses CSV text/binary into Vuetify table format
+- `convertToTableData(headers, rows)` - Converts arrays to table objects
+- `capitalize(word)` - Capitalizes first letter with null guards
+- Handles line ending normalization and empty row filtering
+- Used by both AESEnc.vue and AESDec.vue
+
 ### Buffer Utilities
 **File**: [src/assets/util/util.js](src/assets/util/util.js)
 
@@ -571,6 +591,17 @@ AESEnc.vue/AESDec.vue
 ## Notes
 
 ### Recent Structural Changes
+- **2025-10-19**: Offline Functionality & Error Message Enhancements
+  - Fixed service worker to cache Vite-generated assets with hashed filenames
+  - Created automated build script (update-sw-cache.js) to update SW cache list
+  - Fixed CORS caching for CDN resources (CryptoJS libraries)
+  - Added `clients.claim()` for immediate service worker activation
+  - Improved worker error handling with user-friendly messages
+  - Refactored AES components to use shared utilities (eliminated ~80 lines of duplication)
+  - Created src/utils/fileDownload.js and src/utils/csvParser.js
+  - Fixed null reference bug in service worker accept header check
+  - Enhanced build process to automatically update service worker on each build
+
 - **2025-10-19**: Completed Phase 3 - UX Enhancements
   - Added global-styles.css with monospace fonts, animations, focus states
   - Implemented snackbar feedback system across all components
@@ -616,4 +647,4 @@ AESEnc.vue/AESDec.vue
 - File sizes grow significantly (>200 line change)
 - Organizational patterns evolve
 
-**Last Updated**: 2025-10-19 (Updated for completed Phases 1-3)
+**Last Updated**: 2025-10-19 (Updated for offline functionality enhancements and code refactoring)

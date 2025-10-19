@@ -142,6 +142,8 @@
 </template>
 
 <script>
+import { downloadFile } from '@/utils/fileDownload';
+import { parseCSV } from '@/utils/csvParser';
 
 export default {
     data() {
@@ -209,18 +211,32 @@ export default {
             const [action, data, fileName] = event.data;
 
             if (action === "ERROR") {
+                // Display the error in the alert box
                 this.error = data;
-                this.showSnackbar('Decryption failed. ' + data, 'error');
+
+                // Show a more concise snackbar notification
+                let snackbarMsg = 'Decryption failed';
+                if (data.includes("Incorrect password")) {
+                    snackbarMsg = '❌ Wrong password';
+                } else if (data.includes("corrupted")) {
+                    snackbarMsg = '❌ File corrupted';
+                } else if (data.includes("not a valid AES")) {
+                    snackbarMsg = '❌ Invalid file format';
+                }
+
+                this.showSnackbar(snackbarMsg, 'error');
                 return;
             }
 
             if (fileName.endsWith(".csv")) {
-                this.parseCSV(data);
+                const parsedCSV = parseCSV(data);
+                this.tableHeaders = parsedCSV.headers;
+                this.tableData = parsedCSV.data;
             } else if (fileName.endsWith(".txt")) {
                 this.plainText = new TextDecoder().decode(data);
             }
 
-            this.downloadFile(data, fileName);
+            downloadFile(data, fileName);
             this.showSnackbar('✓ File decrypted successfully!', 'success');
             this.clearInputs();
         },
@@ -229,48 +245,6 @@ export default {
             this.error = ''; // Clear any previous errors
             this.setupWorker();
             this.worker.postMessage(["DECRYPT", this.file[0], this.password, this.file[0].name]);
-        },
-        downloadFile(data, name) {
-            let blob = new Blob([data], { type: "application/octet-stream" });
-            let a = document.createElement("a");
-            document.body.appendChild(a);
-            a.style.display = "none";
-            let url = window.URL.createObjectURL(blob);
-            a.href = url;
-            a.download = name;
-            a.click();
-            window.URL.revokeObjectURL(url);
-            a.remove();
-        },
-        parseCSV(inputData) {
-            const text = new TextDecoder().decode(inputData);
-            const rows = text.split("\n").map(row => row.split(","));
-
-            const { headers, data } = this.convertToTableData(rows[0] || [], rows.slice(1));
-            this.tableHeaders = headers;
-            this.tableData = data;
-        },
-
-        convertToTableData(headersArray, rowsArray) {
-            // Create Vuetify-style headers
-            const headers = headersArray.map(header => ({
-                title: this.capitalize(header),
-                key: header,
-            }));
-
-            // Map each row to an object using headersArray as keys
-            const data = rowsArray.map(row => {
-                const obj = {};
-                headersArray.forEach((key, i) => {
-                    obj[key] = row[i];
-                });
-                return obj;
-            });
-            return { headers, data };
-        },
-
-        capitalize(word) {
-            return word.charAt(0).toUpperCase() + word.slice(1);
         }
     }
 };

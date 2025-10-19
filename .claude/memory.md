@@ -42,19 +42,35 @@ Slurm Tools is a Progressive Web Application (PWA) providing browser-based crypt
 
 ## Error Handling
 - Try-catch blocks around file I/O operations
-- Web Worker errors caught and sent via postMessage
+- Web Worker errors caught and sent via postMessage with context
 - User-friendly error messages displayed in Vuetify v-alert components
 - Console.error for debugging, v-alert for user feedback
 - Graceful degradation for unsupported browser features
+- AES library throws strings (not Error objects), handle both types
 
 **Error Display Pattern**:
 ```javascript
 try {
   // risky operation
 } catch (error) {
+  // Handle both string and Error object exceptions
+  const errorMessage = typeof error === 'string' ? error : (error.message || 'Unknown error');
   this.errorMessage = 'User-friendly error description'
   console.error('Technical details:', error)
 }
+```
+
+**Worker Error Handling Pattern**:
+```javascript
+.catch((error) => {
+  const errorMessage = typeof error === 'string' ? error : (error.message || 'Unknown error');
+  // Transform technical errors to user-friendly messages
+  let friendlyMessage = errorMessage;
+  if (errorMessage.includes("Wrong password")) {
+    friendlyMessage = "Incorrect password. Please check your password and try again.";
+  }
+  postMessage(["ERROR", friendlyMessage, "DECRYPT"]);
+});
 ```
 
 ---
@@ -200,6 +216,10 @@ npm run generate-icons  # Generate PNG icons from SVG
 npm run build
 ```
 - Vite builds and minifies assets
+- **Automated post-build**: update-sw-cache.js runs automatically
+  - Scans dist/ for generated asset filenames
+  - Updates service worker cache list with correct hashed filenames
+  - Updates cache name with timestamp for versioning
 - Output directory: `../slurm.it/` (external folder)
 - Service Worker and Web Worker copied to output
 - Hashed filenames for cache busting
@@ -207,7 +227,9 @@ npm run build
 
 ### Build Configuration
 - **Environment variables**: None currently (no backend)
-- **Build artifacts**: index.html, /assets/, /libs/, sw.js, worker.js, manifest.json, /icons/
+- **Build artifacts**: index.html, /assets/, /libs/, sw.js (auto-updated), worker.js, manifest.json, /icons/
+- **Build script**: package.json includes post-build automation
+  - `vite build && node scripts/update-sw-cache.js`
 
 ### Hosting
 - **Current deployment**: Built to `../slurm.it/` directory
@@ -230,41 +252,61 @@ npm run build
 ### Known Limitations
 - No automated testing infrastructure
 - No TypeScript type safety
-- Legacy Vue template components (HelloWorld, etc.) still in repo
 - No formal state management (fine for current scope)
 - Limited accessibility features (could expand ARIA labels)
+- CSV parser is basic (doesn't handle quoted fields with commas)
 
 ---
 
 ## Project-Specific Guidelines
 
 ### Worker Communication Pattern
-Always use structured messages with `type` field:
+Always use structured messages with array format:
 ```javascript
 // Component to Worker
-worker.postMessage({ type: 'encrypt', file: fileData, password: pwd })
+worker.postMessage(["ENCRYPT", fileData, password, fileName])
+worker.postMessage(["DECRYPT", fileData, password, fileName])
 
 // Worker to Component
-self.postMessage({ success: true, result: encryptedData })
-self.postMessage({ success: false, error: 'Error message' })
+self.postMessage(["ENCRYPT", encryptedData, outputFileName])
+self.postMessage(["DECRYPT", decryptedData, outputFileName])
+self.postMessage(["ERROR", errorMessage, operationType]) // operationType: "ENCRYPT" or "DECRYPT"
 ```
 
 ### File Download Pattern
-Use Blob URLs for downloads:
+Use shared utility for consistency:
 ```javascript
-const blob = new Blob([data], { type: mimeType })
-const url = URL.createObjectURL(blob)
-const link = document.createElement('a')
-link.href = url
-link.download = filename
-link.click()
-URL.revokeObjectURL(url)
+import { downloadFile } from '@/utils/fileDownload';
+
+// Trigger download
+downloadFile(data, filename);
+```
+
+### CSV Parsing Pattern
+Use shared utility for consistency:
+```javascript
+import { parseCSV } from '@/utils/csvParser';
+
+// Parse CSV data
+const { headers, data } = parseCSV(csvText);
+this.tableHeaders = headers;
+this.tableData = data;
 ```
 
 ### Service Worker Updates
-Cache version must be updated when static assets change:
+Cache name automatically updated on each build by update-sw-cache.js:
 ```javascript
-const CACHE_NAME = 'slurm-tools-v1'  // Increment version on changes
+// Automatically generated on build:
+const CACHE_NAME = 'slurm-cache-2025-10-19T15-28-19'  // Timestamp-based
+```
+
+### Shared Utilities Pattern
+Extract common logic to src/utils/ for reuse:
+```javascript
+// BAD: Duplicate code in multiple components
+// GOOD: Shared utility in src/utils/
+import { downloadFile } from '@/utils/fileDownload';
+import { parseCSV } from '@/utils/csvParser';
 ```
 
 ---
@@ -279,4 +321,16 @@ const CACHE_NAME = 'slurm-tools-v1'  // Increment version on changes
 
 ---
 
-Last Updated: 2025-10-18
+### Recent Architecture Decisions
+- **2025-10-19**: Introduced shared utilities pattern
+  - Created src/utils/ directory for reusable functions
+  - Eliminated ~80 lines of duplicate code between AES components
+  - Standardized file download and CSV parsing across components
+
+- **2025-10-19**: Enhanced PWA offline functionality
+  - Automated service worker cache updates via build script
+  - Fixed CORS caching for CDN resources
+  - Improved error handling with user-friendly messages
+  - Added immediate service worker activation
+
+Last Updated: 2025-10-19

@@ -45,13 +45,28 @@ onmessage = function(e) {
 				aes.encrypt(file, passw).then((r) => {
 					postMessage(["ENCRYPT", r, fileName + ".aes"]);
 				}).catch((error) => {
-					postMessage(["ERROR", "Encryption failed: " + error.message]);
+					// AES library throws strings, not Error objects
+					const errorMessage = typeof error === 'string' ? error : (error.message || 'Unknown encryption error');
+					postMessage(["ERROR", errorMessage, "ENCRYPT"]);
 				});
 		} else {
 			aes.decrypt(file, passw).then((r) => {
 				postMessage(["DECRYPT", r, fileName.split('.').slice(0, -1).join('.')]);
 			}).catch((error) => {
-				postMessage(["ERROR", "Decryption failed: " + error.message]);
+				// AES library throws strings, not Error objects
+				const errorMessage = typeof error === 'string' ? error : (error.message || 'Unknown decryption error');
+
+				// Provide user-friendly messages for common errors
+				let friendlyMessage = errorMessage;
+				if (errorMessage.includes("Wrong password")) {
+					friendlyMessage = "Incorrect password. Please check your password and try again.";
+				} else if (errorMessage.includes("Bad HMAC") || errorMessage.includes("corrupted")) {
+					friendlyMessage = "File appears to be corrupted or tampered with.";
+				} else if (errorMessage.includes("not an AES Crypt")) {
+					friendlyMessage = "This file is not a valid AES encrypted file.";
+				}
+
+				postMessage(["ERROR", friendlyMessage, "DECRYPT"]);
 			});
 		}
 	}
