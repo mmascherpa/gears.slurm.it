@@ -58,6 +58,7 @@
               readonly
               bg-color="grey-lighten-4"
               placeholder="Base64 encoded text will appear here"
+              class="monospace-output"
               hide-details>
             </v-textarea>
           </v-col>
@@ -109,6 +110,15 @@
       </v-card-text>
     </v-card>
 
+    <!-- Success/Error Snackbar -->
+    <v-snackbar
+      v-model="snackbar"
+      :color="snackbarColor"
+      timeout="3000"
+      location="top">
+      {{ snackbarText }}
+    </v-snackbar>
+
   </div>
 </template>
 
@@ -120,10 +130,18 @@ export default {
       encodedText: '',
       isLoading: false,
       plainFile: [],
-      encodedFile: false
+      encodedFile: false,
+      snackbar: false,
+      snackbarText: '',
+      snackbarColor: 'success'
     };
   },
   methods: {
+    showSnackbar(text, color = 'success') {
+      this.snackbarText = text;
+      this.snackbarColor = color;
+      this.snackbar = true;
+    },
     /**
      * Encodes plain text to Base64 with debouncing to avoid excessive processing
      * @param {number} timeout - Debounce delay in milliseconds (default: 350ms)
@@ -147,9 +165,12 @@ export default {
      */
     copyToClipboard() {
       navigator.clipboard.writeText(this.encodedText)
+        .then(() => {
+          this.showSnackbar('✓ Copied to clipboard!', 'success');
+        })
         .catch(error => {
           console.error('Clipboard write failed:', error);
-          alert('Failed to copy to clipboard. Please copy manually.');
+          this.showSnackbar('Failed to copy. Please try again.', 'error');
         });
     },
     /**
@@ -160,10 +181,11 @@ export default {
         .then((clipboardText) => {
           this.plainText = clipboardText;
           this.updateEncodedText();
+          this.showSnackbar('✓ Pasted from clipboard!', 'success');
         })
         .catch(error => {
           console.error('Clipboard read failed:', error);
-          alert('Failed to read from clipboard. Please paste manually.');
+          this.showSnackbar('Failed to paste. Please try again.', 'error');
         });
     },
     /**
@@ -208,4 +230,21 @@ export default {
 };
 </script>
 
-<style></style>
+<style scoped>
+/* Monospace font for encoded output for better readability */
+.monospace-output :deep(textarea) {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+  line-height: 1.5;
+}
+
+/* Smooth transitions for buttons */
+.v-btn {
+  transition: all 0.2s ease;
+}
+
+.v-btn:hover {
+  transform: translateY(-1px);
+}
+</style>

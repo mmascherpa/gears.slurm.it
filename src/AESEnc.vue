@@ -165,6 +165,10 @@
             </v-card-text>
         </v-card>
 
+        <v-snackbar v-model="snackbar" :color="snackbarColor" timeout="3000" location="top">
+            {{ snackbarText }}
+        </v-snackbar>
+
     </div>
 </template>
 
@@ -182,6 +186,9 @@ export default {
             tableData: [],
             search: '',
             error: '',
+            snackbar: false,
+            snackbarText: '',
+            snackbarColor: 'success'
         };
     },
     computed: {
@@ -201,12 +208,26 @@ export default {
     },
     methods: {
         /**
+         * Shows a snackbar notification
+         * @param {string} text - Message to display
+         * @param {string} color - Snackbar color (success, error, warning, info)
+         */
+        showSnackbar(text, color = 'success') {
+            this.snackbarText = text;
+            this.snackbarColor = color;
+            this.snackbar = true;
+        },
+        /**
          * Pastes text from clipboard into the plainText field
          */
         pasteFromClipboard() {
             navigator.clipboard.readText()
                 .then((clipboardText) => {
                     this.plainText = clipboardText;
+                    this.showSnackbar('✓ Pasted from clipboard!', 'success');
+                })
+                .catch(() => {
+                    this.showSnackbar('Failed to paste. Please try again.', 'error');
                 });
         },
         /**
@@ -271,10 +292,12 @@ export default {
 
             if (action === "ERROR") {
                 this.error = data;
+                this.showSnackbar('Encryption failed. ' + data, 'error');
                 return;
             }
 
             this.downloadFile(data, fileName);
+            this.showSnackbar('✓ File encrypted successfully!', 'success');
             this.clearAll();
         },
         /**

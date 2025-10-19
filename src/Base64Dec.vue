@@ -25,6 +25,7 @@
               variant="outlined"
               rows="4"
               placeholder="Enter your Base64 encoded text here"
+              class="monospace-output"
               hide-details>
             </v-textarea>
           </v-col>
@@ -109,6 +110,15 @@
       </v-card-text>
     </v-card>
 
+    <!-- Success/Error Snackbar -->
+    <v-snackbar
+      v-model="snackbar"
+      :color="snackbarColor"
+      timeout="3000"
+      location="top">
+      {{ snackbarText }}
+    </v-snackbar>
+
   </div>
 </template>
 
@@ -120,10 +130,18 @@ export default {
       encodedText: '',
       isLoading: false,
       encodedFile: [],
-      plainFile: false
+      plainFile: false,
+      snackbar: false,
+      snackbarText: '',
+      snackbarColor: 'success'
     };
   },
   methods: {
+    showSnackbar(text, color = 'success') {
+      this.snackbarText = text;
+      this.snackbarColor = color;
+      this.snackbar = true;
+    },
     /**
      * Decodes Base64 text to plain text with debouncing
      * @param {number} timeout - Debounce delay in milliseconds (default: 350ms)
@@ -147,9 +165,12 @@ export default {
      */
     copyToClipboard() {
       navigator.clipboard.writeText(this.plainText)
+        .then(() => {
+          this.showSnackbar('✓ Copied to clipboard!', 'success');
+        })
         .catch(error => {
           console.error('Clipboard write failed:', error);
-          alert('Failed to copy to clipboard. Please copy manually.');
+          this.showSnackbar('Failed to copy. Please try again.', 'error');
         });
     },
     /**
@@ -160,10 +181,11 @@ export default {
         .then((clipboardText) => {
           this.encodedText = clipboardText;
           this.updatePlainText();
+          this.showSnackbar('✓ Pasted from clipboard!', 'success');
         })
         .catch(error => {
           console.error('Clipboard read failed:', error);
-          alert('Failed to read from clipboard. Please paste manually.');
+          this.showSnackbar('Failed to paste. Please try again.', 'error');
         });
     },
     /**

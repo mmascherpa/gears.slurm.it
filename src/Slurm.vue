@@ -15,7 +15,7 @@ const drawer = ref(false);
             <v-app-bar-title class="font-weight-bold">Slurm Tools</v-app-bar-title>
 
             <template v-slot:append>
-                <v-chip size="small" variant="tonal" color="success">
+                <v-chip size="small" variant="tonal" color="success" class="d-none d-sm-flex">
                     <v-icon start icon="mdi-shield-check"></v-icon>
                     Private & Offline
                 </v-chip>
@@ -75,7 +75,7 @@ const drawer = ref(false);
         </v-navigation-drawer>
 
         <v-main app>
-            <v-container fluid class="pa-4 pa-md-6">
+            <v-container fluid class="pa-4 pa-md-6 main-container">
                 <router-view v-slot="{ Component }">
                     <transition name="fade" mode="out-in">
                         <component :is="Component" />
@@ -95,9 +95,15 @@ const drawer = ref(false);
     border-right: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
 }
 
+/* Max width for better readability on large screens */
+.main-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
 /* Page transition */
 .fade-enter-active, .fade-leave-active {
-    transition: opacity 0.2s ease;
+    transition: opacity 0.25s ease;
 }
 
 .fade-enter-from, .fade-leave-to {

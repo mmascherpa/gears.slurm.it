@@ -1,0 +1,56 @@
+/* Global UX improvements for Slurm Tools */
+
+/* Monospace font for encoded/encrypted outputs */
+.monospace-output textarea,
+.monospace-output .v-field__input {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+  font-size: 0.9rem !important;
+  letter-spacing: 0.5px !important;
+  line-height: 1.5 !important;
+}
+
+/* Smooth button transitions */
+.v-btn {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.v-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.v-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Better card hover effects */
+.v-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Smooth loading indicator */
+.v-progress-circular {
+  transition: opacity 0.3s ease;
+}
+
+/* Better focus states for accessibility */
+.v-text-field:focus-within,
+.v-textarea:focus-within,
+.v-file-input:focus-within {
+  transform: translateY(-1px);
+}
+
+/* Fade-in animation for results */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}

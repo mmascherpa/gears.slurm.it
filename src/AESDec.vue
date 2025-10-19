@@ -134,6 +134,10 @@
             </v-card-text>
         </v-card>
 
+        <v-snackbar v-model="snackbar" :color="snackbarColor" timeout="3000" location="top">
+            {{ snackbarText }}
+        </v-snackbar>
+
     </div>
 </template>
 
@@ -149,7 +153,10 @@ export default {
             tableHeaders: [],
             tableData: [],
             error: '',
-            search: ''
+            search: '',
+            snackbar: false,
+            snackbarText: '',
+            snackbarColor: 'success'
         };
     },
     computed: {
@@ -165,6 +172,16 @@ export default {
         }
     },
     methods: {
+        /**
+         * Shows a snackbar notification
+         * @param {string} text - Message to display
+         * @param {string} color - Snackbar color (success, error, warning, info)
+         */
+        showSnackbar(text, color = 'success') {
+            this.snackbarText = text;
+            this.snackbarColor = color;
+            this.snackbar = true;
+        },
         clearAll() {
             this.clearOutputs();
             this.clearInputs();
@@ -193,6 +210,7 @@ export default {
 
             if (action === "ERROR") {
                 this.error = data;
+                this.showSnackbar('Decryption failed. ' + data, 'error');
                 return;
             }
 
@@ -203,6 +221,7 @@ export default {
             }
 
             this.downloadFile(data, fileName);
+            this.showSnackbar('✓ File decrypted successfully!', 'success');
             this.clearInputs();
         },
         decryptFile() {

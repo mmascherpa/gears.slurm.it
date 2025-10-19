@@ -1,4 +1,4 @@
-//import './assets/main.css'
+import './assets/global-styles.css'
 
 import { createApp } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
