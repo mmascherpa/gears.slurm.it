@@ -31,6 +31,10 @@
                             prepend-inner-icon="mdi-lock-open"
                             hide-details>
                         </v-text-field>
+                        <PasswordStrengthIndicator
+                            :password="password"
+                            :show-requirements="false"
+                            :show-feedback="false" />
                     </v-col>
                 </v-row>
             </v-card-text>
@@ -144,8 +148,12 @@
 <script>
 import { downloadFile } from '@/utils/fileDownload';
 import { parseCSV } from '@/utils/csvParser';
+import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator.vue';
 
 export default {
+    components: {
+        PasswordStrengthIndicator
+    },
     data() {
         return {
             password: '',
@@ -167,7 +175,6 @@ export default {
         },
         isFilePopulated() {
             return !!this.file && !!this.file[0];
-
         },
         isOutputPopulated() {
             return !!this.plainText || !!this.tableHeaders.length > 0 || !!this.tableData.length > 0;

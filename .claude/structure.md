@@ -3,9 +3,9 @@
 ## Overview
 Slurm Tools is a Progressive Web Application providing cryptographic and encoding utilities (Base64 encode/decode, AES encrypt/decrypt) that works offline. Built with Vue 3, Vuetify, and modern PWA capabilities, the application features a clean component-based architecture with Web Workers for CPU-intensive operations.
 
-**Last Updated**: 2025-10-19
-**Total Files**: 75 (cleaned up legacy components)
-**Total Lines of Code**: ~2,400 lines (added documentation and UX features)
+**Last Updated**: 2025-10-20
+**Total Files**: 77 (added password strength indicator)
+**Total Lines of Code**: ~2,700 lines (added password strength feature)
 
 ---
 
@@ -38,12 +38,15 @@ src/
 ├── Home.vue                # Landing page with tool grid (120 lines)
 ├── Base64Enc.vue           # Base64 encoder page (250 lines)
 ├── Base64Dec.vue           # Base64 decoder page (245 lines)
-├── AESEnc.vue              # AES encryption page (340 lines - refactored)
-├── AESDec.vue              # AES decryption page (250 lines - refactored)
+├── AESEnc.vue              # AES encryption page (340 lines - with password strength)
+├── AESDec.vue              # AES decryption page (250 lines - with password strength)
 ├── About.vue               # About page (comprehensive info)
-├── utils/                  # Shared utility functions (NEW)
+├── components/             # Reusable Vue components
+│   └── PasswordStrengthIndicator.vue  # Password strength meter (140 lines)
+├── utils/                  # Shared utility functions
 │   ├── fileDownload.js     # File download helper (19 lines)
-│   └── csvParser.js        # CSV parsing utilities (67 lines)
+│   ├── csvParser.js        # CSV parsing utilities (67 lines)
+│   └── passwordStrength.js # Password strength calculator (160 lines)
 └── assets/                 # Static assets and utilities
     ├── base.css            # Global CSS variables
     ├── global-styles.css   # Global UX styles
@@ -65,12 +68,14 @@ src/
 - **Home.vue** (120 lines) - Landing page with modernized tool cards in responsive grid
 - **Base64Enc.vue** (250 lines) - Text/file Base64 encoding with clipboard ops, snackbar feedback, monospace output
 - **Base64Dec.vue** (245 lines) - Text/file Base64 decoding with clipboard ops, snackbar feedback, monospace output
-- **AESEnc.vue** (340 lines) - Password-protected file encryption with Web Worker, CSV preview, improved error handling
-- **AESDec.vue** (250 lines) - Password-protected file decryption with CSV preview, improved error handling
+- **AESEnc.vue** (340 lines) - Password-protected file encryption with Web Worker, CSV preview, password strength indicator
+- **AESDec.vue** (250 lines) - Password-protected file decryption with CSV preview, password strength indicator
 - **About.vue** - Comprehensive about page with privacy and security information
 - **global-styles.css** - Global UX styles including monospace fonts, button animations, focus states
-- **utils/fileDownload.js** (NEW) - Shared file download utility
-- **utils/csvParser.js** (NEW) - Shared CSV parsing with input validation
+- **components/PasswordStrengthIndicator.vue** (140 lines) - Reusable password strength meter component
+- **utils/fileDownload.js** - Shared file download utility
+- **utils/csvParser.js** - Shared CSV parsing with input validation
+- **utils/passwordStrength.js** (160 lines) - Password strength calculation algorithm
 
 ### Public Directory (`/public/`)
 ```
@@ -460,6 +465,16 @@ AESEnc.vue/AESDec.vue
 - Handles line ending normalization and empty row filtering
 - Used by both AESEnc.vue and AESDec.vue
 
+**passwordStrength.js** (160 lines):
+- `calculatePasswordStrength(password)` - Evaluates password strength with scoring algorithm
+- `getRequirements(password, charChecks)` - Returns requirements checklist with met/unmet status
+- `isPasswordSecure(password)` - Simple boolean check for minimum security requirements
+- Scores based on length (2 points per char, max 40) and character variety (max 60)
+- Monotonically increasing scores (adding characters never decreases score)
+- Detects patterns (sequential, repeating) without score penalties
+- Very Strong requires all requirements: 12+ chars, upper, lower, numbers, special chars
+- Used by PasswordStrengthIndicator.vue component
+
 ### Buffer Utilities
 **File**: [src/assets/util/util.js](src/assets/util/util.js)
 
@@ -591,6 +606,16 @@ AESEnc.vue/AESDec.vue
 ## Notes
 
 ### Recent Structural Changes
+- **2025-10-20**: Password Strength Indicator (Phase 4, Task #1)
+  - Created src/utils/passwordStrength.js with monotonically increasing scoring algorithm
+  - Created src/components/PasswordStrengthIndicator.vue reusable component
+  - Integrated password strength indicator into AESEnc.vue and AESDec.vue
+  - Implemented visual progress bar with color-coded strength levels (Weak/Medium/Strong/Very Strong)
+  - Added requirements checklist with real-time validation feedback
+  - Very Strong passwords require all security features (12+ chars, upper, lower, numbers, special chars)
+  - Progress bar capped at 90% for Strong, 100% only for Very Strong
+  - Applied code review fixes: eliminated regex duplication, removed dead code, improved performance
+
 - **2025-10-19**: Offline Functionality & Error Message Enhancements
   - Fixed service worker to cache Vite-generated assets with hashed filenames
   - Created automated build script (update-sw-cache.js) to update SW cache list
@@ -647,4 +672,4 @@ AESEnc.vue/AESDec.vue
 - File sizes grow significantly (>200 line change)
 - Organizational patterns evolve
 
-**Last Updated**: 2025-10-19 (Updated for offline functionality enhancements and code refactoring)
+**Last Updated**: 2025-10-20 (Updated for password strength indicator feature)
