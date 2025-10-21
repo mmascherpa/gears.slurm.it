@@ -1,11 +1,11 @@
 # Slurm-SPA Code Structure
 
-## Overview
-Slurm Tools is a Progressive Web Application providing cryptographic and encoding utilities (Base64 encode/decode, AES encrypt/decrypt) that works offline. Built with Vue 3, Vuetify, and modern PWA capabilities, the application features a clean component-based architecture with Web Workers for CPU-intensive operations.
+## Purpose
+This file documents the file organization, component responsibilities, and architectural layers of the Slurm Tools codebase.
 
 **Last Updated**: 2025-10-20
-**Total Files**: 77 (added password strength indicator)
-**Total Lines of Code**: ~2,700 lines (added password strength feature)
+**Total Files**: 77
+**Total Lines of Code**: ~2,700 lines
 
 ---
 

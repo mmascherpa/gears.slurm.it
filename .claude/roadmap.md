@@ -1,13 +1,13 @@
 # Slurm Tools Enhancement Roadmap
 
-## Overview
-Slurm Tools is a privacy-focused Progressive Web Application providing client-side cryptographic utilities (Base64 encoding/decoding and AES encryption/decryption) with full offline support. This roadmap outlines potential improvements to enhance functionality, code quality, user experience, and maintainability.
+## Purpose
+This file tracks feature planning, completed work, and future development priorities for the Slurm Tools project.
 
 ---
 
 ## Current State
 
-### Existing Features
+### Existing Features (Production)
 - ✅ **Base64 Encoder** - Text and file encoding with clipboard operations
 - ✅ **Base64 Decoder** - Text and file decoding with clipboard operations
 - ✅ **AES File Encryption** - Password-protected encryption with CSV preview
@@ -404,24 +404,6 @@ Slurm Tools is a privacy-focused Progressive Web Application providing client-si
 - Phase 7 (New Features): 0% (0/6 features completed)
 - Phase 8 (TypeScript): 0% (0/3 features completed)
 - Phase 9 (Accessibility/i18n): 0% (0/2 features completed)
-
----
-
-## Architecture Decisions
-
-### Current Approach
-- **Client-side only**: All operations in browser, no backend
-- **Progressive Web App**: Service Worker for offline functionality
-- **Component-based**: Vue 3 SFC with clear separation of concerns
-- **Worker-based parallelism**: CPU-intensive crypto on background threads
-- **Material Design**: Vuetify for consistent, professional UI
-
-### Design Principles
-- **Privacy First** - Never send user data to servers
-- **Offline First** - Full functionality without internet
-- **Progressive Enhancement** - Core features work, PWA enhances
-- **Performance Conscious** - Non-blocking crypto operations
-- **Mobile Responsive** - Adapts to all screen sizes
 
 ---
 

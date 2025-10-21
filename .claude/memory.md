@@ -1,54 +1,50 @@
 # Slurm Tools Project Memory
 
-## Project Overview
-Slurm Tools is a Progressive Web Application (PWA) providing browser-based cryptographic and encoding utilities. The toolkit offers Base64 encoding/decoding and AES file encryption/decryption, with full offline functionality via Service Worker. Built for privacy-conscious users who need client-side encryption without server uploads.
+## Purpose
+This file contains code style preferences, coding patterns, and development practices for the Slurm Tools project.
 
 ---
 
 ## Code Style Preferences
 
 ### JavaScript/Vue 3
-- Use ES6+ syntax (arrow functions, destructuring, template literals)
-- Prefer `const` over `let`, avoid `var`
-- Component methods use regular function syntax (not arrow functions) to preserve `this` context
+- ES6+ syntax (arrow functions, destructuring, template literals)
+- `const` over `let`, avoid `var`
+- Component methods use regular function syntax (preserves `this` context)
 - Async operations use async/await pattern
 - 350ms debounce for real-time encoding operations
 
-**Note**: Follows global code style preferences from `~/.claude/memory.md` unless noted otherwise below.
+**Note**: Follows global code style preferences from `~/.claude/memory.md` unless noted otherwise.
 
 ### Project-Specific Style Overrides
-- Vue components use Composition API style where appropriate
 - Vuetify components preferred over custom HTML/CSS
 - Material Design Icons (`mdi-` prefix) for all icons
 - Hash-based routing (`#/`) for SPA compatibility
 
----
-
-## Comments
-- Minimal comments - prefer self-documenting code with clear variable/function names
-- Add comments for complex crypto operations or non-obvious browser API usage
-- Use JSDoc-style comments for public API methods
-- Document workarounds for browser compatibility issues
-
----
-
-## Formatting
+### Formatting
 - 2-space indentation (Vue/JavaScript standard)
 - No specific line length limit (reasonable discretion)
 - Formatting tools: Vite defaults, no explicit Prettier/ESLint config
 - Single quotes for strings in JavaScript, no strict enforcement
 
+### Comments
+- Minimal comments - prefer self-documenting code with clear variable/function names
+- JSDoc-style comments for public API methods
+- Comment complex crypto operations and non-obvious browser API usage
+- Document workarounds for browser compatibility issues
+
 ---
 
-## Error Handling
-- Try-catch blocks around file I/O operations
-- Web Worker errors caught and sent via postMessage with context
-- User-friendly error messages displayed in Vuetify v-alert components
-- Console.error for debugging, v-alert for user feedback
-- Graceful degradation for unsupported browser features
-- AES library throws strings (not Error objects), handle both types
+## Error Handling Patterns
 
-**Error Display Pattern**:
+### General Error Handling
+- Try-catch blocks around file I/O operations
+- User-friendly error messages displayed in Vuetify v-alert components
+- Console.error for debugging (remove before commit)
+- Graceful degradation for unsupported browser features
+- **AES library throws strings (not Error objects)** - handle both types
+
+### Error Display Pattern
 ```javascript
 try {
   // risky operation
@@ -60,42 +56,95 @@ try {
 }
 ```
 
-**Worker Error Handling Pattern**:
+### Worker Error Handling Pattern
 ```javascript
 .catch((error) => {
   const errorMessage = typeof error === 'string' ? error : (error.message || 'Unknown error');
+
   // Transform technical errors to user-friendly messages
   let friendlyMessage = errorMessage;
   if (errorMessage.includes("Wrong password")) {
     friendlyMessage = "Incorrect password. Please check your password and try again.";
+  } else if (errorMessage.includes("Bad HMAC")) {
+    friendlyMessage = "File appears to be corrupted or tampered with.";
   }
+
   postMessage(["ERROR", friendlyMessage, "DECRYPT"]);
 });
 ```
 
 ---
 
-## Project Architecture
+## Critical Coding Patterns
 
-### Design Principles
-- **Privacy First**: All crypto operations client-side, no server uploads
-- **Offline First**: Full functionality without internet via Service Worker
-- **Progressive Enhancement**: Core features work, PWA features enhance experience
-- **Performance Conscious**: CPU-intensive tasks on Web Workers to avoid UI blocking
-- **Mobile Responsive**: Material Design with breakpoints for all screen sizes
+### Worker Communication Protocol
+Always use structured array messages:
 
-### Architectural Patterns
-- **Component-Based Architecture**: Vue 3 single-file components with clear responsibilities
-- **Worker-Based Parallelism**: Web Workers for encryption/decryption to keep UI responsive
-- **Cache-First PWA**: Service Worker caches assets for offline usage
-- **Hash-Based Routing**: Client-side routing without server-side configuration
+```javascript
+// Component → Worker
+worker.postMessage(["ENCRYPT", fileData, password, fileName])
+worker.postMessage(["DECRYPT", fileData, password, fileName])
 
-### Key Constraints
-- Must work entirely client-side (no backend)
-- Must function offline after initial load
-- Must handle large files without blocking UI
-- Must support modern browsers (Chrome, Firefox, Safari, Edge)
-- Crypto libraries loaded from CDN to reduce bundle size
+// Worker → Component
+self.postMessage(["ENCRYPT", encryptedData, outputFileName])
+self.postMessage(["DECRYPT", decryptedData, outputFileName])
+self.postMessage(["ERROR", errorMessage, operationType]) // operationType: "ENCRYPT" or "DECRYPT"
+```
+
+### Shared Utilities Pattern
+Extract common logic to `src/utils/` for reuse:
+
+```javascript
+// GOOD: Use shared utilities
+import { downloadFile } from '@/utils/fileDownload';
+import { parseCSV } from '@/utils/csvParser';
+import { calculatePasswordStrength } from '@/utils/passwordStrength';
+
+// BAD: Duplicate code in multiple components
+```
+
+### File Download Pattern
+```javascript
+import { downloadFile } from '@/utils/fileDownload';
+
+// Trigger download
+downloadFile(data, filename);
+```
+
+### CSV Parsing Pattern
+```javascript
+import { parseCSV } from '@/utils/csvParser';
+
+// Parse CSV data
+const { headers, data } = parseCSV(csvText);
+this.tableHeaders = headers;
+this.tableData = data;
+```
+
+### Password Strength Integration
+```vue
+<template>
+  <v-text-field v-model="password" type="password" />
+  <PasswordStrengthIndicator
+    :password="password"
+    :show-requirements="true"
+    :show-feedback="true" />
+</template>
+
+<script>
+import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator.vue';
+import { calculatePasswordStrength } from '@/utils/passwordStrength';
+</script>
+```
+
+### Service Worker Updates
+Cache name automatically updated on each build by `scripts/update-sw-cache.js`:
+
+```javascript
+// Auto-generated by update-sw-cache.js - DO NOT EDIT MANUALLY:
+const CACHE_NAME = 'slurm-cache-2025-10-19T15-28-19'  // Timestamp-based
+const urlsToCache = [/* auto-populated asset list */]
+```
 
 ---
 
@@ -114,30 +163,43 @@ try {
 - **Sharp**: v0.33.2 (dev) - Image processing for icon generation
 - **@mdi/font**: v7.4.47 - Material Design Icons
 
-### APIs / External Services
+### Browser APIs Used
 - **Web Crypto API**: Used in jsAesCrypt for cryptographic operations
 - **FileReader API**: Reading files in browser without upload
 - **Clipboard API**: Copy/paste functionality
 - **Service Worker API**: Offline caching and PWA functionality
 - **Web Worker API**: Background thread for crypto operations
-- **CryptoJS CDN**: https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js
 
 ---
 
-## Code Structure
+## Development Workflow
 
-**See [structure.md](.claude/structure.md) for detailed file organization and class responsibilities.**
+### Commands
+```bash
+npm install                # Install dependencies
+npm run dev                # Start Vite dev server (port 5173)
+npm run build              # Production build to ../slurm.it/
+npm run preview            # Preview production build locally
+npm run generate-icons     # Generate PNG icons from SVG
+```
 
-### High-Level Organization
-- `/src/` - Vue components, application entry point, theme configuration
-- `/public/` - Static files (Service Worker, Web Worker, manifest, icons, crypto libs)
-- `/scripts/` - Build utilities (icon generation)
-- `/.claude/` - Project documentation (memory, structure, roadmap)
+### Debugging Tools
+- **Vue DevTools**: Browser extension for component inspection
+- **Console logging**: Use console.error for debugging, remove before commit
+- **Network tab**: Monitor Service Worker caching behavior
+- **Application tab**: Inspect Service Worker, manifest, cache storage
+- **Sources tab**: Debug Web Worker and Service Worker code
 
-### Entry Points
-- **index.html** → **main.js** - Main application entry
-- **public/sw.js** - Service Worker (PWA caching)
-- **public/worker.js** - Web Worker (crypto operations)
+### Build Process
+```bash
+npm run build
+```
+- Vite builds and minifies assets
+- **Automated post-build**: `scripts/update-sw-cache.js` runs automatically
+  - Scans `dist/` for generated asset filenames
+  - Updates service worker cache list with correct hashed filenames
+  - Updates cache name with timestamp for versioning
+- Output directory: `../slurm.it/` (external folder)
 
 ---
 
@@ -158,25 +220,10 @@ try {
 - Invalid file format handling
 - CSV parsing with different delimiters and encodings
 
----
-
-## Development Workflow
-
-### Local Development
-```bash
-npm install          # Install dependencies
-npm run dev          # Start Vite dev server (usually port 5173)
-npm run build        # Production build to ../slurm.it/
-npm run preview      # Preview production build locally
-npm run generate-icons  # Generate PNG icons from SVG
-```
-
-### Debugging
-- **Vue DevTools**: Browser extension for component inspection
-- **Console logging**: Use console.error for debugging, remove before commit
-- **Network tab**: Monitor Service Worker caching behavior
-- **Application tab**: Inspect Service Worker, manifest, cache storage
-- **Sources tab**: Debug Web Worker and Service Worker code
+### Offline Testing
+1. Chrome DevTools → Network tab → Check "Offline"
+2. Reload page
+3. Verify all features work (especially AES encryption with CryptoJS from cache)
 
 ---
 
@@ -195,7 +242,30 @@ npm run generate-icons  # Generate PNG icons from SVG
 - **CryptoJS from CDN**: Reduce main bundle size, leverage browser cache
 - **Service Worker caching**: Cache-first strategy for static assets
 - **Code splitting**: Vite automatically splits vendor chunks
-- **Lazy loading**: Router uses hash-based navigation with component lazy load
+
+---
+
+## Design Principles
+
+### Core Principles
+1. **Privacy First**: All crypto operations client-side, no server uploads
+2. **Offline First**: Full functionality without internet via Service Worker
+3. **Progressive Enhancement**: Core features work, PWA features enhance experience
+4. **Performance Conscious**: CPU-intensive tasks on Web Workers to avoid UI blocking
+5. **Mobile Responsive**: Material Design with breakpoints for all screen sizes
+
+### Architectural Patterns
+- **Component-Based Architecture**: Vue 3 single-file components with clear responsibilities
+- **Worker-Based Parallelism**: Web Workers for encryption/decryption to keep UI responsive
+- **Cache-First PWA**: Service Worker caches assets for offline usage
+- **Hash-Based Routing**: Client-side routing without server-side configuration
+
+### Key Constraints
+- Must work entirely client-side (no backend)
+- Must function offline after initial load
+- Must handle large files without blocking UI
+- Must support modern browsers (Chrome, Firefox, Safari, Edge)
+- Crypto libraries loaded from CDN to reduce bundle size
 
 ---
 
@@ -209,47 +279,8 @@ npm run generate-icons  # Generate PNG icons from SVG
 
 ---
 
-## Deployment
+## Known Limitations
 
-### Build Process
-```bash
-npm run build
-```
-- Vite builds and minifies assets
-- **Automated post-build**: update-sw-cache.js runs automatically
-  - Scans dist/ for generated asset filenames
-  - Updates service worker cache list with correct hashed filenames
-  - Updates cache name with timestamp for versioning
-- Output directory: `../slurm.it/` (external folder)
-- Service Worker and Web Worker copied to output
-- Hashed filenames for cache busting
-- Minified JS/CSS bundles
-
-### Build Configuration
-- **Environment variables**: None currently (no backend)
-- **Build artifacts**: index.html, /assets/, /libs/, sw.js (auto-updated), worker.js, manifest.json, /icons/
-- **Build script**: package.json includes post-build automation
-  - `vite build && node scripts/update-sw-cache.js`
-
-### Hosting
-- **Current deployment**: Built to `../slurm.it/` directory
-- **Hosting requirements**: Static file hosting (no server-side processing)
-- **Suggested platforms**: GitHub Pages, Netlify, Vercel, any static host
-- **URLs**: No production URL in code currently
-
----
-
-## Current Phase
-
-**Focus**: Stabilization and UI refinement
-
-### Active Goals
-- Improve responsive layout for small screens
-- Refine data table display for CSV previews
-- Optimize PWA caching strategy
-- Bug fixes and edge case handling
-
-### Known Limitations
 - No automated testing infrastructure
 - No TypeScript type safety
 - No formal state management (fine for current scope)
@@ -258,79 +289,36 @@ npm run build
 
 ---
 
-## Project-Specific Guidelines
+## Recent Architecture Decisions
 
-### Worker Communication Pattern
-Always use structured messages with array format:
-```javascript
-// Component to Worker
-worker.postMessage(["ENCRYPT", fileData, password, fileName])
-worker.postMessage(["DECRYPT", fileData, password, fileName])
+### 2025-10-20: Password Strength Indicator
+- Created `src/utils/passwordStrength.js` with monotonically increasing scoring algorithm
+- Created `src/components/PasswordStrengthIndicator.vue` reusable component
+- Integrated into AESEnc.vue and AESDec.vue
+- Applied code review fixes: eliminated regex duplication, improved performance 2x
 
-// Worker to Component
-self.postMessage(["ENCRYPT", encryptedData, outputFileName])
-self.postMessage(["DECRYPT", decryptedData, outputFileName])
-self.postMessage(["ERROR", errorMessage, operationType]) // operationType: "ENCRYPT" or "DECRYPT"
-```
+### 2025-10-19: Shared Utilities Pattern
+- Created `src/utils/` directory for reusable functions
+- Eliminated ~80 lines of duplicate code between AES components
+- Standardized file download and CSV parsing across components
 
-### File Download Pattern
-Use shared utility for consistency:
-```javascript
-import { downloadFile } from '@/utils/fileDownload';
-
-// Trigger download
-downloadFile(data, filename);
-```
-
-### CSV Parsing Pattern
-Use shared utility for consistency:
-```javascript
-import { parseCSV } from '@/utils/csvParser';
-
-// Parse CSV data
-const { headers, data } = parseCSV(csvText);
-this.tableHeaders = headers;
-this.tableData = data;
-```
-
-### Service Worker Updates
-Cache name automatically updated on each build by update-sw-cache.js:
-```javascript
-// Automatically generated on build:
-const CACHE_NAME = 'slurm-cache-2025-10-19T15-28-19'  // Timestamp-based
-```
-
-### Shared Utilities Pattern
-Extract common logic to src/utils/ for reuse:
-```javascript
-// BAD: Duplicate code in multiple components
-// GOOD: Shared utility in src/utils/
-import { downloadFile } from '@/utils/fileDownload';
-import { parseCSV } from '@/utils/csvParser';
-```
+### 2025-10-19: PWA Offline Functionality
+- Automated service worker cache updates via build script
+- Fixed CORS caching for CDN resources
+- Improved error handling with user-friendly messages
+- Added immediate service worker activation
 
 ---
 
 ## References
-- [Roadmap](.claude/roadmap.md) - Feature planning and progress
-- [Structure](.claude/structure.md) - Detailed code organization
-- [Global Preferences](~/.claude/memory.md) - Global code style preferences
+
+- [CLAUDE.md](../CLAUDE.md) - Quick start guide for Claude Code instances
+- [structure.md](structure.md) - Detailed code organization
+- [roadmap.md](roadmap.md) - Feature planning and progress
 - [Vue 3 Docs](https://vuejs.org/)
 - [Vuetify Docs](https://vuetifyjs.com/)
 - [CryptoJS Docs](https://cryptojs.gitbook.io/)
 
 ---
 
-### Recent Architecture Decisions
-- **2025-10-19**: Introduced shared utilities pattern
-  - Created src/utils/ directory for reusable functions
-  - Eliminated ~80 lines of duplicate code between AES components
-  - Standardized file download and CSV parsing across components
-
-- **2025-10-19**: Enhanced PWA offline functionality
-  - Automated service worker cache updates via build script
-  - Fixed CORS caching for CDN resources
-  - Improved error handling with user-friendly messages
-  - Added immediate service worker activation
-
-Last Updated: 2025-10-19
+**Last Updated**: 2025-10-20
