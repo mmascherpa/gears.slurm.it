@@ -1,7 +1,45 @@
 <script setup>
 import { ref } from 'vue';
+import { useTheme } from 'vuetify';
+import { THEME_MODES } from './theme.js';
 
 const drawer = ref(false);
+const theme = useTheme();
+
+// Theme management
+const STORAGE_KEY = 'slurm-theme-preference';
+
+/**
+ * Get saved theme from localStorage or default to 'default'
+ * Falls back to default theme if localStorage is unavailable
+ */
+const getSavedTheme = () => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved && Object.values(THEME_MODES).includes(saved) ? saved : THEME_MODES.DEFAULT;
+  } catch (error) {
+    console.warn('Failed to read theme preference from localStorage:', error);
+    return THEME_MODES.DEFAULT;
+  }
+};
+
+/**
+ * Set theme and persist to localStorage
+ * @param {string} themeName - One of THEME_MODES values
+ */
+const setTheme = (themeName) => {
+  theme.global.name.value = themeName;
+
+  try {
+    localStorage.setItem(STORAGE_KEY, themeName);
+  } catch (error) {
+    console.warn('Failed to save theme preference to localStorage:', error);
+    // Theme still works, just won't persist across sessions
+  }
+};
+
+// Initialize theme immediately (before component renders)
+theme.global.name.value = getSavedTheme();
 </script>
 
 <template>
@@ -15,6 +53,45 @@ const drawer = ref(false);
             <v-app-bar-title class="font-weight-bold">Slurm Tools</v-app-bar-title>
 
             <template v-slot:append>
+                <!-- Theme Toggle Buttons -->
+                <v-btn-toggle
+                    mandatory
+                    density="compact"
+                    class="mr-2 theme-toggle"
+                    :model-value="theme.global.name.value"
+                    @update:model-value="setTheme"
+                >
+                    <v-btn
+                        :value="THEME_MODES.DEFAULT"
+                        size="small"
+                        :variant="theme.global.name.value === THEME_MODES.DEFAULT ? 'flat' : 'text'"
+                        class="square-btn"
+                    >
+                        <v-icon>mdi-white-balance-sunny</v-icon>
+                        <v-tooltip activator="parent" location="bottom">Default Theme</v-tooltip>
+                    </v-btn>
+
+                    <v-btn
+                        :value="THEME_MODES.DARK"
+                        size="small"
+                        :variant="theme.global.name.value === THEME_MODES.DARK ? 'flat' : 'text'"
+                        class="square-btn"
+                    >
+                        <v-icon>mdi-moon-waning-crescent</v-icon>
+                        <v-tooltip activator="parent" location="bottom">Dark Mode</v-tooltip>
+                    </v-btn>
+
+                    <v-btn
+                        :value="THEME_MODES.CRAZY"
+                        size="small"
+                        :variant="theme.global.name.value === THEME_MODES.CRAZY ? 'flat' : 'text'"
+                        class="square-btn"
+                    >
+                        <v-icon>mdi-auto-fix</v-icon>
+                        <v-tooltip activator="parent" location="bottom">Slurm Mode</v-tooltip>
+                    </v-btn>
+                </v-btn-toggle>
+
                 <v-chip size="small" variant="tonal" color="success" class="d-none d-sm-flex">
                     <v-icon start icon="mdi-shield-check"></v-icon>
                     Private & Offline
@@ -99,6 +176,35 @@ const drawer = ref(false);
 .main-container {
     max-width: 1400px;
     margin: 0 auto;
+}
+
+/* Theme toggle buttons */
+.theme-toggle {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.theme-toggle :deep(.v-btn) {
+    color: rgba(255, 255, 255, 0.9);
+    transition: all 0.2s ease;
+}
+
+.theme-toggle :deep(.v-btn.square-btn) {
+    border-radius: 0;
+    min-width: 36px;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+}
+
+.theme-toggle :deep(.v-btn--variant-flat) {
+    background-color: rgba(255, 255, 255, 0.3);
+    color: white;
+}
+
+.theme-toggle :deep(.v-btn:hover) {
+    background-color: rgba(255, 255, 255, 0.15);
 }
 
 /* Page transition */

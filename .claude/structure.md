@@ -3,9 +3,9 @@
 ## Purpose
 This file documents the file organization, component responsibilities, and architectural layers of the Slurm Tools codebase.
 
-**Last Updated**: 2025-10-20
+**Last Updated**: 2025-10-21
 **Total Files**: 77
-**Total Lines of Code**: ~2,700 lines
+**Total Lines of Code**: ~2,750 lines
 
 ---
 
@@ -33,8 +33,8 @@ slurm-spa/
 ```
 src/
 ├── main.js                  # Application entry point (66 lines)
-├── theme.js                 # Vuetify theme with color palette (85 lines)
-├── Slurm.vue               # Root layout component (110 lines)
+├── theme.js                 # Vuetify theme system with 3 themes (172 lines)
+├── Slurm.vue               # Root layout component with theme toggle (145 lines)
 ├── Home.vue                # Landing page with tool grid (120 lines)
 ├── Base64Enc.vue           # Base64 encoder page (250 lines)
 ├── Base64Dec.vue           # Base64 decoder page (245 lines)
@@ -63,8 +63,8 @@ src/
 
 **Key Files**:
 - **main.js** (66 lines) - Application initialization, router setup, Vuetify configuration, Service Worker registration
-- **theme.js** (85 lines) - Custom Vuetify theme with integrated color palette (sage, coffee, royal blue, deep blue)
-- **Slurm.vue** (110 lines) - Root layout with gradient app bar, navigation drawer, and responsive badge
+- **theme.js** (172 lines) - Theme system with 3 modes (Default, Dark, Slurm) and shared CSS variables
+- **Slurm.vue** (145 lines) - Root layout with gradient app bar, theme toggle buttons, navigation drawer, localStorage persistence
 - **Home.vue** (120 lines) - Landing page with modernized tool cards in responsive grid
 - **Base64Enc.vue** (250 lines) - Text/file Base64 encoding with clipboard ops, snackbar feedback, monospace output
 - **Base64Dec.vue** (245 lines) - Text/file Base64 decoding with clipboard ops, snackbar feedback, monospace output

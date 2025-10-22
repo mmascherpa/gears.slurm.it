@@ -146,6 +146,48 @@ const CACHE_NAME = 'slurm-cache-2025-10-19T15-28-19'  // Timestamp-based
 const urlsToCache = [/* auto-populated asset list */]
 ```
 
+### Theme System Pattern
+Theme management with localStorage persistence:
+
+```javascript
+// Import theme modes
+import { useTheme } from 'vuetify';
+import { THEME_MODES } from './theme.js';
+
+const theme = useTheme();
+
+// Get saved theme with error handling
+const getSavedTheme = () => {
+  try {
+    const saved = localStorage.getItem('slurm-theme-preference');
+    return saved && Object.values(THEME_MODES).includes(saved) ? saved : THEME_MODES.DEFAULT;
+  } catch (error) {
+    console.warn('Failed to read theme preference:', error);
+    return THEME_MODES.DEFAULT;
+  }
+};
+
+// Set theme with localStorage persistence
+const setTheme = (themeName) => {
+  theme.global.name.value = themeName;
+  try {
+    localStorage.setItem('slurm-theme-preference', themeName);
+  } catch (error) {
+    console.warn('Failed to save theme preference:', error);
+  }
+};
+
+// Initialize immediately (before component renders to prevent flash)
+theme.global.name.value = getSavedTheme();
+```
+
+**Theme Modes**:
+- `THEME_MODES.DEFAULT` - Light theme with sage/coffee/royal blue palette
+- `THEME_MODES.DARK` - Dark mode with Material Design dark colors
+- `THEME_MODES.CRAZY` - "Slurm Mode" with bright cyan background (original palette)
+
+**localStorage Key**: `slurm-theme-preference`
+
 ---
 
 ## Technology Stack

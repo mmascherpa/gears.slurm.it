@@ -40,7 +40,7 @@ import * as directives from 'vuetify/directives'
 import { md2 } from 'vuetify/blueprints'
 import '@mdi/font/css/materialdesignicons.css'
 import { aliases, mdi } from 'vuetify/iconsets/mdi'
-import {slurmTheme} from './theme.js'
+import { themes } from './theme.js'
 
 const vuetify = createVuetify({
   components,
@@ -54,10 +54,8 @@ const vuetify = createVuetify({
     },
   },
   theme: {
-    defaultTheme: 'slurmTheme',
-    themes: {
-      slurmTheme,
-    },
+    defaultTheme: 'default',
+    themes: themes,
   }
 })
 
