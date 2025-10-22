@@ -9,7 +9,7 @@ export default defineConfig({
     vue(),
   ],
   build: {
-    outDir: '../slurm.it/', // directory to output build files
+    outDir: 'deploy/', // directory to output build files
   },
   resolve: {
     alias: {
