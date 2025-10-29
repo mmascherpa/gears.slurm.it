@@ -3,9 +3,9 @@
 ## Purpose
 This file documents the file organization, component responsibilities, and architectural layers of the Slurm Tools codebase.
 
-**Last Updated**: 2025-10-21
-**Total Files**: 77
-**Total Lines of Code**: ~2,750 lines
+**Last Updated**: 2025-10-28
+**Total Files**: 79
+**Total Lines of Code**: ~3,157 lines
 
 ---
 
@@ -32,21 +32,23 @@ slurm-spa/
 ### Source Directory (`/src/`)
 ```
 src/
-├── main.js                  # Application entry point (66 lines)
+├── main.js                  # Application entry point (68 lines)
 ├── theme.js                 # Vuetify theme system with 3 themes (172 lines)
-├── Slurm.vue               # Root layout component with theme toggle (145 lines)
-├── Home.vue                # Landing page with tool grid (120 lines)
+├── Slurm.vue               # Root layout component with theme toggle (151 lines)
+├── Home.vue                # Landing page with tool grid (127 lines)
 ├── Base64Enc.vue           # Base64 encoder page (250 lines)
 ├── Base64Dec.vue           # Base64 decoder page (245 lines)
 ├── AESEnc.vue              # AES encryption page (340 lines - with password strength)
 ├── AESDec.vue              # AES decryption page (250 lines - with password strength)
-├── About.vue               # About page (comprehensive info)
+├── PasswordGenerator.vue   # Password generator tool (280 lines)
+├── About.vue               # About page (178 lines)
 ├── components/             # Reusable Vue components
 │   └── PasswordStrengthIndicator.vue  # Password strength meter (140 lines)
 ├── utils/                  # Shared utility functions
 │   ├── fileDownload.js     # File download helper (19 lines)
 │   ├── csvParser.js        # CSV parsing utilities (67 lines)
-│   └── passwordStrength.js # Password strength calculator (160 lines)
+│   ├── passwordStrength.js # Password strength calculator (160 lines)
+│   └── passwordGenerator.js # Cryptographic password generator (127 lines)
 └── assets/                 # Static assets and utilities
     ├── base.css            # Global CSS variables
     ├── global-styles.css   # Global UX styles
@@ -62,20 +64,22 @@ src/
 **Purpose**: Contains all Vue.js source code, components, and application logic.
 
 **Key Files**:
-- **main.js** (66 lines) - Application initialization, router setup, Vuetify configuration, Service Worker registration
+- **main.js** (68 lines) - Application initialization, router setup, Vuetify configuration, Service Worker registration
 - **theme.js** (172 lines) - Theme system with 3 modes (Default, Dark, Slurm) and shared CSS variables
-- **Slurm.vue** (145 lines) - Root layout with gradient app bar, theme toggle buttons, navigation drawer, localStorage persistence
-- **Home.vue** (120 lines) - Landing page with modernized tool cards in responsive grid
+- **Slurm.vue** (151 lines) - Root layout with gradient app bar, theme toggle buttons, navigation drawer, localStorage persistence
+- **Home.vue** (127 lines) - Landing page with modernized tool cards in responsive grid (6 tools)
 - **Base64Enc.vue** (250 lines) - Text/file Base64 encoding with clipboard ops, snackbar feedback, monospace output
 - **Base64Dec.vue** (245 lines) - Text/file Base64 decoding with clipboard ops, snackbar feedback, monospace output
 - **AESEnc.vue** (340 lines) - Password-protected file encryption with Web Worker, CSV preview, password strength indicator
 - **AESDec.vue** (250 lines) - Password-protected file decryption with CSV preview, password strength indicator
-- **About.vue** - Comprehensive about page with privacy and security information
+- **PasswordGenerator.vue** (280 lines) - Cryptographically secure password generator with auto-generation, customizable options
+- **About.vue** (178 lines) - Comprehensive about page with privacy, security information, and tool listing
 - **global-styles.css** - Global UX styles including monospace fonts, button animations, focus states
 - **components/PasswordStrengthIndicator.vue** (140 lines) - Reusable password strength meter component
 - **utils/fileDownload.js** - Shared file download utility
 - **utils/csvParser.js** - Shared CSV parsing with input validation
 - **utils/passwordStrength.js** (160 lines) - Password strength calculation algorithm
+- **utils/passwordGenerator.js** (127 lines) - Cryptographically secure random password generation using Web Crypto API
 
 ### Public Directory (`/public/`)
 ```
@@ -294,6 +298,38 @@ scripts/
 
 ---
 
+### PasswordGenerator.vue (Password Generator)
+**File**: [src/PasswordGenerator.vue](src/PasswordGenerator.vue)
+**Lines**: ~280
+**Purpose**: Generate cryptographically secure random passwords with customizable options
+
+**Key Methods/Functions**:
+- `generateNewPassword()` - Creates new password using Web Crypto API with secure randomness
+- `copyToClipboard()` - Copies password to clipboard with snackbar feedback
+- `showSnackbar()` - Displays success/error messages to user
+
+**Key Features**:
+- Avatar header with password icon
+- Real-time auto-generation on any option change (no manual button)
+- Password length slider (8-64 characters, default 16)
+- Character type toggles (uppercase, lowercase, numbers, special characters)
+- Integrated PasswordStrengthIndicator for immediate feedback
+- Icon-only copy button matching existing pattern
+- Warning alert when no character types selected
+- Monospace font for password display
+- Vue watchers for automatic regeneration
+
+**Dependencies**:
+- passwordGenerator.js utility (Web Crypto API)
+- PasswordStrengthIndicator.vue component
+- Vuetify components (v-card, v-text-field, v-slider, v-checkbox, v-snackbar)
+- Theme colors (primary)
+
+**Used By**:
+- Router (/password-generator route)
+
+---
+
 ### main.js (Application Entry)
 **File**: [src/main.js](src/main.js)
 **Lines**: ~65
@@ -351,6 +387,7 @@ Slurm.vue (Root Layout)
     ├── Base64Dec.vue (Base64 Decoder)
     ├── AESEnc.vue (AES Encryption)
     ├── AESDec.vue (AES Decryption)
+    ├── PasswordGenerator.vue (Password Generator)
     └── About.vue (About Page)
 ```
 
@@ -484,6 +521,17 @@ AESEnc.vue/AESDec.vue
 - Very Strong requires all requirements: 12+ chars, upper, lower, numbers, special chars
 - Used by PasswordStrengthIndicator.vue component
 
+**passwordGenerator.js** (127 lines):
+- `generatePassword(options)` - Generates cryptographically secure random passwords
+- `getDefaultOptions()` - Returns default password generation options
+- `getSecureRandomInt(max)` - Uses crypto.getRandomValues() for secure random numbers
+- `secureShuffleArray(array)` - Fisher-Yates shuffle with secure randomness
+- Configurable length (8-64 characters) and character types (uppercase, lowercase, numbers, special)
+- Guarantees at least one character from each selected type
+- Uses Web Crypto API (crypto.getRandomValues) for true randomness, NOT Math.random()
+- Validates options and throws errors for invalid input
+- Used by PasswordGenerator.vue component
+
 ### Buffer Utilities
 **File**: [src/assets/util/util.js](src/assets/util/util.js)
 
@@ -615,6 +663,18 @@ AESEnc.vue/AESDec.vue
 ## Notes
 
 ### Recent Structural Changes
+- **2025-10-28**: Password Generator (Phase 7, Task #1)
+  - Created src/PasswordGenerator.vue (280 lines) with real-time auto-generation UI
+  - Created src/utils/passwordGenerator.js (127 lines) with Web Crypto API for secure randomness
+  - Configurable options: length slider (8-64 chars), character type toggles
+  - Auto-regeneration using Vue watchers (no manual button required)
+  - Integrated existing PasswordStrengthIndicator component
+  - Uses Fisher-Yates shuffle algorithm to prevent predictable patterns
+  - Guarantees at least one character from each selected type
+  - Copy to clipboard with icon-only button matching existing patterns
+  - Updated main.js (+2 lines), Home.vue (+8 lines), Slurm.vue (+6 lines), About.vue (+13 lines)
+  - Total changes: +435 lines across 6 files (2 new, 4 modified)
+
 - **2025-10-20**: Password Strength Indicator (Phase 4, Task #1)
   - Created src/utils/passwordStrength.js with monotonically increasing scoring algorithm
   - Created src/components/PasswordStrengthIndicator.vue reusable component
@@ -681,4 +741,4 @@ AESEnc.vue/AESDec.vue
 - File sizes grow significantly (>200 line change)
 - Organizational patterns evolve
 
-**Last Updated**: 2025-10-20 (Updated for password strength indicator feature)
+**Last Updated**: 2025-10-28 (Updated for password generator feature)
