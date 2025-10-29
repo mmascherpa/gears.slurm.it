@@ -57,7 +57,6 @@
               variant="outlined"
               rows="4"
               readonly
-              bg-color="grey-lighten-4"
               placeholder="Decoded plain text will appear here"
               hide-details>
             </v-textarea>
@@ -83,21 +82,23 @@
         File Decoding
       </v-card-title>
       <v-card-text class="pa-4">
-        <v-row align="center">
+        <v-row>
           <v-col cols="12" sm="8">
             <v-file-input
               v-model="encodedFile"
               label="Select a Base64 file to decode"
               variant="outlined"
-              show-size
               prepend-icon=""
               prepend-inner-icon="mdi-paperclip"
-              hide-details>
+              @change="handleFileSelection"
+              @click:clear="clearFileValidation"
+              :hint="fileSizeHint"
+              persistent-hint>
             </v-file-input>
           </v-col>
           <v-col cols="12" sm="4">
             <v-btn
-              :disabled="encodedFile.length == 0"
+              :disabled="encodedFile.length == 0 || !isFileSizeValid"
               @click="decodeFile"
               color="primary"
               size="large"
@@ -107,6 +108,30 @@
             </v-btn>
           </v-col>
         </v-row>
+
+        <!-- File Size Error Alert -->
+        <v-alert
+          v-if="fileSizeError"
+          type="error"
+          variant="tonal"
+          class="mt-4"
+          density="compact"
+          closable
+          @click:close="fileSizeError = ''">
+          {{ fileSizeError }}
+        </v-alert>
+
+        <!-- File Size Warning Alert -->
+        <v-alert
+          v-if="showFileSizeWarning"
+          type="warning"
+          variant="tonal"
+          class="mt-4"
+          density="compact"
+          closable
+          @click:close="showFileSizeWarning = false">
+          {{ fileSizeWarningMessage }}
+        </v-alert>
       </v-card-text>
     </v-card>
 
@@ -123,6 +148,8 @@
 </template>
 
 <script>
+import { validateFileSize, formatFileSize } from '@/utils/fileSizeValidator';
+
 export default {
   data() {
     return {
@@ -133,10 +160,54 @@ export default {
       plainFile: false,
       snackbar: false,
       snackbarText: '',
-      snackbarColor: 'success'
+      snackbarColor: 'success',
+      // File size validation
+      isFileSizeValid: true,
+      showFileSizeWarning: false,
+      fileSizeWarningMessage: '',
+      fileSizeError: '',
+      fileSizeHint: ''
     };
   },
   methods: {
+    /**
+     * Clears all file validation state
+     */
+    clearFileValidation() {
+      this.isFileSizeValid = true;
+      this.showFileSizeWarning = false;
+      this.fileSizeWarningMessage = '';
+      this.fileSizeError = '';
+      this.fileSizeHint = '';
+    },
+    /**
+     * Handles file selection and validates file size
+     */
+    handleFileSelection() {
+      // Reset validation state
+      this.clearFileValidation();
+
+      if (!this.encodedFile || this.encodedFile.length === 0) {
+        return;
+      }
+
+      const file = this.encodedFile[0];
+      const validation = validateFileSize(file);
+
+      // Display file size
+      this.fileSizeHint = `File size: ${validation.formattedSize}`;
+
+      if (!validation.isValid) {
+        // File exceeds maximum size
+        this.isFileSizeValid = false;
+        this.fileSizeError = validation.message;
+      } else if (validation.hasWarning) {
+        // File is large but within limits
+        this.isFileSizeValid = true;
+        this.showFileSizeWarning = true;
+        this.fileSizeWarningMessage = validation.message;
+      }
+    },
     showSnackbar(text, color = 'success') {
       this.snackbarText = text;
       this.snackbarColor = color;

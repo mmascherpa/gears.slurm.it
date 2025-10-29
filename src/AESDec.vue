@@ -48,24 +48,26 @@
                     Encrypted File
                 </v-card-title>
                 <v-card-text class="pa-4">
-                    <v-row align="center">
+                    <v-row>
                         <v-col cols="12" sm="8">
                             <v-file-input
                                 v-model="file"
                                 label="Select encrypted file (.aes)"
                                 variant="outlined"
-                                show-size
                                 prepend-icon=""
                                 prepend-inner-icon="mdi-paperclip"
                                 accept=".aes"
-                                hide-details>
+                                @change="handleFileSelection"
+                                @click:clear="clearFileValidation"
+                                :hint="fileSizeHint"
+                                persistent-hint>
                             </v-file-input>
                         </v-col>
                         <v-col cols="12" sm="4">
                             <v-btn
                                 type="submit"
-                                :disabled="!isPasswordPopulated || !isFilePopulated"
-                                color="primary-darken-1"
+                                :disabled="!isPasswordPopulated || !isFilePopulated || !isFileSizeValid"
+                                color="primary"
                                 size="large"
                                 block>
                                 <v-icon start>mdi-lock-open</v-icon>
@@ -73,6 +75,30 @@
                             </v-btn>
                         </v-col>
                     </v-row>
+
+                    <!-- File Size Error Alert -->
+                    <v-alert
+                        v-if="fileSizeError"
+                        type="error"
+                        variant="tonal"
+                        class="mt-4"
+                        density="compact"
+                        closable
+                        @click:close="fileSizeError = ''">
+                        {{ fileSizeError }}
+                    </v-alert>
+
+                    <!-- File Size Warning Alert -->
+                    <v-alert
+                        v-if="showFileSizeWarning"
+                        type="warning"
+                        variant="tonal"
+                        class="mt-4"
+                        density="compact"
+                        closable
+                        @click:close="showFileSizeWarning = false">
+                        {{ fileSizeWarningMessage }}
+                    </v-alert>
                 </v-card-text>
             </v-card>
         </form>
@@ -206,6 +232,7 @@
 <script>
 import { downloadFile } from '@/utils/fileDownload';
 import { parseCSV } from '@/utils/csvParser';
+import { validateFileSize } from '@/utils/fileSizeValidator';
 import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator.vue';
 
 export default {
@@ -230,7 +257,13 @@ export default {
             // Maximum file size for preview (8MB)
             maxPreviewSize: 8 * 1024 * 1024,
             // Flag to prevent watchers from clearing outputs during decryption
-            isDecrypting: false
+            isDecrypting: false,
+            // File size validation
+            isFileSizeValid: true,
+            showFileSizeWarning: false,
+            fileSizeWarningMessage: '',
+            fileSizeError: '',
+            fileSizeHint: ''
         };
     },
     computed: {
@@ -261,6 +294,44 @@ export default {
         }
     },
     methods: {
+        /**
+         * Clears all file validation state
+         */
+        clearFileValidation() {
+            this.isFileSizeValid = true;
+            this.showFileSizeWarning = false;
+            this.fileSizeWarningMessage = '';
+            this.fileSizeError = '';
+            this.fileSizeHint = '';
+        },
+        /**
+         * Handles file selection and validates file size
+         */
+        handleFileSelection() {
+            // Reset validation state
+            this.clearFileValidation();
+
+            if (!this.file || this.file.length === 0) {
+                return;
+            }
+
+            const selectedFile = this.file[0];
+            const validation = validateFileSize(selectedFile);
+
+            // Display file size
+            this.fileSizeHint = `File size: ${validation.formattedSize}`;
+
+            if (!validation.isValid) {
+                // File exceeds maximum size
+                this.isFileSizeValid = false;
+                this.fileSizeError = validation.message;
+            } else if (validation.hasWarning) {
+                // File is large but within limits
+                this.isFileSizeValid = true;
+                this.showFileSizeWarning = true;
+                this.fileSizeWarningMessage = validation.message;
+            }
+        },
         /**
          * Shows a snackbar notification
          * @param {string} text - Message to display

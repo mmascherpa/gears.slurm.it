@@ -465,6 +465,15 @@ AESEnc.vue/AESDec.vue
 - Handles line ending normalization and empty row filtering
 - Used by both AESEnc.vue and AESDec.vue
 
+**fileSizeValidator.js** (110 lines):
+- `validateFileSize(file)` - Validates file size and returns validation result
+- `formatFileSize(bytes, decimals)` - Formats bytes to human-readable size (e.g., "50.00 MB")
+- `isFileSizeValid(file)` - Simple boolean check if file is within limits
+- `shouldWarnFileSize(file)` - Checks if file should trigger warning
+- `FILE_SIZE_LIMITS` - Constants (50MB warning threshold, 200MB max)
+- Returns validation object with isValid, hasWarning, message, formattedSize
+- Used by all file upload components (Base64Enc, Base64Dec, AESEnc, AESDec)
+
 **passwordStrength.js** (160 lines):
 - `calculatePasswordStrength(password)` - Evaluates password strength with scoring algorithm
 - `getRequirements(password, charChecks)` - Returns requirements checklist with met/unmet status
