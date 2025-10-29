@@ -139,6 +139,12 @@ theme.global.name.value = getSavedTheme();
                     title="AES Decrypt"
                     value="aesdec">
                 </v-list-item>
+                <v-list-item
+                    to="/password-generator"
+                    prepend-icon="mdi-form-textbox-password"
+                    title="Password Generator"
+                    value="password-generator">
+                </v-list-item>
 
                 <v-divider class="my-2"></v-divider>
 

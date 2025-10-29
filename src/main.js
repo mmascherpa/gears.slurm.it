@@ -10,6 +10,7 @@ import Base64Enc from './Base64Enc.vue'
 import Base64Dec from './Base64Dec.vue'
 import AESEnc from './AESEnc.vue'
 import AESDec from './AESDec.vue'
+import PasswordGenerator from './PasswordGenerator.vue'
 
 // 2. Define some routes
 // Each route should map to a component.
@@ -20,6 +21,7 @@ const routes = [
   { path: '/base64dec', component: Base64Dec },
   { path: '/aesenc', component: AESEnc },
   { path: '/aesdec', component: AESDec },
+  { path: '/password-generator', component: PasswordGenerator },
   { path: '/about', component: About },
 ]
 

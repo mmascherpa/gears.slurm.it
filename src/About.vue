@@ -82,6 +82,11 @@
                                 <v-list-item-title class="font-weight-bold">AES Decryption</v-list-item-title>
                                 <v-list-item-subtitle>Decrypt password-protected AES encrypted files</v-list-item-subtitle>
                             </v-list-item>
+                            <v-divider class="my-2"></v-divider>
+                            <v-list-item prepend-icon="mdi-form-textbox-password">
+                                <v-list-item-title class="font-weight-bold">Password Generator</v-list-item-title>
+                                <v-list-item-subtitle>Generate strong random passwords with customizable length and character types</v-list-item-subtitle>
+                            </v-list-item>
                         </v-list>
                     </v-card-text>
                 </v-card>
@@ -117,7 +122,7 @@
                             </v-list-item>
                             <v-list-item>
                                 <template v-slot:prepend>
-                                    <v-icon size="small">mdi-worker</v-icon>
+                                    <v-icon size="small">mdi-cog-sync</v-icon>
                                 </template>
                                 <v-list-item-title>Web Workers - Background Processing</v-list-item-title>
                             </v-list-item>
@@ -139,6 +144,12 @@
                                     <v-icon size="small" color="success">mdi-check-circle</v-icon>
                                 </template>
                                 <v-list-item-title>AES-256 Encryption Standard</v-list-item-title>
+                            </v-list-item>
+                            <v-list-item>
+                                <template v-slot:prepend>
+                                    <v-icon size="small" color="success">mdi-check-circle</v-icon>
+                                </template>
+                                <v-list-item-title>Cryptographically Secure Password Generation</v-list-item-title>
                             </v-list-item>
                             <v-list-item>
                                 <template v-slot:prepend>

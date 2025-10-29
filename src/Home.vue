@@ -82,6 +82,14 @@ export default {
                     description: 'Decrypt password-protected AES encrypted files securely in your browser.'
                 },
                 {
+                    title: 'Password Generator',
+                    icon: 'mdi-form-textbox-password',
+                    route: '/password-generator',
+                    category: 'Security Tool',
+                    color: 'primary',
+                    description: 'Generate strong random passwords with customizable length and character types.'
+                },
+                {
                     title: 'About',
                     icon: 'mdi-information',
                     route: '/about',
