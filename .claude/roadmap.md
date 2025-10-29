@@ -284,48 +284,103 @@ This file tracks feature planning, completed work, and future development priori
 
 ---
 
-## Phase 7: New Features (Priority: LOW)
+## Phase 7: New Tool Features (Priority: MEDIUM-LOW)
 
 **Status**: ⚪ Not Started
-**Estimated Effort**: 12-20 hours
-**Trigger**: When user feedback indicates demand
+**Estimated Effort**: 28-38 hours
+**Trigger**: After completing Phase 4-6, or when user feedback indicates demand
 
-### Features
+### Core Tools (High Value)
 
-- [ ] **Hash Generator Tool** (3 hours) - Priority 1
+- [ ] **Password Generator** (2 hours) - Priority 1 🔥 **RECOMMENDED**
+  - Generate strong random passwords with configurable length/complexity
+  - Visual strength indicator integration
+  - One-click copy to clipboard
+  - Options: length (8-64 chars), include/exclude character types
+  - **Benefit**: Natural pairing with encryption tools, fills workflow gap
+  - **Use Case**: Users need strong passwords for AES encryption
+
+- [ ] **Text Encryption (AES)** (3 hours) - Priority 1 🔥 **RECOMMENDED**
+  - Add text-based AES encryption (in addition to files)
+  - Password protection with strength indicator
+  - Copy encrypted text to clipboard
+  - Symmetric decrypt functionality
+  - **Benefit**: Quick text encryption without file I/O overhead
+  - **Use Case**: "I just want to encrypt this API key/secret quickly"
+
+- [ ] **Hash Generator Tool** (3 hours) - Priority 1 🔥 **RECOMMENDED**
   - Add new page for SHA-256, SHA-512, MD5 hashing
   - File and text hashing support
-  - Compare hashes functionality
-  - **Benefit**: Expands toolkit, common use case
+  - Compare two hashes (file integrity verification)
+  - Copy hash to clipboard
+  - **Benefit**: Natural companion to encryption, common workflow
+  - **Use Case**: "Encrypt file → share hash for verification"
 
-- [ ] **Text Encryption (AES)** (3 hours) - Priority 2
-  - Add text-based AES encryption (in addition to files)
-  - Password protection
-  - Copy encrypted text to clipboard
-  - **Benefit**: Quick text encryption without file I/O
+### Developer Tools
+
+- [ ] **JWT Decoder** (2.5 hours) - Priority 2
+  - Decode and display JWT tokens
+  - Show header, payload, signature in formatted JSON
+  - Validate signature (optional, requires algorithm selection)
+  - Copy decoded sections to clipboard
+  - **Benefit**: Very popular developer tool (jwt.io gets millions of visits)
+  - **Use Case**: Debugging authentication tokens
 
 - [ ] **URL Encoder/Decoder** (2 hours) - Priority 2
   - Add URL encoding/decoding tool
-  - Component-wise encoding option
-  - **Benefit**: Common developer tool
+  - Component-wise encoding option (encode only query params, etc.)
+  - Copy encoded/decoded result to clipboard
+  - **Benefit**: Common developer tool, fits toolkit theme
 
-- [ ] **JWT Decoder** (2.5 hours) - Priority 3
-  - Decode and display JWT tokens
-  - Show header, payload, signature
-  - Validate signature (optional)
-  - **Benefit**: Useful for developers
+### Quality of Life Features
 
-- [ ] **Export/Import Settings** (2 hours) - Priority 3
-  - Export app settings to JSON
+- [ ] **File History/Recent Operations** (2.5 hours) - Priority 2
+  - Remember last 5-10 operations (filename, type, timestamp - NO content)
+  - Show in sidebar or home page
+  - Quick re-process same file with different settings
+  - Clear history button
+  - **Benefit**: Users often re-encrypt same file with different passwords
+  - **Privacy**: Optional feature with clear opt-out, localStorage only
+  - **Dependency**: Requires careful privacy consideration
+
+- [ ] **QR Code Generator** (2 hours) - Priority 3
+  - Generate QR codes from text/URLs
+  - Useful for sharing encrypted text or Base64 output
+  - Download as PNG with configurable size
+  - **Benefit**: Mobile-friendly way to transfer encrypted data
+  - **Tech**: Use qrcode.js library
+  - **Use Case**: Transfer encrypted text to mobile device
+
+- [ ] **File Comparison Tool** (3 hours) - Priority 3
+  - Compare two files byte-by-byte
+  - Show if identical (useful after decrypt → re-encrypt roundtrip)
+  - Visual diff for text files (side-by-side comparison)
+  - Hash comparison mode (compare file hashes)
+  - **Benefit**: Quality assurance - "Did my decrypt work correctly?"
+  - **Use Case**: Verify encryption/decryption roundtrip accuracy
+
+### Advanced Features
+
+- [ ] **Compression Tool** (4 hours) - Priority 3
+  - Compress files before encryption (gzip/brotli)
+  - Decompress after decryption
+  - Show compression ratio and size savings
+  - **Benefit**: Smaller encrypted files = easier to share
+  - **Use Case**: Encrypt large log files or datasets
+  - **Tech**: Use pako.js for gzip compression
+
+- [ ] **Export/Import Settings** (2 hours) - Priority 4
+  - Export app settings (theme, preferences) to JSON
   - Import settings from file
   - **Benefit**: User convenience for multi-device usage
 
-- [ ] **Batch File Operations** (4 hours) - Priority 4
+- [ ] **Batch File Operations** (6 hours) - Priority 4
   - Support multiple file uploads
-  - Batch encode/decode/encrypt/decrypt
-  - Download as ZIP
-  - **Benefit**: Efficiency for power users
-  - **Dependency**: Requires significant UI/UX redesign
+  - Batch encode/decode/encrypt/decrypt with same password
+  - Download as ZIP archive
+  - Progress indicator for batch operations
+  - **Benefit**: Efficiency for power users (10+ files)
+  - **Dependency**: Requires significant UI/UX redesign, ZIP library integration
 
 ---
 
@@ -393,20 +448,20 @@ This file tracks feature planning, completed work, and future development priori
 
 ## Progress Summary
 
-**Total Planned Features**: 49
+**Total Planned Features**: 56
 **Completed**: 19 ✅
 **In Progress**: 2 🔄 (Phase 4, Phase 6)
-**Planned**: 30 📋
+**Planned**: 37 📋
 
 **Phase Completion**:
 - Phase 1 (Code Cleanup): ✅ 100% (5/5 features completed)
 - Phase 2 (UI Modernization): ✅ 100% (3/3 features completed)
 - Phase 3 (UX Enhancements): ✅ 100% (3/3 features completed)
 - Phase 3.5 (Offline & Code Quality): ✅ 100% (4/4 features completed)
-- Phase 4 (Security): 🔄 25% (1/4 features completed)
+- Phase 4 (Security): 🔄 50% (2/4 features completed)
 - Phase 5 (Testing): 0% (0/4 features completed)
 - Phase 6 (Additional UX): 🔄 20% (1/5 features completed)
-- Phase 7 (New Features): 0% (0/6 features completed)
+- Phase 7 (New Tool Features): 0% (0/13 features completed)
 - Phase 8 (TypeScript): 0% (0/3 features completed)
 - Phase 9 (Accessibility/i18n): 0% (0/2 features completed)
 
@@ -414,7 +469,7 @@ This file tracks feature planning, completed work, and future development priori
 
 ## Next Immediate Steps
 
-**Current Focus**: Phase 4 - Security & Validation
+**Current Focus**: Phase 4 - Security & Validation (50% complete)
 
 **Completed Phases**:
 - ✅ Phase 1: Code Cleanup & Quality (5/5 features)
@@ -422,12 +477,16 @@ This file tracks feature planning, completed work, and future development priori
 - ✅ Phase 3: UX Enhancements (3/3 features)
 - ✅ Phase 3.5: Offline Functionality & Code Quality (4/4 features)
 
-**Recommended Next Steps**:
-1. **Password Strength Indicator** (Phase 4, 2 hours) - Improve security UX
-2. **File Size Validation** (Phase 4, 1 hour) - Prevent browser crashes
-3. **Self-Hosted CryptoJS** (Phase 4, 1.5 hours) - Eliminate external dependency (partially addressed by Phase 3.5 CORS caching)
+**Remaining Phase 4 Tasks**:
+1. **Input Sanitization** (Phase 4, 1 hour) - Enhanced security posture
+2. **Self-Hosted CryptoJS** (Phase 4, 1.5 hours) - Eliminate external dependency
 
-Or assess user priorities for additional features from Phase 6+ based on feedback.
+**High-Value Next Features** (After Phase 4):
+1. **Password Generator** (Phase 7, 2 hours) 🔥 - Natural pairing with encryption
+2. **Drag & Drop File Upload** (Phase 6, 2 hours) 🔥 - Modern UX everyone expects
+3. **Text AES Encryption** (Phase 7, 3 hours) 🔥 - Quick text encryption without files
+
+Or continue with **Phase 5 (Testing Infrastructure)** for long-term code quality.
 
 ---
 
