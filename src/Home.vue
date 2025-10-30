@@ -64,7 +64,7 @@ export default {
                     description: 'Decode Base64 encoded text or files back to their original format.'
                 },
                 {
-                    title: 'AES Encryption',
+                    title: 'AES File Encryption',
                     icon: 'mdi-lock',
                     route: '/aesenc',
                     category: 'Security Tool',
@@ -73,13 +73,31 @@ export default {
                     description: 'Encrypt files with password protection using AES algorithm for maximum security.'
                 },
                 {
-                    title: 'AES Decryption',
+                    title: 'AES File Decryption',
                     icon: 'mdi-lock-open',
                     route: '/aesdec',
                     category: 'Security Tool',
                     color: 'primary-darken-1',
                     featured: true,
                     description: 'Decrypt password-protected AES encrypted files securely in your browser.'
+                },
+                {
+                    title: 'AES Text Encryption',
+                    icon: 'mdi-file-lock-outline',
+                    route: '/textaesenc',
+                    category: 'Security Tool',
+                    color: 'primary',
+                    featured: true,
+                    description: 'Quickly encrypt text with password protection - perfect for API keys and secrets.'
+                },
+                {
+                    title: 'AES Text Decryption',
+                    icon: 'mdi-lock-open-variant-outline',
+                    route: '/textaesdec',
+                    category: 'Security Tool',
+                    color: 'primary-darken-1',
+                    featured: true,
+                    description: 'Decrypt password-protected text and copy results instantly to clipboard.'
                 },
                 {
                     title: 'Password Generator',

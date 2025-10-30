@@ -130,14 +130,26 @@ theme.global.name.value = getSavedTheme();
                 <v-list-item
                     to="/aesenc"
                     prepend-icon="mdi-lock"
-                    title="AES Encrypt"
+                    title="AES File Encrypt"
                     value="aesenc">
                 </v-list-item>
                 <v-list-item
                     to="/aesdec"
                     prepend-icon="mdi-lock-open"
-                    title="AES Decrypt"
+                    title="AES File Decrypt"
                     value="aesdec">
+                </v-list-item>
+                <v-list-item
+                    to="/textaesenc"
+                    prepend-icon="mdi-file-lock-outline"
+                    title="AES Text Encrypt"
+                    value="textaesenc">
+                </v-list-item>
+                <v-list-item
+                    to="/textaesdec"
+                    prepend-icon="mdi-lock-open-variant-outline"
+                    title="AES Text Decrypt"
+                    value="textaesdec">
                 </v-list-item>
                 <v-list-item
                     to="/password-generator"
