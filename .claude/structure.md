@@ -3,9 +3,9 @@
 ## Purpose
 This file documents the file organization, component responsibilities, and architectural layers of the Slurm Tools codebase.
 
-**Last Updated**: 2025-10-28
-**Total Files**: 79
-**Total Lines of Code**: ~3,157 lines
+**Last Updated**: 2025-11-01
+**Total Files**: 88 (79→88, +9 new files from refactoring)
+**Total Lines of Code**: ~3,764 lines (+607 net from refactoring)
 
 ---
 
@@ -36,14 +36,26 @@ src/
 ├── theme.js                 # Vuetify theme system with 3 themes (172 lines)
 ├── Slurm.vue               # Root layout component with theme toggle (151 lines)
 ├── Home.vue                # Landing page with tool grid (127 lines)
-├── Base64Enc.vue           # Base64 encoder page (250 lines)
-├── Base64Dec.vue           # Base64 decoder page (245 lines)
-├── AESEnc.vue              # AES encryption page (340 lines - with password strength)
-├── AESDec.vue              # AES decryption page (250 lines - with password strength)
-├── PasswordGenerator.vue   # Password generator tool (280 lines)
+├── Base64Enc.vue           # Base64 encoder page (252 lines)
+├── Base64Dec.vue           # Base64 decoder page (226 lines)
+├── TextAESEnc.vue          # Text AES encryption page (323 lines)
+├── TextAESDec.vue          # Text AES decryption page (322 lines)
+├── AESEnc.vue              # File AES encryption page (346 lines)
+├── AESDec.vue              # File AES decryption page (426 lines)
+├── PasswordGenerator.vue   # Password generator tool (257 lines)
 ├── About.vue               # About page (178 lines)
 ├── components/             # Reusable Vue components
-│   └── PasswordStrengthIndicator.vue  # Password strength meter (140 lines)
+│   ├── FileUploadWithValidation.vue   # File upload with validation (230 lines)
+│   ├── PasswordStrengthIndicator.vue  # Password strength meter (140 lines)
+│   ├── SharedSnackbar.vue             # Reusable snackbar (76 lines)
+│   ├── TextInputWithActions.vue       # Text input with action buttons (265 lines)
+│   └── ToolPageHeader.vue             # Standardized page header (65 lines)
+├── composables/            # Reusable composition functions
+│   ├── useAESWorker.js     # AES worker management with auto-cleanup (163 lines)
+│   ├── useClipboard.js     # Clipboard operations (74 lines)
+│   ├── useDebounce.js      # Debounced function calls (66 lines)
+│   ├── useFileSizeValidation.js  # File size validation logic (99 lines)
+│   └── useSnackbar.js      # Snackbar state management (41 lines)
 ├── utils/                  # Shared utility functions
 │   ├── fileDownload.js     # File download helper (19 lines)
 │   ├── csvParser.js        # CSV parsing utilities (67 lines)
@@ -67,19 +79,29 @@ src/
 - **main.js** (68 lines) - Application initialization, router setup, Vuetify configuration, Service Worker registration
 - **theme.js** (172 lines) - Theme system with 3 modes (Default, Dark, Slurm) and shared CSS variables
 - **Slurm.vue** (151 lines) - Root layout with gradient app bar, theme toggle buttons, navigation drawer, localStorage persistence
-- **Home.vue** (127 lines) - Landing page with modernized tool cards in responsive grid (6 tools)
-- **Base64Enc.vue** (250 lines) - Text/file Base64 encoding with clipboard ops, snackbar feedback, monospace output
-- **Base64Dec.vue** (245 lines) - Text/file Base64 decoding with clipboard ops, snackbar feedback, monospace output
-- **AESEnc.vue** (340 lines) - Password-protected file encryption with Web Worker, CSV preview, password strength indicator
-- **AESDec.vue** (250 lines) - Password-protected file decryption with CSV preview, password strength indicator
-- **PasswordGenerator.vue** (280 lines) - Cryptographically secure password generator with auto-generation, customizable options
-- **About.vue** (178 lines) - Comprehensive about page with privacy, security information, and tool listing
-- **global-styles.css** - Global UX styles including monospace fonts, button animations, focus states
-- **components/PasswordStrengthIndicator.vue** (140 lines) - Reusable password strength meter component
-- **utils/fileDownload.js** - Shared file download utility
-- **utils/csvParser.js** - Shared CSV parsing with input validation
+- **Home.vue** (127 lines) - Landing page with modernized tool cards in responsive grid (7 tools)
+- **Base64Enc.vue** (252 lines) - Text/file Base64 encoding with shared components, standardized patterns
+- **Base64Dec.vue** (226 lines) - Text/file Base64 decoding with shared components, standardized patterns
+- **TextAESEnc.vue** (323 lines) - Text AES encryption with password confirmation, auto-encryption
+- **TextAESDec.vue** (322 lines) - Text AES decryption with clipboard operations
+- **AESEnc.vue** (346 lines) - File AES encryption with Web Worker, CSV preview, password strength
+- **AESDec.vue** (426 lines) - File AES decryption with CSV preview, password strength
+- **PasswordGenerator.vue** (257 lines) - Compact 2-column layout with regenerate button
+- **About.vue** (178 lines) - Comprehensive about page with privacy, security information
+- **components/FileUploadWithValidation.vue** (230 lines) - Reusable file upload with size validation and dynamic tooltips
+- **components/PasswordStrengthIndicator.vue** (140 lines) - Reusable password strength meter
+- **components/SharedSnackbar.vue** (76 lines) - Centralized notification component
+- **components/TextInputWithActions.vue** (265 lines) - Text area with configurable action buttons
+- **components/ToolPageHeader.vue** (65 lines) - Standardized page headers with avatar and icon
+- **composables/useAESWorker.js** (163 lines) - Web Worker lifecycle management with memory leak fix
+- **composables/useClipboard.js** (74 lines) - Copy/paste operations with error handling
+- **composables/useDebounce.js** (66 lines) - Debounced function calls with automatic cleanup
+- **composables/useFileSizeValidation.js** (99 lines) - File size validation (50MB warning, 200MB max)
+- **composables/useSnackbar.js** (41 lines) - Snackbar state management
+- **utils/fileDownload.js** (19 lines) - Shared file download utility
+- **utils/csvParser.js** (67 lines) - Shared CSV parsing with input validation
 - **utils/passwordStrength.js** (160 lines) - Password strength calculation algorithm
-- **utils/passwordGenerator.js** (127 lines) - Cryptographically secure random password generation using Web Crypto API
+- **utils/passwordGenerator.js** (127 lines) - Cryptographically secure password generation
 
 ### Public Directory (`/public/`)
 ```
@@ -300,19 +322,19 @@ scripts/
 
 ### PasswordGenerator.vue (Password Generator)
 **File**: [src/PasswordGenerator.vue](src/PasswordGenerator.vue)
-**Lines**: ~280
+**Lines**: ~257
 **Purpose**: Generate cryptographically secure random passwords with customizable options
 
 **Key Methods/Functions**:
 - `generateNewPassword()` - Creates new password using Web Crypto API with secure randomness
-- `copyToClipboard()` - Copies password to clipboard with snackbar feedback
-- `showSnackbar()` - Displays success/error messages to user
+- `handleCopy()` - Copies password to clipboard with snackbar feedback
 
 **Key Features**:
-- Avatar header with password icon
-- Real-time auto-generation on any option change (no manual button)
+- Compact 2-column layout (50% less vertical space than original)
+- Regenerate button with mdi-refresh icon (positioned left of password field)
+- Real-time auto-generation on any option change
 - Password length slider (8-64 characters, default 16)
-- Character type toggles (uppercase, lowercase, numbers, special characters)
+- Character type toggles in 2x2 grid (uppercase, lowercase, numbers, special characters)
 - Integrated PasswordStrengthIndicator for immediate feedback
 - Icon-only copy button matching existing pattern
 - Warning alert when no character types selected
@@ -322,11 +344,389 @@ scripts/
 **Dependencies**:
 - passwordGenerator.js utility (Web Crypto API)
 - PasswordStrengthIndicator.vue component
-- Vuetify components (v-card, v-text-field, v-slider, v-checkbox, v-snackbar)
+- useClipboard composable
+- useSnackbar composable
+- Vuetify components (v-card, v-text-field, v-slider, v-checkbox)
 - Theme colors (primary)
 
 **Used By**:
 - Router (/password-generator route)
+
+---
+
+## Shared Components
+
+### ToolPageHeader.vue
+**File**: [src/components/ToolPageHeader.vue](src/components/ToolPageHeader.vue)
+**Lines**: 65
+**Purpose**: Standardized page header component used across all tool pages
+
+**Props**:
+- `title` (String, required) - Page title
+- `description` (String, required) - Tool description
+- `icon` (String, required) - Material Design Icon name
+- `avatarColor` (String, default: 'primary') - Avatar background color
+
+**Key Features**:
+- Consistent layout with avatar, icon, title, and description
+- Customizable avatar color for visual categorization
+- Responsive design with proper spacing
+- Material Design styling
+
+**Used By**:
+- All 7 tool pages (Base64Enc, Base64Dec, TextAESEnc, TextAESDec, AESEnc, AESDec, PasswordGenerator)
+
+**Impact**: Saved ~72 lines of duplicated code
+
+---
+
+### SharedSnackbar.vue
+**File**: [src/components/SharedSnackbar.vue](src/components/SharedSnackbar.vue)
+**Lines**: 76
+**Purpose**: Centralized notification component for displaying success/error messages
+
+**Props**:
+- `modelValue` (Boolean) - v-model for snackbar visibility
+- `text` (String, required) - Message text to display
+- `color` (String, default: 'success') - Snackbar color (success, error, warning, info)
+
+**Emits**:
+- `update:modelValue` - Updates visibility state
+
+**Key Features**:
+- Multi-line text support
+- Configurable duration (4 seconds default)
+- Top-right positioning
+- Color-coded message types
+- Consistent styling across all tools
+
+**Used By**:
+- All 7 tool pages for user feedback
+
+**Usage Pattern**:
+```vue
+<SharedSnackbar
+  v-model="snackbar"
+  :text="snackbarText"
+  :color="snackbarColor" />
+```
+
+---
+
+### TextInputWithActions.vue
+**File**: [src/components/TextInputWithActions.vue](src/components/TextInputWithActions.vue)
+**Lines**: 265
+**Purpose**: Reusable text input component with configurable action buttons
+
+**Props**:
+- `modelValue` (String) - v-model for text content
+- `label` (String, required) - Input label
+- `placeholder` (String) - Placeholder text
+- `rows` (Number, default: 8) - Number of textarea rows
+- `isLoading` (Boolean) - Loading state
+- `readonly` (Boolean) - Read-only mode
+- `showPaste` (Boolean, default: true) - Show paste button
+- `showClear` (Boolean, default: true) - Show clear button
+- `showCopy` (Boolean, default: false) - Show copy button
+- `showDownload` (Boolean, default: false) - Show download button
+- `showSpacers` (Boolean, default: false) - Show spacers between buttons
+- `downloadFilename` (String) - Filename for download
+- `textareaClass` (String) - Custom CSS class for textarea
+- `rowClass` (String) - Custom CSS class for row
+
+**Emits**:
+- `update:modelValue` - Text content updates
+- `paste` - Paste button clicked
+- `clear` - Clear button clicked
+- `copy` - Copy button clicked
+- `download` - Download button clicked
+
+**Key Features**:
+- Flexible action button configuration
+- Consistent button styling across all tools
+- Loading state with progress indicator
+- Optional spacers for visual grouping
+- Responsive 8-4 column layout (text area + buttons)
+- Custom classes for styling
+
+**Used By**:
+- Base64Enc, Base64Dec, TextAESEnc, TextAESDec
+
+**Impact**: Eliminated hundreds of lines of duplicated textarea/button code
+
+---
+
+### FileUploadWithValidation.vue
+**File**: [src/components/FileUploadWithValidation.vue](src/components/FileUploadWithValidation.vue)
+**Lines**: 230
+**Purpose**: Reusable file upload component with built-in size validation and submit button
+
+**Props**:
+- `modelValue` (Array) - v-model for selected file(s)
+- `label` (String, required) - File input label
+- `accept` (String) - Accepted file types (e.g., '.txt,.pdf')
+- `disabled` (Boolean) - Disabled state
+- `buttonText` (String, required) - Submit button text
+- `buttonIcon` (String, required) - Submit button icon
+- `buttonColor` (String, default: 'primary') - Submit button color
+- `canSubmit` (Boolean, required) - Whether submit should be enabled (external validation)
+
+**Emits**:
+- `update:modelValue` - File selection updates
+- `submit` - Submit button clicked
+- `validation-change` - File validation state changed
+
+**Key Features**:
+- **Automatic file size validation** (50MB warning, 200MB maximum)
+- **Dynamic tooltips** based on validation state:
+  - "Please select a file first" (no file)
+  - "File is too large to process" (size invalid)
+  - "Complete all required fields" (other validation failed)
+  - "Click to [action]" (ready to submit)
+- Error and warning alerts (dismissible)
+- Formatted file size display in hint text
+- Button automatically disabled when file too large
+- Consistent layout (file input + button in 8-4 column split)
+- Closable validation alerts
+
+**Used By**:
+- Base64Enc, Base64Dec, AESEnc, AESDec
+
+**Validation Logic**:
+```javascript
+// Button disabled when:
+// - File size invalid (!isFileSizeValid)
+// - OR external validation failed (!canSubmit)
+:disabled="!canSubmit || !isFileSizeValid"
+```
+
+**Impact**: Saved ~180 lines of duplicated file validation code
+
+---
+
+## Composables (Reusable Logic)
+
+### useSnackbar.js
+**File**: [src/composables/useSnackbar.js](src/composables/useSnackbar.js)
+**Lines**: 41
+**Purpose**: Centralized snackbar state management
+
+**Exports**:
+- `snackbar` (Ref<Boolean>) - Visibility state
+- `snackbarText` (Ref<String>) - Message text
+- `snackbarColor` (Ref<String>) - Message color
+- `showSnackbar(text, color)` - Function to display notification
+
+**Usage Pattern**:
+```javascript
+const { snackbar, snackbarText, snackbarColor, showSnackbar } = useSnackbar();
+
+// Display success message
+showSnackbar('✓ Operation successful!', 'success');
+
+// Display error message
+showSnackbar('❌ Operation failed', 'error');
+```
+
+**Used By**: All 7 tool pages
+
+**Impact**: Saved ~120 lines across components
+
+---
+
+### useClipboard.js
+**File**: [src/composables/useClipboard.js](src/composables/useClipboard.js)
+**Lines**: 74
+**Purpose**: Copy/paste operations with error handling
+
+**Exports**:
+- `copyToClipboard(text, onSuccess, onError)` - Copy text to clipboard
+- `pasteFromClipboard(onSuccess, onError)` - Paste text from clipboard
+
+**Key Features**:
+- Browser compatibility checks
+- Permission handling
+- User-friendly error messages
+- Callback-based success/error handling
+
+**Usage Pattern**:
+```javascript
+const { copyToClipboard, pasteFromClipboard } = useClipboard();
+
+// Copy
+await copyToClipboard(
+  encodedText.value,
+  (message) => showSnackbar(message, 'success'),
+  (message) => showSnackbar(message, 'error')
+);
+
+// Paste
+await pasteFromClipboard(
+  (text) => {
+    plainText.value = text;
+    showSnackbar('Text pasted!', 'success');
+  },
+  (message) => showSnackbar(message, 'error')
+);
+```
+
+**Used By**: Base64Enc, Base64Dec, TextAESEnc, TextAESDec, PasswordGenerator
+
+**Impact**: Saved ~150 lines
+
+---
+
+### useDebounce.js
+**File**: [src/composables/useDebounce.js](src/composables/useDebounce.js)
+**Lines**: 66
+**Purpose**: Debounced function calls with automatic cleanup
+
+**Exports**:
+- `debounce` - Debounced version of provided function
+- `cancel` - Cancel pending execution
+
+**Standard Delays**:
+- **Text operations** (Base64 encode/decode): 350ms
+- **Crypto operations** (AES encrypt/decrypt): 800ms
+- **Password generation**: No debounce (instant)
+
+**Key Features**:
+- Automatic cleanup on component unmount
+- Cancellation support
+- Configurable delay
+
+**Usage Pattern**:
+```javascript
+// For crypto operations (800ms)
+const { debounce: debouncedEncrypt, cancel: cancelEncryption } = useDebounce(() => {
+  // encryption logic
+}, 800);
+
+// For text operations (350ms)
+const { debounce: debouncedEncode } = useDebounce(() => {
+  // encoding logic
+}, 350);
+
+// Use in watcher
+watch(plainText, () => {
+  if (plainText.value) {
+    debouncedEncode();
+  }
+});
+```
+
+**Used By**: Base64Enc, Base64Dec, TextAESEnc, TextAESDec
+
+**Impact**: Consistent debouncing, automatic cleanup
+
+---
+
+### useFileSizeValidation.js
+**File**: [src/composables/useFileSizeValidation.js](src/composables/useFileSizeValidation.js)
+**Lines**: 99
+**Purpose**: File size validation with warning/error thresholds
+
+**Constants**:
+- `FILE_SIZE_WARNING` - 50MB (52,428,800 bytes)
+- `FILE_SIZE_MAX` - 200MB (209,715,200 bytes)
+
+**Exports**:
+- `isFileSizeValid` (Ref<Boolean>) - Whether file size is within limits
+- `showFileSizeWarning` (Ref<Boolean>) - Whether to show warning
+- `fileSizeWarningMessage` (Ref<String>) - Warning message text
+- `fileSizeError` (Ref<String>) - Error message text
+- `fileSizeHint` (Computed<String>) - Hint text for file input
+- `handleFileSelection(file)` - Validates file and returns result
+- `clearFileValidation()` - Clears validation state
+
+**Validation Logic**:
+```javascript
+// Returns:
+{
+  isValid: true/false,      // false if > 200MB
+  hasWarning: true/false,   // true if > 50MB
+  message: "...",           // User-friendly message
+  formattedSize: "75.50 MB" // Formatted file size
+}
+```
+
+**Usage Pattern**:
+```javascript
+const {
+  isFileSizeValid,
+  showFileSizeWarning,
+  fileSizeWarningMessage,
+  fileSizeError,
+  fileSizeHint,
+  handleFileSelection,
+  clearFileValidation
+} = useFileSizeValidation();
+
+// On file selection
+const handleFileChange = (files) => {
+  if (files && files.length > 0) {
+    const result = handleFileSelection(files[0]);
+    emit('validation-change', result);
+  }
+};
+```
+
+**Used By**: FileUploadWithValidation component
+
+**Impact**: Saved ~180 lines, prevents browser crashes from large files
+
+---
+
+### useAESWorker.js
+**File**: [src/composables/useAESWorker.js](src/composables/useAESWorker.js)
+**Lines**: 163
+**Purpose**: Web Worker lifecycle management with memory leak fix
+
+**Exports**:
+- `worker` (Ref<Worker>) - Worker instance
+- `isProcessing` (Ref<Boolean>) - Processing state
+- `progress` (Ref<Number>) - Progress percentage (0-100)
+- `encryptFile(file, password, onSuccess, onError)` - Encrypt file
+- `decryptFile(file, password, onSuccess, onError)` - Decrypt file
+- `terminateWorker()` - Manual worker termination
+
+**Key Features**:
+- **Memory leak fix**: Automatically terminates worker on component unmount using `onBeforeUnmount`
+- User-friendly error message mapping (e.g., "Password too long" instead of "undefined")
+- Progress tracking (simulated for now)
+- Consistent error handling
+- Worker message protocol handling
+
+**Error Message Mapping**:
+```javascript
+'Unsupported format' → 'File format not supported'
+'undefined' → 'Decryption failed. Check your password.'
+'Password too long' → 'Password too long (max 1024 characters)'
+```
+
+**Usage Pattern**:
+```javascript
+const { worker, isProcessing, encryptFile, decryptFile } = useAESWorker();
+
+// Encrypt
+encryptFile(
+  file,
+  password,
+  (encryptedData, outputFileName) => {
+    // Handle success
+    downloadFile(encryptedData, outputFileName);
+    showSnackbar('✓ File encrypted!', 'success');
+  },
+  (errorMessage) => {
+    // Handle error
+    showSnackbar(`❌ ${errorMessage}`, 'error');
+  }
+);
+```
+
+**Used By**: TextAESEnc, TextAESDec, AESEnc, AESDec
+
+**Impact**: Fixed critical memory leak affecting all AES components
 
 ---
 
@@ -663,6 +1063,41 @@ AESEnc.vue/AESDec.vue
 ## Notes
 
 ### Recent Structural Changes
+- **2025-11-01**: Major Refactoring - Composables & Shared Components (Phase 4 completion)
+  - **Created 5 composables** (443 total lines):
+    - useSnackbar.js (41 lines) - Centralized notification management, saved ~120 lines
+    - useClipboard.js (74 lines) - Copy/paste operations, saved ~150 lines
+    - useDebounce.js (66 lines) - Debounced function calls with auto-cleanup
+    - useFileSizeValidation.js (99 lines) - File size validation, saved ~180 lines
+    - useAESWorker.js (163 lines) - **Fixed critical memory leak**, auto-terminates workers
+  - **Created 4 shared components** (636 total lines):
+    - ToolPageHeader.vue (65 lines) - Standardized headers, saved ~72 lines
+    - SharedSnackbar.vue (76 lines) - Reusable notifications
+    - TextInputWithActions.vue (265 lines) - Configurable text input with action buttons
+    - FileUploadWithValidation.vue (230 lines) - File upload with dynamic tooltips, saved ~180 lines
+  - **Refactored all 7 tool components** to use composables and shared components:
+    - Base64Enc.vue: 322→252 lines (-22%)
+    - Base64Dec.vue: 305→226 lines (-26%)
+    - TextAESEnc.vue: 466→323 lines (-31%)
+    - TextAESDec.vue: 444→322 lines (-27%)
+    - AESEnc.vue: 418→346 lines (-17%)
+    - AESDec.vue: 491→426 lines (-13%)
+    - PasswordGenerator.vue: 281→257 lines (-9%)
+  - **Created .claude/CODING-STANDARDS.md**: Comprehensive coding standards documentation
+  - **Code quality improvements**:
+    - Eliminated ~1,124 lines of duplicated code
+    - Fixed memory leaks in all AES components (workers not terminated on unmount)
+    - Standardized variable naming (is*, can*, handle* prefixes)
+    - Consistent import order (Vue → utils → composables → components)
+    - Unified debounce timing (350ms text, 800ms crypto)
+    - Standardized error handling patterns
+  - **UI/UX enhancements**:
+    - Dynamic file upload tooltips (context-aware feedback)
+    - Password confirmation visual feedback alignment
+    - Compact Password Generator layout (50% less vertical space)
+    - Regenerate password button with mdi-refresh icon
+  - Total impact: +2,792 insertions, -2,185 deletions across 16 files (9 new, 7 modified)
+
 - **2025-10-28**: Password Generator (Phase 7, Task #1)
   - Created src/PasswordGenerator.vue (280 lines) with real-time auto-generation UI
   - Created src/utils/passwordGenerator.js (127 lines) with Web Crypto API for secure randomness
@@ -741,4 +1176,4 @@ AESEnc.vue/AESDec.vue
 - File sizes grow significantly (>200 line change)
 - Organizational patterns evolve
 
-**Last Updated**: 2025-10-28 (Updated for password generator feature)
+**Last Updated**: 2025-11-01 (Updated for major refactoring: added composables directory, 4 new shared components, updated all 7 tool components)

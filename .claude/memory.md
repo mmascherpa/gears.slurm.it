@@ -10,11 +10,13 @@ This file contains code style preferences, coding patterns, and development prac
 ### JavaScript/Vue 3
 - ES6+ syntax (arrow functions, destructuring, template literals)
 - `const` over `let`, avoid `var`
-- Component methods use regular function syntax (preserves `this` context)
+- **Vue 3 Composition API** for all components (migrated from Options API in 2025-11-01)
 - Async operations use async/await pattern
-- 350ms debounce for real-time encoding operations
+- Standard debounce delays: 350ms (text operations), 800ms (crypto operations)
 
 **Note**: Follows global code style preferences from `~/.claude/memory.md` unless noted otherwise.
+
+**Detailed Standards**: See [CODING-STANDARDS.md](CODING-STANDARDS.md) for comprehensive coding guidelines established during Phase 4 refactoring.
 
 ### Project-Specific Style Overrides
 - Vuetify components preferred over custom HTML/CSS
@@ -254,6 +256,32 @@ npm run build
 
 ## Architecture Notes
 
+### Composables Pattern (2025-11-01)
+**WHY THIS MATTERS**: Eliminates code duplication, provides automatic cleanup, ensures consistent behavior.
+
+- **Extract reusable logic** to `src/composables/` directory
+- **Available composables**:
+  - `useSnackbar()` - Centralized notification state
+  - `useClipboard()` - Copy/paste with error handling
+  - `useDebounce()` - Debounced functions with auto-cleanup
+  - `useFileSizeValidation()` - File size validation (50MB warning, 200MB max)
+  - `useAESWorker()` - Web Worker lifecycle with memory leak fix
+- **Critical**: `useAESWorker` automatically terminates workers on unmount (fixes memory leak)
+- All composables use `onBeforeUnmount` for cleanup
+- See [structure.md](structure.md) for usage patterns
+
+### Shared Components Pattern (2025-11-01)
+**WHY THIS MATTERS**: DRY principle, consistent UX, reduced maintenance burden.
+
+- **Reusable components** in `src/components/` directory
+- **Available shared components**:
+  - `ToolPageHeader.vue` - Standardized page headers
+  - `SharedSnackbar.vue` - Centralized notifications
+  - `TextInputWithActions.vue` - Text input with configurable buttons
+  - `FileUploadWithValidation.vue` - File upload with size validation and dynamic tooltips
+- All tool pages use these components for consistency
+- See [structure.md](structure.md) for props and usage
+
 ### Shared Utilities Pattern (2025-10-19)
 - Extract common logic to `src/utils/` directory
 - See [structure.md](structure.md) for available utilities
@@ -264,6 +292,7 @@ npm run build
 ## References
 
 - [CLAUDE.md](../CLAUDE.md) - Quick start guide for Claude Code instances
+- [CODING-STANDARDS.md](CODING-STANDARDS.md) - Comprehensive coding guidelines (NEW)
 - [structure.md](structure.md) - Detailed code organization
 - [roadmap.md](roadmap.md) - Feature planning and progress
 - [Vue 3 Docs](https://vuejs.org/)
@@ -272,4 +301,4 @@ npm run build
 
 ---
 
-**Last Updated**: 2025-10-26 (Slimmed down to focus on critical patterns only)
+**Last Updated**: 2025-11-01 (Added composables pattern, shared components pattern, Vue 3 Composition API migration, CODING-STANDARDS.md reference)
