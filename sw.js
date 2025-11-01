@@ -1,4 +1,4 @@
-const CACHE_NAME = 'slurm-cache-2025-10-29T00-54-17';
+const CACHE_NAME = 'slurm-cache-2025-11-01T23-54-40';
 const urlsToCache = [
     '/',
     '/index.html',
@@ -8,8 +8,8 @@ const urlsToCache = [
     '/icons/icon-512x512.png',
     '/libs/enc-uint8array.min.js',
     '/libs/aes_crypt.min.js',
-    '/assets/index-xjf3podB.js',
-    '/assets/index-kbphdPbM.css',
+    '/assets/index-mWCJKQjp.js',
+    '/assets/index-oIDlA_w5.css',
     '/assets/materialdesignicons-webfont-6eb_lmTU.woff2',
     '/assets/materialdesignicons-webfont-D15t_tsC.woff',
     '/assets/materialdesignicons-webfont-e5j8FT_3.ttf',
