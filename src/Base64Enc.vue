@@ -1,14 +1,10 @@
 <template>
   <div>
-    <div class="d-flex align-center mb-6">
-      <v-avatar color="secondary" size="48" class="mr-4">
-        <v-icon icon="mdi-arrow-down-bold-box" size="28" color="white"></v-icon>
-      </v-avatar>
-      <div>
-        <h1 class="text-h4 font-weight-bold">Base64 Encoder</h1>
-        <p class="text-body-2 text-medium-emphasis mb-0">Convert text or files to Base64 format</p>
-      </div>
-    </div>
+    <ToolPageHeader
+      title="Base64 Encoder"
+      description="Convert text or files to Base64 format"
+      icon="mdi-arrow-down-bold-box"
+      avatar-color="secondary" />
 
     <v-card class="mb-4" elevation="2">
       <v-card-title class="bg-surface-variant">
@@ -16,63 +12,34 @@
         Text Encoding
       </v-card-title>
       <v-card-text class="pa-4">
-        <v-row no-gutters class="mb-4">
-          <v-col class="flex-grow-1">
-            <v-textarea
-              label="Plain Text"
-              v-model="plainText"
-              @input="updateEncodedText()"
-              variant="outlined"
-              rows="4"
-              placeholder="Enter your plain text here"
-              hide-details>
-            </v-textarea>
-          </v-col>
-          <v-col class="ml-2" cols="auto">
-            <v-tooltip text="Paste from clipboard" location="top">
-              <template v-slot:activator="{ props }">
-                <v-btn v-bind="props" flat icon @click="pasteFromClipboard" v-show="!plainText">
-                  <v-icon icon='mdi-content-paste' />
-                </v-btn>
-              </template>
-            </v-tooltip>
-            <v-tooltip text="Clear text" location="top">
-              <template v-slot:activator="{ props }">
-                <v-btn v-bind="props" flat icon @click="plainText = ''; updateEncodedText(0)" v-show="!!plainText">
-                  <v-icon icon='mdi-close-octagon-outline' />
-                </v-btn>
-              </template>
-            </v-tooltip>
-          </v-col>
-        </v-row>
+        <TextInputWithActions
+          v-model="plainText"
+          label="Plain Text"
+          placeholder="Enter your plain text here"
+          :rows="4"
+          :show-paste="true"
+          :show-clear="true"
+          :show-copy="false"
+          row-class="mb-4"
+          @paste="handlePaste"
+          @clear="handleClearInput"
+          @input="scheduleEncode" />
 
         <v-divider class="my-4"></v-divider>
 
-        <v-row no-gutters>
-          <v-col class="flex-grow-1">
-            <v-textarea
-              v-model="encodedText"
-              label="Base64 Encoded Output"
-              variant="outlined"
-              rows="4"
-              readonly
-              placeholder="Base64 encoded text will appear here"
-              class="monospace-output"
-              hide-details>
-            </v-textarea>
-          </v-col>
-          <v-col class="ml-2" cols="auto">
-            <v-btn v-if="!isLoading && !plainText" color="transparent" flat icon></v-btn>
-            <v-progress-circular v-if="isLoading" color="primary" indeterminate :size="48" :width="6"></v-progress-circular>
-            <v-tooltip text="Copy to clipboard" location="top">
-              <template v-slot:activator="{ props }">
-                <v-btn v-bind="props" v-if="!isLoading" flat icon @click="copyToClipboard" v-show="!!encodedText">
-                  <v-icon icon='mdi-content-copy' />
-                </v-btn>
-              </template>
-            </v-tooltip>
-          </v-col>
-        </v-row>
+        <TextInputWithActions
+          v-model="encodedText"
+          label="Base64 Encoded Output"
+          placeholder="Base64 encoded text will appear here"
+          :rows="4"
+          :is-loading="isLoading"
+          :readonly="true"
+          :show-paste="false"
+          :show-clear="false"
+          :show-copy="true"
+          :show-spacers="true"
+          textarea-class="monospace-output"
+          @copy="handleCopy" />
       </v-card-text>
     </v-card>
 
@@ -82,240 +49,203 @@
         File Encoding
       </v-card-title>
       <v-card-text class="pa-4">
-        <v-row>
-          <v-col cols="12" sm="8">
-            <v-file-input
-              v-model="plainFile"
-              label="Select a file to encode"
-              variant="outlined"
-              prepend-icon=""
-              prepend-inner-icon="mdi-paperclip"
-              @change="handleFileSelection"
-              @click:clear="clearFileValidation"
-              :hint="fileSizeHint"
-              persistent-hint>
-            </v-file-input>
-          </v-col>
-          <v-col cols="12" sm="4">
-            <v-btn
-              :disabled="plainFile.length == 0 || !isFileSizeValid"
-              @click="encodeFile"
-              color="primary"
-              size="large"
-              block>
-              <v-icon start>mdi-arrow-down-bold-box</v-icon>
-              Encode File
-            </v-btn>
-          </v-col>
-        </v-row>
-
-        <!-- File Size Error Alert -->
-        <v-alert
-          v-if="fileSizeError"
-          type="error"
-          variant="tonal"
-          class="mt-4"
-          density="compact"
-          closable
-          @click:close="fileSizeError = ''">
-          {{ fileSizeError }}
-        </v-alert>
-
-        <!-- File Size Warning Alert -->
-        <v-alert
-          v-if="showFileSizeWarning"
-          type="warning"
-          variant="tonal"
-          class="mt-4"
-          density="compact"
-          closable
-          @click:close="showFileSizeWarning = false">
-          {{ fileSizeWarningMessage }}
-        </v-alert>
+        <FileUploadWithValidation
+          v-model="plainFile"
+          label="Select a file to encode"
+          button-text="Encode File"
+          button-icon="mdi-arrow-down-bold-box"
+          :can-submit="canEncodeFile"
+          @submit="encodeFile"
+          @validation-change="handleFileValidation" />
       </v-card-text>
     </v-card>
 
-    <!-- Success/Error Snackbar -->
-    <v-snackbar
+    <SharedSnackbar
       v-model="snackbar"
-      :color="snackbarColor"
-      timeout="3000"
-      location="top">
-      {{ snackbarText }}
-    </v-snackbar>
+      :text="snackbarText"
+      :color="snackbarColor" />
 
   </div>
 </template>
 
 <script>
-import { validateFileSize, formatFileSize } from '@/utils/fileSizeValidator';
+import { computed, ref } from 'vue';
+import { downloadFile } from '@/utils/fileDownload';
+import { useClipboard } from '@/composables/useClipboard';
+import { useDebounce } from '@/composables/useDebounce';
+import { useSnackbar } from '@/composables/useSnackbar';
+import FileUploadWithValidation from '@/components/FileUploadWithValidation.vue';
+import SharedSnackbar from '@/components/SharedSnackbar.vue';
+import TextInputWithActions from '@/components/TextInputWithActions.vue';
+import ToolPageHeader from '@/components/ToolPageHeader.vue';
 
 export default {
-  data() {
-    return {
-      plainText: '',
-      encodedText: '',
-      isLoading: false,
-      plainFile: [],
-      encodedFile: false,
-      snackbar: false,
-      snackbarText: '',
-      snackbarColor: 'success',
-      // File size validation
-      isFileSizeValid: true,
-      showFileSizeWarning: false,
-      fileSizeWarningMessage: '',
-      fileSizeError: '',
-      fileSizeHint: ''
-    };
+  name: 'Base64Enc',
+  components: {
+    FileUploadWithValidation,
+    SharedSnackbar,
+    TextInputWithActions,
+    ToolPageHeader
   },
-  methods: {
-    /**
-     * Clears all file validation state
-     */
-    clearFileValidation() {
-      this.isFileSizeValid = true;
-      this.showFileSizeWarning = false;
-      this.fileSizeWarningMessage = '';
-      this.fileSizeError = '';
-      this.fileSizeHint = '';
-    },
-    /**
-     * Handles file selection and validates file size
-     */
-    handleFileSelection() {
-      // Reset validation state
-      this.clearFileValidation();
+  setup() {
+    // Reactive State
+    const encodedText = ref('');
+    const isLoading = ref(false);
+    const plainFile = ref(null);
+    const plainText = ref('');
 
-      if (!this.plainFile || this.plainFile.length === 0) {
+    // Composables
+    const { snackbar, snackbarText, snackbarColor, showSnackbar } = useSnackbar();
+    const { copyToClipboard, pasteFromClipboard } = useClipboard();
+
+    // Computed Properties
+    const canEncodeFile = computed(() => {
+      return !!plainFile.value && plainFile.value.length > 0;
+    });
+
+    // Functions
+    /**
+     * Encodes plain text to Base64
+     */
+    const encodeText = () => {
+      if (!plainText.value) {
+        encodedText.value = '';
         return;
       }
 
-      const file = this.plainFile[0];
-      const validation = validateFileSize(file);
+      isLoading.value = true;
 
-      // Display file size
-      this.fileSizeHint = `File size: ${validation.formattedSize}`;
-
-      if (!validation.isValid) {
-        // File exceeds maximum size
-        this.isFileSizeValid = false;
-        this.fileSizeError = validation.message;
-      } else if (validation.hasWarning) {
-        // File is large but within limits
-        this.isFileSizeValid = true;
-        this.showFileSizeWarning = true;
-        this.fileSizeWarningMessage = validation.message;
+      try {
+        encodedText.value = btoa(plainText.value);
+        isLoading.value = false;
+      } catch (error) {
+        console.error('Encoding error:', error);
+        showSnackbar('❌ Failed to encode text', 'error');
+        isLoading.value = false;
       }
-    },
-    showSnackbar(text, color = 'success') {
-      this.snackbarText = text;
-      this.snackbarColor = color;
-      this.snackbar = true;
-    },
+    };
+
     /**
-     * Encodes plain text to Base64 with debouncing to avoid excessive processing
-     * @param {number} timeout - Debounce delay in milliseconds (default: 350ms)
+     * Schedules encoding with debounce
      */
-    updateEncodedText(timeout = 350) {
-      this.isLoading = true;
-      clearTimeout(this.updateTimeout);
-      this.updateTimeout = setTimeout(() => {
-        try {
-          this.encodedText = btoa(this.plainText);
-        } catch (error) {
-          console.error('Base64 encoding error:', error);
-          this.encodedText = 'Error: Unable to encode text. Please check for invalid characters.';
-        } finally {
-          this.isLoading = false;
-        }
-      }, timeout);
-    },
+    const scheduleEncode = () => {
+      encodedText.value = '';
+      debouncedEncode();
+    };
+
     /**
-     * Copies the Base64 encoded text to the system clipboard
+     * Handles clearing the input text
      */
-    copyToClipboard() {
-      navigator.clipboard.writeText(this.encodedText)
-        .then(() => {
-          this.showSnackbar('✓ Copied to clipboard!', 'success');
-        })
-        .catch(error => {
-          console.error('Clipboard write failed:', error);
-          this.showSnackbar('Failed to copy. Please try again.', 'error');
-        });
-    },
+    const handleClearInput = () => {
+      plainText.value = '';
+      encodedText.value = '';
+      isLoading.value = false;
+    };
+
     /**
-     * Pastes text from clipboard and triggers encoding
+     * Handles paste from clipboard
      */
-    pasteFromClipboard() {
-      navigator.clipboard.readText()
-        .then((clipboardText) => {
-          this.plainText = clipboardText;
-          this.updateEncodedText();
-          this.showSnackbar('✓ Pasted from clipboard!', 'success');
-        })
-        .catch(error => {
-          console.error('Clipboard read failed:', error);
-          this.showSnackbar('Failed to paste. Please try again.', 'error');
-        });
-    },
+    const handlePaste = async () => {
+      await pasteFromClipboard(
+        (pastedText, message) => {
+          plainText.value = pastedText;
+          showSnackbar(message, 'success');
+          scheduleEncode();
+        },
+        (message) => showSnackbar(message, 'error')
+      );
+    };
+
     /**
-     * Encodes a file to Base64 and triggers download of the encoded result
-     * Uses FileReader API to read file as Data URL, extracts Base64 portion
+     * Handles copying encoded text to clipboard
      */
-    encodeFile() {
-      if (!this.plainFile || !this.plainFile[0]) {
-        alert('Please select a file first.');
+    const handleCopy = async () => {
+      await copyToClipboard(
+        encodedText.value,
+        (message) => showSnackbar(message, 'success'),
+        (message) => showSnackbar(message, 'error')
+      );
+    };
+
+    /**
+     * Handles file validation updates from FileUploadWithValidation
+     */
+    const handleFileValidation = () => {
+      // Validation state is managed by FileUploadWithValidation component
+      // This handler is kept for potential future use
+    };
+
+    /**
+     * Encodes file to Base64 and triggers download
+     */
+    const encodeFile = () => {
+      if (!plainFile.value || plainFile.value.length === 0) {
+        showSnackbar('❌ Please select a file', 'error');
         return;
       }
 
+      const file = plainFile.value[0];
       const reader = new FileReader();
-
-      reader.onerror = () => {
-        console.error('File read error:', reader.error);
-        alert('Failed to read file. Please try again.');
-      };
 
       reader.onload = () => {
         try {
-          const dataUrl = reader.result;
-          const base64String = dataUrl.split(',')[1];
-          const dataLink = `data:text/plain;,${base64String}`;
-          const link = document.createElement('a');
-          link.href = dataLink;
-          link.download = `${this.plainFile[0].name}.b64.txt`;
-          link.style.display = 'none';
+          const base64String = reader.result.split(',')[1];
+          const blob = new Blob([base64String], { type: 'text/plain' });
+          const fileName = file.name + '.base64';
 
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
+          downloadFile(blob, fileName);
+          showSnackbar('✓ File encoded and downloaded!', 'success');
+
+          // Clear file input
+          plainFile.value = null;
         } catch (error) {
           console.error('File encoding error:', error);
-          alert('Failed to encode file. Please try again.');
+          showSnackbar('❌ Failed to encode file', 'error');
         }
       };
 
-      reader.readAsDataURL(this.plainFile[0]);
-    }
-  },
+      reader.onerror = () => {
+        console.error('File reading error');
+        showSnackbar('❌ Failed to read file', 'error');
+      };
+
+      reader.readAsDataURL(file);
+    };
+
+    // Debounced encoding (350ms for non-crypto operations)
+    const { debounce: debouncedEncode } = useDebounce(encodeText, 350);
+
+    return {
+      // State
+      encodedText,
+      isLoading,
+      plainFile,
+      plainText,
+
+      // Snackbar
+      snackbar,
+      snackbarColor,
+      snackbarText,
+
+      // Computed
+      canEncodeFile,
+
+      // Methods
+      encodeFile,
+      handleClearInput,
+      handleCopy,
+      handleFileValidation,
+      handlePaste,
+      scheduleEncode
+    };
+  }
 };
 </script>
 
 <style scoped>
-/* Monospace font for encoded output for better readability */
-.monospace-output :deep(textarea) {
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-  font-size: 0.9rem;
-  letter-spacing: 0.5px;
-  line-height: 1.5;
-}
-
-/* Smooth transitions for buttons */
-.v-btn {
-  transition: all 0.2s ease;
-}
-
-.v-btn:hover {
-  transform: translateY(-1px);
+.monospace-output {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9em;
+  letter-spacing: 0.05em;
 }
 </style>

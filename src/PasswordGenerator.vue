@@ -1,105 +1,106 @@
 <template>
   <div>
-    <!-- Header with Icon and Title -->
-    <div class="d-flex align-center mb-6">
-      <v-avatar color="primary" size="48" class="mr-4">
-        <v-icon icon="mdi-form-textbox-password" size="28" color="white"></v-icon>
-      </v-avatar>
-      <div>
-        <h1 class="text-h4 font-weight-bold">Password Generator</h1>
-        <p class="text-body-2 text-medium-emphasis mb-0">Generate strong random passwords with customizable options</p>
-      </div>
-    </div>
+    <ToolPageHeader
+      title="Password Generator"
+      description="Generate strong random passwords with customizable options"
+      icon="mdi-form-textbox-password"
+      avatar-color="primary" />
 
-    <!-- Password Options Card -->
     <v-card class="mb-4" elevation="2">
       <v-card-title class="bg-surface-variant">
         <v-icon icon="mdi-cog" class="mr-2"></v-icon>
         Password Options
       </v-card-title>
-      <v-card-text class="pa-4">
-        <!-- Length Slider -->
-        <div class="mb-6">
-          <div class="d-flex justify-space-between align-center mb-2">
-            <label class="text-subtitle-1 font-weight-medium">Password Length</label>
-            <v-chip color="primary" size="small">{{ length }} characters</v-chip>
-          </div>
-          <v-slider
-            v-model="length"
-            :min="8"
-            :max="64"
-            :step="1"
-            color="primary"
-            track-color="grey-lighten-2"
-            thumb-label
-          ></v-slider>
-        </div>
+      <v-card-text class="pa-3">
+        <v-row dense>
+          <v-col cols="12" md="6">
+            <div class="mb-3">
+              <div class="d-flex justify-space-between align-center mb-1">
+                <label class="text-body-2 font-weight-medium">Password Length</label>
+                <v-chip color="primary" size="x-small">{{ length }} chars</v-chip>
+              </div>
+              <v-slider
+                v-model="length"
+                :min="8"
+                :max="64"
+                :step="1"
+                color="primary"
+                track-color="grey-lighten-2"
+                thumb-label
+                hide-details></v-slider>
+            </div>
+          </v-col>
+          <v-col cols="12" md="6">
+            <label class="text-body-2 font-weight-medium d-block mb-1">Character Types</label>
+            <v-row dense>
+              <v-col cols="6">
+                <v-checkbox
+                  v-model="includeUppercase"
+                  label="Uppercase (A-Z)"
+                  color="primary"
+                  hide-details
+                  density="compact"></v-checkbox>
+              </v-col>
+              <v-col cols="6">
+                <v-checkbox
+                  v-model="includeLowercase"
+                  label="Lowercase (a-z)"
+                  color="primary"
+                  hide-details
+                  density="compact"></v-checkbox>
+              </v-col>
+              <v-col cols="6">
+                <v-checkbox
+                  v-model="includeNumbers"
+                  label="Numbers (0-9)"
+                  color="primary"
+                  hide-details
+                  density="compact"></v-checkbox>
+              </v-col>
+              <v-col cols="6">
+                <v-checkbox
+                  v-model="includeSpecial"
+                  label="Special (!@#$%)"
+                  color="primary"
+                  hide-details
+                  density="compact"></v-checkbox>
+              </v-col>
+            </v-row>
+          </v-col>
+        </v-row>
 
-        <!-- Character Type Checkboxes -->
-        <div>
-          <label class="text-subtitle-1 font-weight-medium d-block mb-3">Character Types</label>
-          <v-row>
-            <v-col cols="12" sm="6">
-              <v-checkbox
-                v-model="includeUppercase"
-                label="Uppercase Letters (A-Z)"
-                color="primary"
-                hide-details
-                density="comfortable"
-              ></v-checkbox>
-            </v-col>
-            <v-col cols="12" sm="6">
-              <v-checkbox
-                v-model="includeLowercase"
-                label="Lowercase Letters (a-z)"
-                color="primary"
-                hide-details
-                density="comfortable"
-              ></v-checkbox>
-            </v-col>
-            <v-col cols="12" sm="6">
-              <v-checkbox
-                v-model="includeNumbers"
-                label="Numbers (0-9)"
-                color="primary"
-                hide-details
-                density="comfortable"
-              ></v-checkbox>
-            </v-col>
-            <v-col cols="12" sm="6">
-              <v-checkbox
-                v-model="includeSpecial"
-                label="Special Characters (!@#$%...)"
-                color="primary"
-                hide-details
-                density="comfortable"
-              ></v-checkbox>
-            </v-col>
-          </v-row>
-
-          <!-- Warning if no character types selected -->
-          <v-alert
-            v-if="!hasCharacterTypeSelected"
-            type="warning"
-            variant="tonal"
-            density="compact"
-            class="mt-4"
-          >
-            Please select at least one character type
-          </v-alert>
-        </div>
+        <v-alert
+          v-if="!hasCharacterTypeSelected"
+          type="warning"
+          variant="tonal"
+          density="compact"
+          class="mt-3">
+          Please select at least one character type
+        </v-alert>
       </v-card-text>
     </v-card>
 
-    <!-- Generated Password Card -->
     <v-card class="mb-4" elevation="2">
       <v-card-title class="bg-surface-variant">
         <v-icon icon="mdi-form-textbox-password" class="mr-2"></v-icon>
         Generated Password
       </v-card-title>
       <v-card-text class="pa-4">
-        <!-- Password Display -->
         <v-row no-gutters>
+          <v-col cols="auto" class="mr-2">
+            <v-tooltip text="Regenerate password" location="top">
+              <template v-slot:activator="{ props }">
+                <v-btn
+                  v-bind="props"
+                  flat
+                  icon
+                  @click="generateNewPassword"
+                  v-show="!!generatedPassword">
+                  <v-icon icon="mdi-refresh"></v-icon>
+                </v-btn>
+              </template>
+            </v-tooltip>
+          </v-col>
           <v-col class="flex-grow-1">
             <v-text-field
               v-model="generatedPassword"
@@ -108,14 +109,18 @@
               readonly
               placeholder="Password will appear here"
               class="monospace-output"
-              hide-details>
-            </v-text-field>
+              hide-details></v-text-field>
           </v-col>
           <v-col class="ml-2" cols="auto">
             <v-tooltip text="Copy to clipboard" location="top">
               <template v-slot:activator="{ props }">
-                <v-btn v-bind="props" flat icon @click="copyToClipboard" v-show="!!generatedPassword">
-                  <v-icon icon='mdi-content-copy' />
+                <v-btn
+                  v-bind="props"
+                  flat
+                  icon
+                  @click="handleCopy"
+                  v-show="!!generatedPassword">
+                  <v-icon icon="mdi-content-copy"></v-icon>
                 </v-btn>
               </template>
             </v-tooltip>
@@ -124,7 +129,6 @@
       </v-card-text>
     </v-card>
 
-    <!-- Password Strength Indicator Card -->
     <v-card v-if="generatedPassword" elevation="2">
       <v-card-title class="bg-surface-variant">
         <v-icon icon="mdi-shield-check" class="mr-2"></v-icon>
@@ -135,139 +139,130 @@
           :password="generatedPassword"
           :show-requirements="true"
           :show-feedback="false"
-          :show-score="true"
-        />
+          :show-score="true" />
       </v-card-text>
     </v-card>
 
-    <!-- Snackbar for Feedback -->
-    <v-snackbar
+    <SharedSnackbar
       v-model="snackbar"
-      :color="snackbarColor"
-      timeout="3000"
-      location="top"
-    >
-      {{ snackbarText }}
-    </v-snackbar>
+      :text="snackbarText"
+      :color="snackbarColor" />
+
   </div>
 </template>
 
 <script>
+import { computed, onMounted, ref, watch } from 'vue';
 import { generatePassword } from '@/utils/passwordGenerator';
+import { useClipboard } from '@/composables/useClipboard';
+import { useSnackbar } from '@/composables/useSnackbar';
 import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator.vue';
+import SharedSnackbar from '@/components/SharedSnackbar.vue';
+import ToolPageHeader from '@/components/ToolPageHeader.vue';
 
 export default {
   name: 'PasswordGenerator',
   components: {
-    PasswordStrengthIndicator
+    PasswordStrengthIndicator,
+    SharedSnackbar,
+    ToolPageHeader
   },
-  data() {
-    return {
-      // Password options
-      length: 16,
-      includeUppercase: true,
-      includeLowercase: true,
-      includeNumbers: true,
-      includeSpecial: true,
+  setup() {
+    // Reactive State
+    const generatedPassword = ref('');
+    const includeLowercase = ref(true);
+    const includeNumbers = ref(true);
+    const includeSpecial = ref(true);
+    const includeUppercase = ref(true);
+    const length = ref(16);
 
-      // Generated password
-      generatedPassword: '',
+    // Composables
+    const { snackbar, snackbarText, snackbarColor, showSnackbar } = useSnackbar();
+    const { copyToClipboard } = useClipboard();
 
-      // Snackbar
-      snackbar: false,
-      snackbarText: '',
-      snackbarColor: 'success'
-    };
-  },
-  computed: {
+    // Computed Properties
     /**
-     * Check if at least one character type is selected
+     * Checks if at least one character type is selected
      */
-    hasCharacterTypeSelected() {
-      return this.includeUppercase ||
-             this.includeLowercase ||
-             this.includeNumbers ||
-             this.includeSpecial;
-    }
-  },
-  watch: {
-    /**
-     * Watch for changes in password options and regenerate
-     */
-    length() {
-      this.generateNewPassword();
-    },
-    includeUppercase() {
-      this.generateNewPassword();
-    },
-    includeLowercase() {
-      this.generateNewPassword();
-    },
-    includeNumbers() {
-      this.generateNewPassword();
-    },
-    includeSpecial() {
-      this.generateNewPassword();
-    }
-  },
-  methods: {
+    const hasCharacterTypeSelected = computed(() => {
+      return includeUppercase.value ||
+             includeLowercase.value ||
+             includeNumbers.value ||
+             includeSpecial.value;
+    });
+
+    // Functions
     /**
      * Generates a new password based on current options
      */
-    generateNewPassword() {
-      if (!this.hasCharacterTypeSelected) {
-        this.generatedPassword = '';
+    const generateNewPassword = () => {
+      if (!hasCharacterTypeSelected.value) {
+        generatedPassword.value = '';
         return;
       }
 
       try {
         const options = {
-          length: this.length,
-          includeUppercase: this.includeUppercase,
-          includeLowercase: this.includeLowercase,
-          includeNumbers: this.includeNumbers,
-          includeSpecial: this.includeSpecial
+          length: length.value,
+          includeUppercase: includeUppercase.value,
+          includeLowercase: includeLowercase.value,
+          includeNumbers: includeNumbers.value,
+          includeSpecial: includeSpecial.value
         };
 
-        this.generatedPassword = generatePassword(options);
+        generatedPassword.value = generatePassword(options);
       } catch (error) {
         const errorMessage = typeof error === 'string' ? error : (error.message || 'Unknown error');
-        this.generatedPassword = '';
+        generatedPassword.value = '';
         console.error('Password generation error:', error);
+        showSnackbar(`❌ ${errorMessage}`, 'error');
       }
-    },
+    };
 
     /**
-     * Copies the generated password to clipboard
+     * Handles copying password to clipboard
      */
-    async copyToClipboard() {
-      if (!this.generatedPassword) {
-        return;
-      }
+    const handleCopy = async () => {
+      await copyToClipboard(
+        generatedPassword.value,
+        (message) => showSnackbar(message, 'success'),
+        (message) => showSnackbar(message, 'error')
+      );
+    };
 
-      try {
-        await navigator.clipboard.writeText(this.generatedPassword);
-        this.showSnackbar('Copied to clipboard', 'success');
-      } catch (error) {
-        console.error('Failed to copy password:', error);
-        this.showSnackbar('Failed to copy to clipboard', 'error');
-      }
-    },
+    // Watchers
+    watch(includeLowercase, generateNewPassword);
+    watch(includeNumbers, generateNewPassword);
+    watch(includeSpecial, generateNewPassword);
+    watch(includeUppercase, generateNewPassword);
+    watch(length, generateNewPassword);
 
-    /**
-     * Shows a snackbar with a message
-     * @param {string} message - Message to display
-     * @param {string} color - Snackbar color (success, error, warning, info)
-     */
-    showSnackbar(message, color = 'success') {
-      this.snackbarText = message;
-      this.snackbarColor = color;
-      this.snackbar = true;
-    }
-  },
-  mounted() {
-    // Generate a password on initial load
-    this.generateNewPassword();
+    // Lifecycle Hooks
+    onMounted(() => {
+      generateNewPassword();
+    });
+
+    return {
+      // State
+      generatedPassword,
+      includeLowercase,
+      includeNumbers,
+      includeSpecial,
+      includeUppercase,
+      length,
+
+      // Snackbar
+      snackbar,
+      snackbarColor,
+      snackbarText,
+
+      // Computed
+      hasCharacterTypeSelected,
+
+      // Methods
+      generateNewPassword,
+      handleCopy
+    };
   }
 };
 </script>

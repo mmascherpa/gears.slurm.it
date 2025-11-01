@@ -1,15 +1,12 @@
 <template>
   <div>
     <!-- Page Header -->
-    <div class="d-flex align-center mb-6">
-      <v-avatar color="primary" size="48" class="mr-4">
-        <v-icon icon="mdi-file-lock-outline" size="28" color="white"></v-icon>
-      </v-avatar>
-      <div>
-        <h1 class="text-h4 font-weight-bold">AES Text Encryption</h1>
-        <p class="text-body-2 text-medium-emphasis mb-0">Encrypt text with password protection</p>
-      </div>
-    </div>
+    <ToolPageHeader
+      icon="mdi-file-lock-outline"
+      title="AES Text Encryption"
+      description="Encrypt text with password protection"
+      avatar-color="primary"
+    />
 
     <!-- Password Protection Section -->
     <v-card class="mb-4" elevation="2">
@@ -27,9 +24,14 @@
               variant="outlined"
               density="comfortable"
               autocomplete="new-password"
+              prepend-inner-icon="mdi-lock"
               hide-details
             ></v-text-field>
-            <PasswordStrengthIndicator :password="password" :show-requirements="true" />
+            <PasswordStrengthIndicator
+              :password="password"
+              :show-requirements="true"
+              :show-feedback="true"
+            />
           </v-col>
           <v-col cols="12" sm="6">
             <v-text-field
@@ -39,9 +41,10 @@
               variant="outlined"
               density="comfortable"
               autocomplete="new-password"
-              hide-details
+              prepend-inner-icon="mdi-lock-check"
               :error="password !== '' && passwordConfirm !== '' && password !== passwordConfirm"
-              :error-messages="password !== '' && passwordConfirm !== '' && password !== passwordConfirm ? 'Passwords do not match' : ''"
+              :success="isPasswordConfirmed"
+              hide-details
             ></v-text-field>
           </v-col>
         </v-row>
@@ -55,105 +58,40 @@
         Plain Text
       </v-card-title>
       <v-card-text class="pa-4">
-        <v-row no-gutters class="mb-4">
-          <v-col class="flex-grow-1">
-            <v-textarea
-              v-model="plainText"
-              label="Enter your secret text"
-              placeholder="Type or paste your text here..."
-              rows="6"
-              variant="outlined"
-              density="comfortable"
-              @input="onPlainTextChange"
-              hide-details
-            ></v-textarea>
-          </v-col>
-          <v-col class="ml-2" cols="auto">
-            <v-tooltip text="Paste from clipboard" location="top">
-              <template v-slot:activator="{ props }">
-                <v-btn
-                  v-bind="props"
-                  flat
-                  icon
-                  @click="pasteFromClipboard"
-                  v-show="!plainText"
-                >
-                  <v-icon icon="mdi-content-paste"></v-icon>
-                </v-btn>
-              </template>
-            </v-tooltip>
-            <v-tooltip text="Clear text" location="top">
-              <template v-slot:activator="{ props }">
-                <v-btn
-                  v-bind="props"
-                  flat
-                  icon
-                  @click="clearPlainText"
-                  v-show="!!plainText"
-                >
-                  <v-icon icon="mdi-close-octagon-outline"></v-icon>
-                </v-btn>
-              </template>
-            </v-tooltip>
-          </v-col>
-        </v-row>
+        <TextInputWithActions
+          v-model="plainText"
+          label="Enter your secret text"
+          placeholder="Type or paste your text here..."
+          :rows="6"
+          :show-paste="true"
+          :show-clear="true"
+          :show-copy="false"
+          row-class="mb-4"
+          @paste="handlePaste"
+          @clear="clearPlainText"
+          @input="handlePlainTextChange"
+        />
 
         <v-divider class="my-4"></v-divider>
 
-        <v-row no-gutters>
-          <v-col class="flex-grow-1">
-            <v-textarea
-              v-model="encryptedText"
-              label="Encrypted Text (Base64)"
-              placeholder="Encrypted output will appear here..."
-              rows="6"
-              variant="outlined"
-              readonly
-              hide-details
-            ></v-textarea>
-          </v-col>
-          <v-col class="ml-2 d-flex flex-column" cols="auto">
-            <!-- Spacer button when no output (maintains layout) -->
-            <v-btn v-if="!isLoading && !encryptedText" color="transparent" flat icon></v-btn>
-            <v-btn v-if="!isLoading && !encryptedText" color="transparent" flat icon></v-btn>
-
-            <!-- Loading spinner -->
-            <v-progress-circular
-              v-if="isLoading"
-              indeterminate
-              :size="48"
-              :width="6"
-              color="primary"
-            ></v-progress-circular>
-
-            <!-- Action buttons when output exists -->
-            <v-tooltip v-if="!isLoading && encryptedText" text="Copy to clipboard" location="top">
-              <template v-slot:activator="{ props }">
-                <v-btn
-                  class="mb-2"
-                  v-bind="props"
-                  flat
-                  icon
-                  @click="copyToClipboard"
-                >
-                  <v-icon icon="mdi-content-copy"></v-icon>
-                </v-btn>
-              </template>
-            </v-tooltip>
-            <v-tooltip v-if="!isLoading && encryptedText" text="Download as file" location="top">
-              <template v-slot:activator="{ props }">
-                <v-btn
-                  v-bind="props"
-                  flat
-                  icon
-                  @click="downloadEncrypted"
-                >
-                  <v-icon icon="mdi-download"></v-icon>
-                </v-btn>
-              </template>
-            </v-tooltip>
-          </v-col>
-        </v-row>
+        <TextInputWithActions
+          v-model="encryptedText"
+          label="Encrypted Text (Base64)"
+          placeholder="Encrypted output will appear here..."
+          :rows="6"
+          :is-loading="isLoading"
+          :readonly="true"
+          :show-paste="false"
+          :show-clear="false"
+          :show-copy="true"
+          :show-download="true"
+          :show-spacers="true"
+          :show-double-spacers="true"
+          copy-button-class="mb-2"
+          button-column-class="d-flex flex-column"
+          @copy="handleCopy"
+          @download="downloadEncrypted"
+        />
       </v-card-text>
     </v-card>
 
@@ -169,253 +107,122 @@
       {{ error }}
     </v-alert>
 
-    <!-- Success/Error Snackbar -->
-    <v-snackbar
+    <!-- Snackbar -->
+    <SharedSnackbar
       v-model="snackbar"
+      :text="snackbarText"
       :color="snackbarColor"
-      :timeout="3000"
-      location="top"
-    >
-      {{ snackbarText }}
-    </v-snackbar>
+    />
   </div>
 </template>
 
 <script>
+import { computed, ref, watch } from 'vue';
 import { downloadFile } from '@/utils/fileDownload';
+import { useAESWorker } from '@/composables/useAESWorker';
+import { useClipboard } from '@/composables/useClipboard';
+import { useDebounce } from '@/composables/useDebounce';
+import { useSnackbar } from '@/composables/useSnackbar';
 import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator.vue';
+import SharedSnackbar from '@/components/SharedSnackbar.vue';
+import TextInputWithActions from '@/components/TextInputWithActions.vue';
+import ToolPageHeader from '@/components/ToolPageHeader.vue';
 
 export default {
   name: 'TextAESEnc',
   components: {
-    PasswordStrengthIndicator
+    PasswordStrengthIndicator,
+    SharedSnackbar,
+    TextInputWithActions,
+    ToolPageHeader
   },
-  data() {
-    return {
-      password: '',
-      passwordConfirm: '',
-      plainText: '',
-      encryptedText: '',
-      worker: null,
-      isLoading: false,
-      error: '',
-      snackbar: false,
-      snackbarText: '',
-      snackbarColor: 'success',
-      encryptionTimer: null
+  setup() {
+    // Reactive State
+    const encryptedText = ref('');
+    const error = ref('');
+    const password = ref('');
+    const passwordConfirm = ref('');
+    const plainText = ref('');
+
+    // Composables
+    const { snackbar, snackbarColor, snackbarText, showSnackbar } = useSnackbar();
+    const { copyToClipboard, pasteFromClipboard } = useClipboard();
+
+    // AES Worker for encryption
+    const { encrypt, isLoading } = useAESWorker(
+      // onSuccess callback
+      (data) => {
+        convertToBase64(data);
+      },
+      // onError callback
+      (friendlyMessage, rawError) => {
+        error.value = rawError;
+        showSnackbar(friendlyMessage, 'error');
+      }
+    );
+
+    // Computed Properties
+    /**
+     * Checks if encryption is possible with valid inputs
+     */
+    const canEncrypt = computed(() => {
+      return isPasswordConfirmed.value && plainText.value.trim() !== '';
+    });
+
+    /**
+     * Checks if the password and confirmation match
+     */
+    const isPasswordConfirmed = computed(() => {
+      return password.value.trim() !== '' && password.value === passwordConfirm.value;
+    });
+
+    // Functions
+
+    /**
+     * Clears plain text and encrypted output.
+     */
+    const clearPlainText = () => {
+      plainText.value = '';
+      encryptedText.value = '';
+      error.value = '';
+      cancelEncryption();
     };
-  },
-  watch: {
-    // Auto-encrypt when password or text changes
-    password() {
-      this.scheduleEncryption();
-    },
-    passwordConfirm() {
-      this.scheduleEncryption();
-    }
-  },
-  computed: {
-    /**
-     * Check if encryption can proceed
-     * @returns {boolean} True if password matches and text is not empty
-     */
-    canEncrypt() {
-      return (
-        this.password.trim() !== '' &&
-        this.password === this.passwordConfirm &&
-        this.plainText.trim() !== ''
-      );
-    },
 
     /**
-     * Check if passwords match
-     * @returns {boolean} True if passwords match
+     * Converts encrypted binary data to Base64 string.
      */
-    isPasswordConfirmed() {
-      return this.password.trim() !== '' && this.password === this.passwordConfirm;
-    }
-  },
-  methods: {
-    /**
-     * Setup Web Worker for encryption
-     * Terminates existing worker if present and creates new one
-     */
-    setupWorker() {
-      if (this.worker) {
-        this.worker.terminate();
-      }
-      this.worker = new Worker('/worker.js');
-      this.worker.onmessage = this.handleWorkerResponse;
-    },
-
-    /**
-     * Handle response from Web Worker
-     * @param {MessageEvent} event - Worker message event
-     */
-    handleWorkerResponse(event) {
-      const [action, data, fileName] = event.data;
-      this.isLoading = false;
-
-      if (action === 'ERROR') {
-        this.error = data;
-        let snackbarMsg = 'Encryption failed';
-
-        if (data.includes('Password is too long')) {
-          snackbarMsg = '❌ Password too long (max 1024 characters)';
-        } else if (data.includes('corrupted')) {
-          snackbarMsg = '❌ Data corrupted during encryption';
-        }
-
-        this.showSnackbar(snackbarMsg, 'error');
-        return;
-      }
-
-      // Convert encrypted Uint8Array to Base64
-      this.convertToBase64(data);
-    },
-
-    /**
-     * Convert binary data to Base64 string
-     * @param {Uint8Array} data - Binary encrypted data
-     */
-    convertToBase64(data) {
+    const convertToBase64 = (data) => {
       try {
         const blob = new Blob([data]);
         const reader = new FileReader();
 
         reader.onload = () => {
-          // Extract Base64 string (remove data:... prefix)
           const base64 = reader.result.split(',')[1];
-          this.encryptedText = base64;
-          this.showSnackbar('✓ Text encrypted successfully!', 'success');
+          encryptedText.value = base64;
+          showSnackbar('✓ Text encrypted successfully!', 'success');
         };
 
         reader.onerror = () => {
-          this.error = 'Failed to convert encrypted data';
-          this.showSnackbar('❌ Encryption failed', 'error');
+          error.value = 'Failed to convert encrypted data';
+          showSnackbar('❌ Encryption failed', 'error');
         };
 
         reader.readAsDataURL(blob);
       } catch (err) {
         console.error('Base64 conversion error:', err);
-        this.error = 'Failed to convert encrypted data';
-        this.showSnackbar('❌ Encryption failed', 'error');
+        error.value = 'Failed to convert encrypted data';
+        showSnackbar('❌ Encryption failed', 'error');
       }
-    },
+    };
 
     /**
-     * Schedule encryption with debouncing
-     * Delays encryption by 800ms to avoid encrypting on every keystroke
+     * Downloads encrypted text as .aes file.
      */
-    scheduleEncryption() {
-      // Clear existing timer
-      if (this.encryptionTimer) {
-        clearTimeout(this.encryptionTimer);
-      }
-
-      // Clear encrypted text while typing
-      this.encryptedText = '';
-      this.error = '';
-
-      // Don't schedule if can't encrypt
-      if (!this.canEncrypt) {
-        return;
-      }
-
-      // Schedule new encryption
-      this.encryptionTimer = setTimeout(() => {
-        this.encryptText();
-      }, 800);
-    },
-
-    /**
-     * Handle plain text input change
-     * Triggers auto-encryption with debouncing
-     */
-    onPlainTextChange() {
-      this.scheduleEncryption();
-    },
-
-    /**
-     * Clear plain text and encrypted output
-     */
-    clearPlainText() {
-      this.plainText = '';
-      this.encryptedText = '';
-      this.error = '';
-      if (this.encryptionTimer) {
-        clearTimeout(this.encryptionTimer);
-      }
-    },
-
-    /**
-     * Encrypt the plain text
-     * Validates input and sends to Web Worker for processing
-     */
-    encryptText() {
-      if (!this.canEncrypt) {
-        return;
-      }
-
-      this.error = '';
-      this.encryptedText = '';
-      this.isLoading = true;
-      this.setupWorker();
+    const downloadEncrypted = () => {
+      if (!encryptedText.value) return;
 
       try {
-        // Wrap plain text in Blob for AES library
-        const textBlob = new Blob([this.plainText], { type: 'text/plain' });
-
-        // Send to worker with filename
-        this.worker.postMessage(['ENCRYPT', textBlob, this.password, 'plaintext.txt']);
-      } catch (err) {
-        console.error('Encryption error:', err);
-        this.error = 'Failed to initiate encryption';
-        this.showSnackbar('❌ Encryption failed', 'error');
-        this.isLoading = false;
-      }
-    },
-
-    /**
-     * Paste text from clipboard
-     */
-    async pasteFromClipboard() {
-      try {
-        const text = await navigator.clipboard.readText();
-        this.plainText = text;
-        this.showSnackbar('✓ Pasted from clipboard', 'success');
-        // Trigger auto-encryption
-        this.scheduleEncryption();
-      } catch (err) {
-        console.error('Clipboard paste error:', err);
-        this.showSnackbar('❌ Failed to paste from clipboard', 'error');
-      }
-    },
-
-    /**
-     * Copy encrypted text to clipboard
-     */
-    async copyToClipboard() {
-      if (!this.encryptedText) return;
-
-      try {
-        await navigator.clipboard.writeText(this.encryptedText);
-        this.showSnackbar('✓ Copied to clipboard!', 'success');
-      } catch (err) {
-        console.error('Clipboard copy error:', err);
-        this.showSnackbar('❌ Failed to copy to clipboard', 'error');
-      }
-    },
-
-    /**
-     * Download encrypted text as .aes file
-     */
-    downloadEncrypted() {
-      if (!this.encryptedText) return;
-
-      try {
-        // Convert Base64 back to binary for file download
-        const binaryString = atob(this.encryptedText);
+        const binaryString = atob(encryptedText.value);
         const bytes = new Uint8Array(binaryString.length);
 
         for (let i = 0; i < binaryString.length; i++) {
@@ -423,41 +230,104 @@ export default {
         }
 
         downloadFile(bytes, 'encrypted.aes');
-        this.showSnackbar('✓ File downloaded!', 'success');
+        showSnackbar('✓ File downloaded!', 'success');
       } catch (err) {
         console.error('Download error:', err);
-        this.showSnackbar('❌ Failed to download file', 'error');
+        showSnackbar('❌ Failed to download file', 'error');
       }
-    },
+    };
 
     /**
-     * Show snackbar notification
-     * @param {string} text - Message to display
-     * @param {string} color - Color of snackbar ('success' or 'error')
+     * Encrypts the plain text.
      */
-    showSnackbar(text, color = 'success') {
-      this.snackbarText = text;
-      this.snackbarColor = color;
-      this.snackbar = true;
-    }
-  },
-  beforeUnmount() {
-    // Clean up worker when component is destroyed
-    if (this.worker) {
-      this.worker.terminate();
-    }
-    // Clean up encryption timer
-    if (this.encryptionTimer) {
-      clearTimeout(this.encryptionTimer);
-    }
+    const encryptText = () => {
+      if (!canEncrypt.value) return;
+
+      error.value = '';
+      encryptedText.value = '';
+
+      try {
+        const textBlob = new Blob([plainText.value], { type: 'text/plain' });
+        encrypt(textBlob, password.value, 'plaintext.txt');
+      } catch (err) {
+        console.error('Encryption error:', err);
+        error.value = 'Failed to initiate encryption';
+        showSnackbar('❌ Encryption failed', 'error');
+      }
+    };
+
+    /**
+     * Copies encrypted text to clipboard.
+     */
+    const handleCopy = async () => {
+      await copyToClipboard(
+        encryptedText.value,
+        (message) => showSnackbar(message, 'success'),
+        (message) => showSnackbar(message, 'error')
+      );
+    };
+
+    /**
+     * Pastes text from clipboard.
+     */
+    const handlePaste = async () => {
+      await pasteFromClipboard(
+        (pastedText, message) => {
+          plainText.value = pastedText;
+          showSnackbar(message, 'success');
+          debouncedEncrypt();
+        },
+        (message) => showSnackbar(message, 'error')
+      );
+    };
+
+    /**
+     * Handles plain text input change.
+     */
+    const handlePlainTextChange = () => {
+      encryptedText.value = '';
+      error.value = '';
+      debouncedEncrypt();
+    };
+
+    // Debounced encryption (800ms for crypto operations)
+    const { cancel: cancelEncryption, debounce: debouncedEncrypt } = useDebounce(() => {
+      if (canEncrypt.value) {
+        encryptText();
+      }
+    }, 800);
+
+    // Watchers
+    watch([password, passwordConfirm], () => {
+      encryptedText.value = '';
+      error.value = '';
+      debouncedEncrypt();
+    });
+
+    return {
+      // State
+      encryptedText,
+      error,
+      isLoading,
+      password,
+      passwordConfirm,
+      plainText,
+
+      // Snackbar
+      snackbar,
+      snackbarColor,
+      snackbarText,
+
+      // Computed
+      isPasswordConfirmed,
+
+      // Methods
+      clearPlainText,
+      downloadEncrypted,
+      handleCopy,
+      handlePaste,
+      handlePlainTextChange
+    };
   }
 };
 </script>
-
-<style scoped>
-.monospace-output {
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 0.9em;
-  letter-spacing: 0.05em;
-}
-</style>
