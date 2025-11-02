@@ -290,6 +290,25 @@ This file tracks feature planning, completed work, and future development priori
   - Optional quick-access toolbar
   - **Benefit**: Faster access for repeat users
 
+- [ ] **Password Session Manager** (2 hours) - Priority 1 🔥 **RECOMMENDED**
+  - "Remember password for this session" checkbox
+  - Encrypt multiple files without re-entering password
+  - Auto-clear on browser close or manual clear button
+  - Privacy-safe: stored in sessionStorage (NOT localStorage)
+  - Visual indicator when password is remembered
+  - **Benefit**: Eliminate friction when encrypting multiple related files
+  - **Use Case**: "Encrypting 10 company documents with same password - no re-typing"
+  - **Privacy**: Memory-only, auto-clears on tab close
+
+- [ ] **Smart Content Detection** (2.5 hours) - Priority 2 🔥 **RECOMMENDED**
+  - Auto-detect pasted content type (Base64, JWT, encrypted AES text, URLs, hashes)
+  - Show intelligent tooltip: "This looks like a JWT token - decode it?"
+  - One-click switch to appropriate tool with pre-filled input
+  - Magic wand icon to manually trigger detection
+  - Support detection in all text input fields
+  - **Benefit**: Makes app intelligent, guides users to right tool
+  - **Use Case**: "Paste random string → app suggests 'This is Base64, want to decode?'"
+
 ---
 
 ## Phase 7: New Tool Features (Priority: MEDIUM-LOW)
@@ -395,6 +414,28 @@ This file tracks feature planning, completed work, and future development priori
   - **Benefit**: Efficiency for power users (10+ files)
   - **Dependency**: Requires significant UI/UX redesign, ZIP library integration
 
+- [ ] **Steganography Mode** (6 hours) - Priority 4 🌟 **UNIQUE FEATURE**
+  - Hide encrypted text inside PNG/JPG images using LSB (Least Significant Bit) steganography
+  - Encrypt text → embed in image pixels (visually identical to human eye)
+  - Extract hidden encrypted text from images
+  - Adjustable capacity indicator (shows how much text fits in image)
+  - Support for multiple image formats (PNG preferred for lossless)
+  - **Benefit**: Next-level privacy - hide secrets in plain sight
+  - **Use Case**: "Hide encrypted API keys in an innocent-looking vacation photo"
+  - **Tech**: Canvas API for pixel manipulation, preserve image quality
+  - **Marketing**: Unique feature rarely found in browser-based tools
+
+- [ ] **Decryption Honeypot Mode** (3 hours) - Priority 4 🌟 **UNIQUE FEATURE**
+  - Dual-password encryption: real password + decoy password
+  - Wrong password decrypts to pre-set fake content (indistinguishable from real)
+  - Plausible deniability under duress
+  - Set decoy content during encryption
+  - Visual indicator: "Honeypot mode enabled"
+  - **Benefit**: Security researcher feature, protection against coercion
+  - **Use Case**: "Under duress, provide decoy password revealing innocent document"
+  - **Tech**: Dual-layer encryption with different keys
+  - **Warning**: Add clear disclaimer about legal implications
+
 ---
 
 ## Phase 8: TypeScript Migration (Priority: LOW)
@@ -448,6 +489,37 @@ This file tracks feature planning, completed work, and future development priori
 
 ---
 
+## Phase 10: Future Considerations (Priority: RESEARCH NEEDED)
+
+**Status**: ⚪ Not Started
+**Estimated Effort**: 10-12 hours
+**Trigger**: When core features mature and user feedback indicates demand
+
+### Features Requiring Design Work
+
+- [ ] **Encrypted Shareable Links via WebRTC P2P** (6 hours) - Priority TBD
+  - Generate one-time shareable link using WebRTC peer-to-peer
+  - Encrypt text/file → create local network link
+  - Recipient on same network clicks link → auto-decrypts
+  - No server, completely peer-to-peer via WebRTC
+  - Self-destructs after one view
+  - **Benefit**: Share encrypted files in same office without USB/email
+  - **Use Case**: "Share confidential file with colleague without leaving digital trace"
+  - **Challenges**: Requires both parties online simultaneously, network discovery UX
+  - **Research Needed**: Workflow design, user discovery mechanism, fallback methods
+
+- [ ] **Offline Device Sync via QR Codes** (4 hours) - Priority TBD
+  - Export settings/presets as QR code
+  - Scan QR with mobile device to import
+  - Transfers theme, presets, history (NOT sensitive data)
+  - Works completely offline, no cloud
+  - **Benefit**: Multi-device configuration without betraying privacy principles
+  - **Use Case**: "Configure desktop, scan QR, mobile has same settings"
+  - **Dependency**: Requires more settings/presets to be worth implementing
+  - **Research Needed**: What data is valuable enough to sync? Security of QR transfer?
+
+---
+
 ## Removed/Reconsidered Features
 
 ### ❌ Not Pursuing
@@ -461,10 +533,11 @@ This file tracks feature planning, completed work, and future development priori
 
 ## Progress Summary
 
-**Total Planned Features**: 54
+**Total Planned Features**: 60
 **Completed**: 23 ✅
 **In Progress**: 2 🔄 (Phase 6, Phase 7)
-**Planned**: 29 📋
+**Planned**: 35 📋
+**Research Needed**: 2 🔬 (Phase 10)
 
 **Phase Completion**:
 - Phase 1 (Code Cleanup): ✅ 100% (5/5 features completed)
@@ -473,10 +546,11 @@ This file tracks feature planning, completed work, and future development priori
 - Phase 3.5 (Offline & Code Quality): ✅ 100% (4/4 features completed)
 - Phase 4 (Security & Validation): ✅ 100% (4/4 features completed)
 - Phase 5 (Testing): 0% (0/4 features completed)
-- Phase 6 (Additional UX): 🔄 20% (1/5 features completed)
-- Phase 7 (New Tool Features): 🔄 15.4% (2/13 features completed)
+- Phase 6 (Additional UX): 🔄 14% (1/7 features completed)
+- Phase 7 (New Tool Features): 🔄 13% (2/15 features completed)
 - Phase 8 (TypeScript): 0% (0/3 features completed)
 - Phase 9 (Accessibility/i18n): 0% (0/2 features completed)
+- Phase 10 (Future Considerations): 0% (0/2 features - research needed)
 
 ---
 
@@ -491,11 +565,22 @@ This file tracks feature planning, completed work, and future development priori
 - ✅ Phase 3.5: Offline Functionality & Code Quality (4/4 features)
 - ✅ Phase 4: Security & Validation (4/4 features)
 
-**High-Value Next Features**:
-1. **Drag & Drop File Upload** (Phase 6, 2 hours) 🔥 - Modern UX everyone expects
-2. **Hash Generator Tool** (Phase 7, 3 hours) 🔥 - Natural companion to encryption, file integrity verification
-3. **Progress Indicators for Large Files** (Phase 6, 2.5 hours) - Better UX for long operations
-4. **JWT Decoder** (Phase 7, 2.5 hours) - Popular developer tool for debugging auth tokens
+**High-Value Next Features (Prioritized by Usability → Functionality → Uniqueness)**:
+
+**Usability Wins (Top Priority):**
+1. **Password Session Manager** (Phase 6, 2 hours) 🔥 - Eliminate re-typing password for multi-file encryption
+2. **Drag & Drop File Upload** (Phase 6, 2 hours) 🔥 - Modern UX everyone expects
+3. **Smart Content Detection** (Phase 6, 2.5 hours) 🔥 - Intelligent paste suggestions
+4. **Progress Indicators for Large Files** (Phase 6, 2.5 hours) - Better UX for long operations
+
+**Well-Designed Functionality (Second Priority):**
+5. **Hash Generator Tool** (Phase 7, 3 hours) 🔥 - Natural companion to encryption, file integrity verification
+6. **JWT Decoder** (Phase 7, 2.5 hours) - Popular developer tool for debugging auth tokens
+7. **Keyboard Shortcuts** (Phase 6, 1.5 hours) - Power user efficiency
+
+**Unique Features (Third Priority):**
+8. **Steganography Mode** (Phase 7, 6 hours) 🌟 - Hide encrypted text in images (unique differentiator)
+9. **Decryption Honeypot** (Phase 7, 3 hours) 🌟 - Plausible deniability feature
 
 Or continue with **Phase 5 (Testing Infrastructure)** for long-term code quality.
 
@@ -622,11 +707,21 @@ Or continue with **Phase 5 (Testing Infrastructure)** for long-term code quality
     - Base64Dec: Fixed button enable/disable logic (was broken with null vs array)
   - **Total Impact**: +2,792 insertions, -2,185 deletions (net +607 lines, but component code reduced by 472 lines)
 
+- **2025-11-02**: Added 6 new creative features to roadmap
+  - **Phase 6 (Usability)**: Password Session Manager, Smart Content Detection
+  - **Phase 7 (Unique Features)**: Steganography Mode, Decryption Honeypot
+  - **Phase 10 (Future Research)**: Encrypted Shareable Links (WebRTC P2P), Offline Device Sync (QR codes)
+  - Updated progress statistics: 54 → 60 total planned features
+  - Reorganized "Next Steps" by priority hierarchy: Usability → Functionality → Uniqueness
+  - Reflects user priorities: privacy-conscious users and aficionados with usability as top concern
+
 ### Key Insights
 - **Well-structured foundation**: Current codebase is clean and focused
 - **Scope management**: Avoiding feature creep by maintaining privacy/offline-first principles
 - **Testing gap**: No automated tests is biggest technical debt item
 - **Security focus**: Password validation and self-hosted crypto lib are high-value wins
+- **Feature priorities**: Usability first, well-designed functionality second, unique features third
+- **Target audience**: Privacy-conscious users and aficionados value smooth UX over novelty
 
 ---
 
@@ -635,4 +730,4 @@ Or continue with **Phase 5 (Testing Infrastructure)** for long-term code quality
 - [Code Structure](.claude/structure.md) - Current codebase organization
 - [Main Application Files](../) - Link to main code files
 
-Last Updated: 2025-11-02 (Updated documentation: Text AES Encryption marked complete, Known Issues cleared)
+Last Updated: 2025-11-02 (Added 6 new creative features: usability wins + unique differentiators)
