@@ -171,19 +171,48 @@ npm run build
 ## Testing Approach
 
 ### Strategy
+- **Automated testing** with Vitest + Vue Test Utils (Added 2025-11-02)
 - **Manual testing** in multiple browsers (Chrome, Firefox, Safari, Edge)
 - Focus on edge cases: large files, invalid passwords, corrupt data
 - Test offline functionality by disabling network
-- No automated test suite currently implemented
 
-### Key Test Cases
-- Base64 encoding/decoding with Unicode characters
+### Testing Infrastructure (2025-11-02)
+**Framework**: Vitest v4.0.6 with happy-dom environment
+
+**Test Scripts**:
+```bash
+npm test              # Run all tests
+npm run test:watch    # Watch mode
+npm run test:ui       # Visual test UI
+npm run test:coverage # Coverage report
+```
+
+**Test Coverage**: 94 passing tests
+- ✅ Utility tests (63): csvParser, fileDownload, passwordGenerator
+- ✅ Composable tests (31): useAESWorker with Worker mocking
+- 📅 Integration tests: Planned for Phase 2 (component workflows)
+
+**Test Organization**:
+```
+tests/
+├── setup/test-utils.js        # Shared mocks (Blob, File, Clipboard, URL)
+├── mocks/WorkerMock.js         # Web Worker simulation
+├── unit/utils/                 # Utility function tests
+└── unit/composables/           # Composable tests
+```
+
+**Key Testing Patterns**:
+- **Worker Mocking**: `createAESWorkerMock()`, `createFailingAESWorkerMock()`, `createErrorScenarioWorker()`
+- **Async Testing**: Proper handling of Worker message delays
+- **Error Scenarios**: Wrong password, corrupted files, invalid formats
+- **See**: [tests/README.md](../tests/README.md) for detailed testing guide
+
+### Manual Test Cases (Still Required)
+- Base64 encoding/decryption with Unicode characters
 - AES encryption/decryption with various file sizes (small, medium, large)
 - Clipboard operations across browsers
 - Offline functionality after Service Worker activation
-- Password mismatch validation
-- Invalid file format handling
-- CSV parsing with different delimiters and encodings
+- PWA installation and auto-updates
 
 ### Offline Testing
 1. Chrome DevTools → Network tab → Check "Offline"
@@ -246,7 +275,8 @@ npm run build
 
 ## Known Limitations
 
-- No automated testing infrastructure
+- ~~No automated testing infrastructure~~ ✅ **Implemented 2025-11-02** (Vitest with 94 tests)
+- Integration/E2E tests not yet implemented (planned for Phase 2)
 - No TypeScript type safety
 - No formal state management (fine for current scope)
 - Limited accessibility features (could expand ARIA labels)
@@ -301,4 +331,4 @@ npm run build
 
 ---
 
-**Last Updated**: 2025-11-01 (Added composables pattern, shared components pattern, Vue 3 Composition API migration, CODING-STANDARDS.md reference)
+**Last Updated**: 2025-11-02 (Added automated testing infrastructure with Vitest, 94 passing tests, Web Worker mocking)
