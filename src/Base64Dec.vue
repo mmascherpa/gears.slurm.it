@@ -21,7 +21,6 @@
           :show-paste="true"
           :show-clear="true"
           :show-copy="false"
-          :show-spacers="false"
           @paste="handlePaste"
           @clear="handleClearInput"
           class="mb-4" />
@@ -37,7 +36,6 @@
           :readonly="true"
           :show-paste="false"
           :show-clear="false"
-          :show-spacers="true"
           :show-copy="true" />
       </v-card-text>
     </v-card>

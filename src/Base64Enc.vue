@@ -37,7 +37,6 @@
           :show-paste="false"
           :show-clear="false"
           :show-copy="true"
-          :show-spacers="true"
           textarea-class="monospace-output"
           @copy="handleCopy" />
       </v-card-text>

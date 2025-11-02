@@ -15,7 +15,7 @@
         hide-details>
       </v-textarea>
     </v-col>
-    <v-col class="ml-2" :class="buttonColumnClass" cols="auto">
+    <v-col class="ml-2 button-column" :class="buttonColumnClass" cols="auto">
       <!-- Loading spinner -->
       <v-progress-circular
         v-if="isLoading"
@@ -27,10 +27,6 @@
 
       <!-- Action buttons -->
       <template v-else>
-        <!-- Spacer buttons when no content (maintains layout consistency) -->
-        <v-btn v-if="showSpacers && !modelValue" color="transparent" flat icon aria-hidden="true"></v-btn>
-        <v-btn v-if="showSpacers && !modelValue && showDoubleSpacers" color="transparent" flat icon aria-hidden="true"></v-btn>
-
         <!-- Paste button -->
         <v-tooltip v-if="showPaste && !modelValue" text="Paste from clipboard" location="top">
           <template v-slot:activator="{ props }">
@@ -218,20 +214,6 @@ export default {
       default: false
     },
     /**
-     * Show invisible spacer buttons when empty (maintains layout)
-     */
-    showSpacers: {
-      type: Boolean,
-      default: false
-    },
-    /**
-     * Show two spacer buttons instead of one
-     */
-    showDoubleSpacers: {
-      type: Boolean,
-      default: false
-    },
-    /**
      * Custom class for textarea
      */
     textareaClass: {
@@ -263,3 +245,9 @@ export default {
   emits: ['update:modelValue', 'paste', 'clear', 'copy', 'download']
 };
 </script>
+
+<style scoped>
+.button-column {
+  min-width: 48px;
+}
+</style>

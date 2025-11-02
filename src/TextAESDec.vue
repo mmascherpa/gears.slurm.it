@@ -72,8 +72,6 @@
           :show-clear="false"
           :show-copy="true"
           :show-download="true"
-          :show-spacers="true"
-          :show-double-spacers="true"
           copy-button-class="mb-2"
           button-column-class="d-flex flex-column"
           @copy="handleCopy"

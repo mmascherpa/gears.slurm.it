@@ -16,7 +16,8 @@
                     :color="strength.color"
                     size="small"
                     variant="flat"
-                    class="mr-2">
+                    class="mr-2"
+                    tabindex="-1">
                     {{ strength.label }}
                 </v-chip>
                 <span v-if="showScore" class="text-caption text-medium-emphasis">
@@ -36,7 +37,8 @@
                         v-for="(req, index) in strength.requirements"
                         :key="index"
                         class="pa-0 mb-1"
-                        density="compact">
+                        density="compact"
+                        tabindex="-1">
                         <template v-slot:prepend>
                             <v-icon
                                 :icon="req.icon"
