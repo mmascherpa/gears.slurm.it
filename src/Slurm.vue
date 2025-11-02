@@ -2,9 +2,13 @@
 import { ref } from 'vue';
 import { useTheme } from 'vuetify';
 import { THEME_MODES } from './theme.js';
+import { useServiceWorkerUpdate } from './composables/useServiceWorkerUpdate.js';
 
 const drawer = ref(false);
 const theme = useTheme();
+
+// Service worker update detection
+const { updateAvailable, showOnlineNotification, applyUpdate, dismissUpdate } = useServiceWorkerUpdate();
 
 // Theme management
 const STORAGE_KEY = 'slurm-theme-preference';
@@ -178,6 +182,58 @@ theme.global.name.value = getSavedTheme();
                 </router-view>
             </v-container>
         </v-main>
+
+        <!-- Update Available Notification -->
+        <v-snackbar
+            v-model="updateAvailable"
+            :timeout="-1"
+            location="bottom"
+            color="primary"
+            elevation="8"
+            class="update-snackbar"
+        >
+            <div class="d-flex align-center">
+                <v-icon icon="mdi-update" class="mr-3" size="large"></v-icon>
+                <div class="flex-grow-1">
+                    <div class="font-weight-bold mb-1">Update Available</div>
+                    <div class="text-caption">A new version of Slurm Tools is ready to install</div>
+                </div>
+            </div>
+
+            <template v-slot:actions>
+                <v-btn
+                    variant="text"
+                    @click="dismissUpdate"
+                    size="small"
+                    color="white"
+                >
+                    Later
+                </v-btn>
+                <v-btn
+                    variant="flat"
+                    color="white"
+                    @click="applyUpdate"
+                    size="small"
+                    class="ml-2"
+                >
+                    Update Now
+                </v-btn>
+            </template>
+        </v-snackbar>
+
+        <!-- Online Notification -->
+        <v-snackbar
+            v-model="showOnlineNotification"
+            :timeout="3000"
+            location="top"
+            color="success"
+            elevation="4"
+        >
+            <div class="d-flex align-center">
+                <v-icon icon="mdi-wifi" class="mr-2"></v-icon>
+                <span>Back online - Checking for updates...</span>
+            </div>
+        </v-snackbar>
     </v-app>
 </template>
 
@@ -232,5 +288,18 @@ theme.global.name.value = getSavedTheme();
 
 .fade-enter-from, .fade-leave-to {
     opacity: 0;
+}
+
+/* Update notification */
+.update-snackbar :deep(.v-snackbar__content) {
+    padding: 16px 8px;
+}
+
+.update-snackbar :deep(.v-btn--variant-flat) {
+    color: rgb(var(--v-theme-primary)) !important;
+}
+
+.update-snackbar :deep(.v-btn--variant-text) {
+    color: rgba(255, 255, 255, 0.9) !important;
 }
 </style>

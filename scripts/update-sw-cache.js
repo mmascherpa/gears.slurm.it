@@ -59,10 +59,19 @@ const cacheList = [
     '/index.html',
     '/manifest.json',
     '/worker.js',
+    // Favicon files
+    '/favicon.svg',
+    '/favicon.png',
+    '/favicon.ico',
+    '/favicon-32x32.png',
+    // Icon files
     '/icons/icon-192x192.png',
     '/icons/icon-512x512.png',
+    '/icons/icon.svg',
+    // Crypto libraries
     '/libs/enc-uint8array.min.js',
     '/libs/aes_crypt.min.js',
+    // Vite-generated assets
     ...jsFiles,
     ...cssFiles,
     ...fontFiles,
@@ -75,6 +84,12 @@ console.log(`\n✅ Total files to cache: ${cacheList.length}\n`);
 
 // Read the current service worker
 let swContent = fs.readFileSync(swPath, 'utf-8');
+
+// Disable debug mode in production
+swContent = swContent.replace(
+    /const DEBUG = true;/,
+    'const DEBUG = false;'
+);
 
 // Update the cache version to force update
 const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
