@@ -24,6 +24,7 @@
               variant="outlined"
               density="comfortable"
               autocomplete="new-password"
+              maxlength="1024"
               prepend-inner-icon="mdi-lock"
               hide-details
             ></v-text-field>
@@ -41,6 +42,7 @@
               variant="outlined"
               density="comfortable"
               autocomplete="new-password"
+              maxlength="1024"
               prepend-inner-icon="mdi-lock-check"
               :error="password !== '' && passwordConfirm !== '' && password !== passwordConfirm"
               :success="isPasswordConfirmed"

@@ -3,9 +3,9 @@
 ## Purpose
 This file documents the file organization, component responsibilities, and architectural layers of the Slurm Tools codebase.
 
-**Last Updated**: 2025-11-01
-**Total Files**: 88 (79→88, +9 new files from refactoring)
-**Total Lines of Code**: ~3,764 lines (+607 net from refactoring)
+**Last Updated**: 2025-11-02
+**Total Files**: 95 (88→95, +7 new files from encryption abstraction)
+**Total Lines of Code**: ~5,100 lines (+1,336 net from encryption abstraction)
 
 ---
 
@@ -56,6 +56,11 @@ src/
 │   ├── useDebounce.js      # Debounced function calls (66 lines)
 │   ├── useFileSizeValidation.js  # File size validation logic (99 lines)
 │   └── useSnackbar.js      # Snackbar state management (41 lines)
+├── crypto/                 # Encryption provider abstraction layer (NEW - Phase 2)
+│   ├── CryptoProvider.js   # Base provider interface and factory (157 lines)
+│   └── providers/          # Concrete provider implementations
+│       ├── JsAesCryptProvider.js   # jsAesCrypt wrapper (142 lines)
+│       └── WebCryptoProvider.js    # Web Crypto API implementation (232 lines)
 ├── utils/                  # Shared utility functions
 │   ├── fileDownload.js     # File download helper (19 lines)
 │   ├── csvParser.js        # CSV parsing utilities (67 lines)
@@ -110,7 +115,10 @@ public/
 ├── favicon.ico             # Browser favicon
 ├── manifest.json           # PWA manifest
 ├── sw.js                   # Service Worker for offline caching (97 lines - enhanced)
-├── worker.js               # Web Worker for AES operations (73 lines - enhanced)
+├── worker.js               # Web Worker for AES operations (117 lines - provider-based)
+├── providers/              # Worker-compatible crypto providers (NEW - Phase 2)
+│   ├── JsAesCryptWorkerProvider.js  # jsAesCrypt worker provider (144 lines)
+│   └── WebCryptoWorkerProvider.js   # Web Crypto worker provider (235 lines)
 ├── icons/                  # PWA app icons
 │   ├── icon.svg
 │   ├── icon-192x192.png
@@ -730,6 +738,294 @@ encryptFile(
 
 ---
 
+## Encryption Provider Abstraction (Phase 2)
+
+### CryptoProvider (Base Interface)
+**File**: [src/crypto/CryptoProvider.js](src/crypto/CryptoProvider.js)
+**Lines**: 157
+**Purpose**: Defines standard interface for encryption providers, enabling decoupling from specific crypto libraries
+
+**Key Components**:
+
+1. **ErrorCodes** - Standardized error codes:
+   - `WRONG_PASSWORD` - Incorrect decryption password
+   - `PASSWORD_TOO_LONG` - Password exceeds provider limits
+   - `CORRUPTED_DATA` - Data integrity check failed
+   - `INVALID_FORMAT` - Unrecognized file format
+   - `ENCRYPTION_FAILED` / `DECRYPTION_FAILED` - Operation failures
+   - `UNKNOWN_ERROR` - Unexpected errors
+
+2. **CryptoProvider Base Class**:
+   ```javascript
+   class CryptoProvider {
+     async encrypt(data, password) // Must implement
+     async decrypt(data, password) // Must implement
+     getInfo() // Returns { name, version, maxPasswordLength, fileExtension }
+     normalizeError(error) // Maps errors to standard format
+     validatePassword(password) // Checks password requirements
+   }
+   ```
+
+3. **CryptoProviderFactory**:
+   - `register(name, providerClass)` - Register new provider
+   - `create(name, options)` - Create provider instance
+   - `getAvailableProviders()` - List registered providers
+
+**Usage Pattern**:
+```javascript
+import { CryptoProviderFactory } from '@/crypto/CryptoProvider';
+import { JsAesCryptProvider } from '@/crypto/providers/JsAesCryptProvider';
+
+// Register provider
+CryptoProviderFactory.register('jsAesCrypt', JsAesCryptProvider);
+
+// Create instance
+const provider = CryptoProviderFactory.create('jsAesCrypt');
+
+// Use provider
+const encrypted = await provider.encrypt(data, password);
+const info = provider.getInfo(); // { name: 'jsAesCrypt', fileExtension: '.aes', ... }
+```
+
+**Benefits**:
+- Consistent error handling across all providers
+- Easy provider switching (jsAesCrypt ↔ WebCrypto ↔ future providers)
+- Testable abstraction (mock providers for testing)
+- Extensible architecture (add new providers without touching core code)
+
+---
+
+### JsAesCryptProvider
+**File**: [src/crypto/providers/JsAesCryptProvider.js](src/crypto/providers/JsAesCryptProvider.js)
+**Lines**: 142
+**Purpose**: Wraps jsAesCrypt library to conform to CryptoProvider interface
+
+**Key Features**:
+- **Algorithm**: AES-256 CBC with HMAC-SHA256 authentication
+- **File Format**: AES Crypt format v2 (.aes files)
+- **Password Limit**: 1024 characters
+- **Compatibility**: Compatible with desktop AES Crypt tools
+
+**Error Mapping**:
+```javascript
+'Wrong password' → WRONG_PASSWORD
+'Bad HMAC' → WRONG_PASSWORD
+'Password is too long' → PASSWORD_TOO_LONG
+'corrupted' → CORRUPTED_DATA
+'not an AES Crypt' → INVALID_FORMAT
+```
+
+**Usage**:
+```javascript
+const provider = new JsAesCryptProvider();
+provider.setLibrary(aesCrypt); // Set jsAesCrypt instance
+
+const encrypted = await provider.encrypt(fileData, 'password123');
+// Returns Uint8Array in .aes format
+```
+
+**Worker Integration**: [public/providers/JsAesCryptWorkerProvider.js](public/providers/JsAesCryptWorkerProvider.js) (144 lines)
+
+---
+
+### WebCryptoProvider
+**File**: [src/crypto/providers/WebCryptoProvider.js](src/crypto/providers/WebCryptoProvider.js)
+**Lines**: 232
+**Purpose**: Browser-native encryption using Web Crypto API (SubtleCrypto)
+
+**Key Features**:
+- **Algorithm**: AES-256-GCM with PBKDF2 key derivation
+- **File Format**: Custom format (.enc files) - NOT compatible with .aes
+- **Password Limit**: 1024 characters (practical limit)
+- **No Dependencies**: Uses only browser-native APIs
+
+**File Format**:
+```
+[salt (16 bytes)][IV (12 bytes)][encrypted data]
+```
+
+**Key Derivation**:
+- **Algorithm**: PBKDF2 with SHA-256
+- **Iterations**: 100,000 (configurable)
+- **Salt**: Random 128-bit per encryption
+- **IV**: Random 96-bit per encryption (GCM recommended size)
+
+**Advantages**:
+- No external dependencies (no CDN, no vendored libraries)
+- Faster than jsAesCrypt (native implementation)
+- Smaller bundle size
+- Built-in authenticated encryption (GCM mode)
+
+**Disadvantages**:
+- Not compatible with .aes file format
+- Cannot decrypt files from desktop AES Crypt tools
+
+**Usage**:
+```javascript
+const provider = new WebCryptoProvider({ iterations: 100000 });
+
+const encrypted = await provider.encrypt(fileData, 'password123');
+// Returns Uint8Array in custom .enc format
+
+const decrypted = await provider.decrypt(encrypted, 'password123');
+// Returns original Uint8Array
+```
+
+**Worker Integration**: [public/providers/WebCryptoWorkerProvider.js](public/providers/WebCryptoWorkerProvider.js) (235 lines)
+
+---
+
+### Worker Provider Architecture
+**Files**:
+- [public/worker.js](public/worker.js) (117 lines - provider-based)
+- [public/providers/JsAesCryptWorkerProvider.js](public/providers/JsAesCryptWorkerProvider.js) (144 lines)
+- [public/providers/WebCryptoWorkerProvider.js](public/providers/WebCryptoWorkerProvider.js) (235 lines)
+
+**Purpose**: Enable dynamic provider switching in Web Worker context
+
+**Key Features**:
+1. **Dynamic Provider Loading**: Worker loads both providers on initialization
+2. **Provider Switching**: Can switch providers mid-session
+3. **Backward Compatible**: Defaults to jsAesCrypt (existing behavior)
+4. **Error Normalization**: Providers normalize errors before sending to main thread
+
+**Message Protocol**:
+```javascript
+// Initialize provider
+postMessage(['INIT', 'webCrypto']);
+// Response: ['INIT_SUCCESS', 'webCrypto']
+
+// Encrypt with specific provider
+postMessage(['ENCRYPT', fileData, password, fileName, 'webCrypto']);
+// Response: ['ENCRYPT', encryptedData, 'file.enc']
+
+// Encrypt with default provider (jsAesCrypt)
+postMessage(['ENCRYPT', fileData, password, fileName]);
+// Response: ['ENCRYPT', encryptedData, 'file.aes']
+```
+
+**Provider Selection Logic**:
+```javascript
+// In worker.js
+function setProvider(providerType) {
+  if (providerType === 'jsAesCrypt') {
+    provider = new JsAesCryptWorkerProvider(aesCrypt);
+  } else if (providerType === 'webCrypto') {
+    provider = new WebCryptoWorkerProvider();
+  }
+}
+```
+
+**Error Handling**:
+```javascript
+// Worker normalizes errors using provider
+.catch((error) => {
+  const normalizedError = provider.normalizeError(error);
+  postMessage(['ERROR', normalizedError.userMessage, operation]);
+});
+```
+
+---
+
+### Provider Testing
+**Files**:
+- [tests/unit/crypto/CryptoProvider.spec.js](tests/unit/crypto/CryptoProvider.spec.js) (17 tests)
+- [tests/unit/crypto/JsAesCryptProvider.spec.js](tests/unit/crypto/JsAesCryptProvider.spec.js) (21 tests)
+- [tests/unit/crypto/WebCryptoProvider.spec.js](tests/unit/crypto/WebCryptoProvider.spec.js) (25 tests)
+
+**Total Tests**: 157 tests (up from 94)
+
+**Test Coverage**:
+- ✅ Base provider interface contract
+- ✅ Error normalization for all providers
+- ✅ Password validation
+- ✅ Encryption/decryption round-trips
+- ✅ File format compatibility
+- ✅ Large file handling (1MB+ test)
+- ✅ Wrong password detection
+- ✅ Corrupted data detection
+- ✅ Provider factory registration
+
+**Key Test Scenarios**:
+```javascript
+// Round-trip encryption
+const encrypted = await provider.encrypt(originalData, password);
+const decrypted = await provider.decrypt(encrypted, password);
+expect(decrypted).toEqual(originalData);
+
+// Error normalization
+const error = provider.normalizeError('Wrong password');
+expect(error.code).toBe(ErrorCodes.WRONG_PASSWORD);
+expect(error.userMessage).toContain('Incorrect password');
+
+// Large file handling
+const largeData = new Uint8Array(1024 * 1024); // 1MB
+const encrypted = await provider.encrypt(largeData, password);
+const decrypted = await provider.decrypt(encrypted, password);
+expect(decrypted).toEqual(largeData);
+```
+
+---
+
+### Provider Comparison Matrix
+
+| Feature | JsAesCryptProvider | WebCryptoProvider |
+|---------|-------------------|-------------------|
+| **Algorithm** | AES-256-CBC + HMAC | AES-256-GCM |
+| **File Extension** | .aes | .enc |
+| **Dependencies** | jsAesCrypt library | None (browser native) |
+| **CDN Required** | Yes (CryptoJS) | No |
+| **Desktop Compat** | ✅ Yes (AES Crypt tools) | ❌ No |
+| **Bundle Size** | Larger (~200KB libs) | Smaller (0KB extra) |
+| **Performance** | Slower (JS library) | Faster (native) |
+| **Password Limit** | 1024 chars | 1024 chars |
+| **Key Derivation** | Built into format | PBKDF2 (100K iterations) |
+| **Authentication** | HMAC-SHA256 | GCM built-in |
+| **Browser Support** | All (uses polyfills) | Modern browsers only |
+
+**Recommendation**:
+- Use **JsAesCryptProvider** for compatibility with desktop tools
+- Use **WebCryptoProvider** for performance and reduced dependencies
+
+---
+
+### Future Provider Ideas
+**Potential Additions**:
+1. **LibSodiumProvider** - NaCl/libsodium.js wrapper (ChaCha20-Poly1305)
+2. **GPGProvider** - OpenPGP.js wrapper for PGP compatibility
+3. **AgeProvider** - age encryption format
+4. **Custom7ZProvider** - 7z AES encryption format
+
+**Adding a New Provider**:
+```javascript
+// 1. Implement provider
+class MyCustomProvider extends CryptoProvider {
+  async encrypt(data, password) { /* ... */ }
+  async decrypt(data, password) { /* ... */ }
+  getInfo() { return { name: 'MyCustom', fileExtension: '.custom', ... }; }
+  normalizeError(error) { /* ... */ }
+}
+
+// 2. Create worker version (no ES6 imports)
+class MyCustomWorkerProvider { /* ... */ }
+
+// 3. Register provider
+CryptoProviderFactory.register('myCustom', MyCustomProvider);
+
+// 4. Update worker.js to load provider
+self.importScripts('/providers/MyCustomWorkerProvider.js');
+function setProvider(type) {
+  if (type === 'myCustom') {
+    provider = new MyCustomWorkerProvider();
+  }
+}
+
+// 5. Use in components
+const { encrypt } = useAESWorker(onSuccess, onError, { providerType: 'myCustom' });
+```
+
+---
+
 ### main.js (Application Entry)
 **File**: [src/main.js](src/main.js)
 **Lines**: ~65
@@ -1063,6 +1359,39 @@ AESEnc.vue/AESDec.vue
 ## Notes
 
 ### Recent Structural Changes
+- **2025-11-02**: Phase 2 - Encryption Abstraction (COMPLETED)
+  - **Created crypto provider abstraction layer** to decouple from jsAesCrypt:
+    - src/crypto/CryptoProvider.js (157 lines) - Base interface, error codes, factory pattern
+    - src/crypto/providers/JsAesCryptProvider.js (142 lines) - jsAesCrypt wrapper
+    - src/crypto/providers/WebCryptoProvider.js (232 lines) - Browser-native Web Crypto API
+    - public/providers/JsAesCryptWorkerProvider.js (144 lines) - Worker-compatible jsAesCrypt
+    - public/providers/WebCryptoWorkerProvider.js (235 lines) - Worker-compatible WebCrypto
+  - **Updated Web Worker** (public/worker.js: 73→117 lines):
+    - Added dynamic provider loading and switching
+    - Supports both jsAesCrypt and WebCrypto providers
+    - Backward compatible (defaults to jsAesCrypt)
+    - Error normalization handled by providers
+  - **Enhanced useAESWorker composable**:
+    - Added optional provider configuration parameter
+    - Error handling simplified (providers normalize errors)
+    - Maintains backward compatibility
+  - **Comprehensive test suite** (+63 tests):
+    - tests/unit/crypto/CryptoProvider.spec.js (17 tests) - Interface contract
+    - tests/unit/crypto/JsAesCryptProvider.spec.js (21 tests) - jsAesCrypt wrapper
+    - tests/unit/crypto/WebCryptoProvider.spec.js (25 tests) - WebCrypto provider
+    - Total tests: 94→157 (67% increase)
+    - All tests passing ✅
+  - **Benefits achieved**:
+    - ✅ Decoupled from jsAesCrypt (can swap providers without touching components)
+    - ✅ Browser-native encryption option (WebCrypto - no dependencies)
+    - ✅ Standardized error handling across all providers
+    - ✅ Extensible architecture (add new providers easily)
+    - ✅ Full backward compatibility (existing code works unchanged)
+  - **Provider comparison**:
+    - JsAesCryptProvider: .aes files, desktop tool compatible, uses external library
+    - WebCryptoProvider: .enc files, faster, no dependencies, browser-native
+  - Total impact: +1,336 lines across 12 files (7 new provider files, 3 updated, 3 new test files)
+
 - **2025-11-01**: Major Refactoring - Composables & Shared Components (Phase 4 completion)
   - **Created 5 composables** (443 total lines):
     - useSnackbar.js (41 lines) - Centralized notification management, saved ~120 lines

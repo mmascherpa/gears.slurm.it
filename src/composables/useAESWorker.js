@@ -8,6 +8,8 @@
  *
  * @param {Function} onSuccess - Callback when operation succeeds (data, fileName)
  * @param {Function} onError - Callback when operation fails (friendlyMessage, rawError)
+ * @param {Object} options - Configuration options
+ * @param {string} options.providerType - Encryption provider type (default: 'jsAesCrypt')
  * @returns {Object} Worker state and operation methods
  * @returns {Ref<Worker|null>} worker - Web Worker instance
  * @returns {Ref<boolean>} isLoading - Whether an operation is in progress
@@ -15,6 +17,7 @@
  * @returns {Function} decrypt - Decrypt data
  *
  * @example
+ * // Use default provider (jsAesCrypt)
  * const { isLoading, encrypt, decrypt } = useAESWorker(
  *   (data, fileName) => {
  *     downloadFile(data, fileName);
@@ -26,6 +29,13 @@
  *   }
  * );
  *
+ * // Use specific provider
+ * const { isLoading, encrypt, decrypt } = useAESWorker(
+ *   onSuccess,
+ *   onError,
+ *   { providerType: 'webCrypto' }
+ * );
+ *
  * // Encrypt a file
  * encrypt(fileBlob, password, 'document.txt');
  *
@@ -34,41 +44,10 @@
  */
 import { ref, onBeforeUnmount } from 'vue';
 
-export function useAESWorker(onSuccess, onError) {
+export function useAESWorker(onSuccess, onError, options = {}) {
   const worker = ref(null);
   const isLoading = ref(false);
-
-  /**
-   * Map raw error messages to user-friendly messages
-   * @param {string} errorData - Raw error message from worker
-   * @param {string} operationType - 'ENCRYPT' or 'DECRYPT'
-   * @returns {string} User-friendly error message
-   */
-  const getFriendlyErrorMessage = (errorData, operationType = '') => {
-    const errorMap = {
-      'Password is too long': '❌ Password too long (max 1024 characters)',
-      'Wrong password': '❌ Wrong password',
-      'Bad HMAC': '❌ Wrong password',
-      'corrupted': '❌ File corrupted or tampered with',
-      'not an AES Crypt': '❌ Invalid AES file format',
-      'not a valid AES': '❌ Invalid AES file format'
-    };
-
-    for (const [pattern, message] of Object.entries(errorMap)) {
-      if (errorData.includes(pattern)) {
-        return message;
-      }
-    }
-
-    // Default error messages based on operation type
-    if (operationType === 'DECRYPT') {
-      return '❌ Decryption failed';
-    } else if (operationType === 'ENCRYPT') {
-      return '❌ Encryption failed';
-    }
-
-    return '❌ Operation failed';
-  };
+  const providerType = options.providerType || 'jsAesCrypt';
 
   /**
    * Setup Web Worker instance
@@ -91,16 +70,13 @@ export function useAESWorker(onSuccess, onError) {
     isLoading.value = false;
 
     if (action === 'ERROR') {
-      const friendlyMessage = getFriendlyErrorMessage(data, currentOperation.value);
-      onError?.(friendlyMessage, data);
+      // Error messages are already normalized by the provider in the worker
+      onError?.(data, data);
       return;
     }
 
     onSuccess?.(data, fileName);
   };
-
-  // Track current operation type for better error messages
-  const currentOperation = ref('');
 
   /**
    * Encrypt data using Web Worker
@@ -114,7 +90,6 @@ export function useAESWorker(onSuccess, onError) {
       return;
     }
 
-    currentOperation.value = 'ENCRYPT';
     isLoading.value = true;
     setupWorker();
     worker.value.postMessage(['ENCRYPT', fileData, password, fileName]);
@@ -132,7 +107,6 @@ export function useAESWorker(onSuccess, onError) {
       return;
     }
 
-    currentOperation.value = 'DECRYPT';
     isLoading.value = true;
     setupWorker();
     worker.value.postMessage(['DECRYPT', fileData, password, fileName]);

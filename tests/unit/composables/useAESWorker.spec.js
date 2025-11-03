@@ -228,7 +228,8 @@ describe('useAESWorker', () => {
 
       expect(onError).toHaveBeenCalled()
       const [friendlyMessage, rawError] = onError.mock.calls[0]
-      expect(friendlyMessage).toBe('❌ Encryption failed')
+      // Error messages are now normalized by the provider
+      expect(friendlyMessage).toBe('Test error')
       expect(rawError).toBe('Test error')
     })
 
@@ -250,7 +251,8 @@ describe('useAESWorker', () => {
 
       expect(onError).toHaveBeenCalled()
       const [friendlyMessage, rawError] = onError.mock.calls[0]
-      expect(friendlyMessage).toBe('❌ Decryption failed')
+      // Error messages are now normalized by the provider
+      expect(friendlyMessage).toBe('Test error')
       expect(rawError).toBe('Test error')
     })
 
@@ -270,7 +272,7 @@ describe('useAESWorker', () => {
       await new Promise(resolve => setTimeout(resolve, 20))
 
       const [friendlyMessage] = onError.mock.calls[0]
-      expect(friendlyMessage).toBe('❌ Wrong password')
+      expect(friendlyMessage).toBe('❌ Incorrect password. Please check your password and try again.')
     })
 
     it('should map "Bad HMAC" error to wrong password message', async () => {
@@ -289,7 +291,7 @@ describe('useAESWorker', () => {
       await new Promise(resolve => setTimeout(resolve, 20))
 
       const [friendlyMessage] = onError.mock.calls[0]
-      expect(friendlyMessage).toBe('❌ Wrong password')
+      expect(friendlyMessage).toBe('❌ Incorrect password. Please check your password and try again.')
     })
 
     it('should map "corrupted" error to friendly message', async () => {
@@ -308,7 +310,7 @@ describe('useAESWorker', () => {
       await new Promise(resolve => setTimeout(resolve, 20))
 
       const [friendlyMessage] = onError.mock.calls[0]
-      expect(friendlyMessage).toBe('❌ File corrupted or tampered with')
+      expect(friendlyMessage).toBe('❌ File appears to be corrupted or tampered with')
     })
 
     it('should map "not an AES Crypt" error to friendly message', async () => {
@@ -327,7 +329,7 @@ describe('useAESWorker', () => {
       await new Promise(resolve => setTimeout(resolve, 20))
 
       const [friendlyMessage] = onError.mock.calls[0]
-      expect(friendlyMessage).toBe('❌ Invalid AES file format')
+      expect(friendlyMessage).toBe('❌ This file is not a valid AES encrypted file')
     })
 
     it('should map "Password is too long" error to friendly message', async () => {

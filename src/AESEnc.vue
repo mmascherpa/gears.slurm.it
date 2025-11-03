@@ -35,6 +35,7 @@
               variant="outlined"
               density="comfortable"
               autocomplete="new-password"
+              maxlength="1024"
               placeholder="Enter encryption password"
               prepend-inner-icon="mdi-lock"
               hide-details>
@@ -52,6 +53,7 @@
               variant="outlined"
               density="comfortable"
               autocomplete="new-password"
+              maxlength="1024"
               placeholder="Confirm encryption password"
               prepend-inner-icon="mdi-lock-check"
               :error="password !== '' && passwordConfirm !== '' && password !== passwordConfirm"
@@ -210,7 +212,7 @@ export default {
       (data, fileName) => {
         downloadFile(data, fileName);
         showSnackbar('✓ File encrypted successfully!', 'success');
-        clearAll();
+        clearInputs();
       },
       // onError callback
       (friendlyMessage, rawError) => {
@@ -259,9 +261,9 @@ export default {
     // Functions
 
     /**
-     * Clears all inputs and outputs.
+     * Clears all inputs.
      */
-    const clearAll = () => {
+    const clearInputs = () => {
       password.value = '';
       passwordConfirm.value = '';
       plainText.value = '';

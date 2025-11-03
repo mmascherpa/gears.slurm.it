@@ -166,15 +166,16 @@ export function createFailingAESWorkerMock(errorMessage = 'Mock encryption error
  * @returns {WorkerMock} Worker mock with specific error
  */
 export function createErrorScenarioWorker(scenario) {
+  // Error messages are now normalized by the provider with emoji prefixes
   const errorMessages = {
-    'wrong-password': 'Wrong password',
-    'bad-hmac': 'Bad HMAC',
-    'corrupted': 'File corrupted',
-    'invalid-format': 'not an AES Crypt file',
-    'password-too-long': 'Password is too long'
+    'wrong-password': '❌ Incorrect password. Please check your password and try again.',
+    'bad-hmac': '❌ Incorrect password. Please check your password and try again.',
+    'corrupted': '❌ File appears to be corrupted or tampered with',
+    'invalid-format': '❌ This file is not a valid AES encrypted file',
+    'password-too-long': '❌ Password too long (max 1024 characters)'
   }
 
-  return createFailingAESWorkerMock(errorMessages[scenario] || 'Unknown error')
+  return createFailingAESWorkerMock(errorMessages[scenario] || '❌ An unexpected error occurred')
 }
 
 /**

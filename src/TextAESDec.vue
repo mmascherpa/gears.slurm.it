@@ -24,6 +24,7 @@
               variant="outlined"
               density="comfortable"
               autocomplete="current-password"
+              maxlength="1024"
               prepend-inner-icon="mdi-lock-open"
               hint="Enter the password used for encryption"
               hide-details

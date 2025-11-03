@@ -22,7 +22,7 @@
           :show-clear="true"
           :show-copy="false"
           @paste="handlePaste"
-          @clear="handleClearInput"
+          @clear="handleClear"
           class="mb-4" />
 
         <v-divider class="my-4"></v-divider>
@@ -130,9 +130,9 @@ export default {
     };
 
     /**
-     * Handles clearing the input text
+     * Handles clearing input and output text
      */
-    const handleClearInput = () => {
+    const handleClear = () => {
       encodedText.value = '';
       plainText.value = '';
     };
@@ -214,7 +214,7 @@ export default {
 
       // Methods
       decodeFile,
-      handleClearInput,
+      handleClear,
       handleFileValidation,
       handlePaste
     };

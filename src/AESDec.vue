@@ -29,6 +29,7 @@
                 type="password"
                 variant="outlined"
                 density="comfortable"
+                maxlength="1024"
                 placeholder="Enter the password used for encryption"
                 prepend-inner-icon="mdi-lock-open"
                 autocomplete="current-password"
@@ -206,7 +207,7 @@
 </template>
 
 <script>
-import { computed, nextTick, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { downloadFile } from '@/utils/fileDownload';
 import { parseCSV } from '@/utils/csvParser';
 import { useAESWorker } from '@/composables/useAESWorker';

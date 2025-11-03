@@ -3,28 +3,57 @@
  * Runs crypto operations on background thread to avoid blocking main UI
  *
  * Message Protocol:
- * - Incoming: [action, file, password, fileName]
+ * - Incoming: [action, file, password, fileName, providerType?]
  *   - action: "ENCRYPT" | "DECRYPT"
  *   - file: File/Blob object
  *   - password: Encryption/decryption password
  *   - fileName: Original filename
+ *   - providerType: Optional provider type (defaults to 'jsAesCrypt')
  *
  * - Outgoing: [action, result, fileName]
  *   - action: "ENCRYPT" | "DECRYPT" | "ERROR"
  *   - result: Encrypted/decrypted blob or error message
- *   - fileName: Output filename (with .aes extension for encryption)
+ *   - fileName: Output filename (with provider-specific extension)
  */
 
 let cdnPath = "https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/";
 let libPath = "/libs/";
 
-// Load required crypto libraries
+// Load required crypto libraries (for jsAesCrypt provider)
 self.importScripts(
 	cdnPath + "core.min.js",
 	cdnPath + "enc-utf16.min.js",
 	libPath + "enc-uint8array.min.js",
 	libPath + "aes_crypt.min.js"
 );
+
+// Load provider abstractions
+self.importScripts("/providers/JsAesCryptWorkerProvider.js");
+self.importScripts("/providers/WebCryptoWorkerProvider.js");
+
+// Initialize default provider (jsAesCrypt)
+let provider = new JsAesCryptWorkerProvider(aesCrypt);
+let currentProviderType = 'jsAesCrypt';
+
+/**
+ * Sets the encryption provider
+ * @param {string} providerType - Provider type ('jsAesCrypt' or 'webCrypto')
+ */
+function setProvider(providerType) {
+  if (providerType === currentProviderType) {
+    return; // Already using this provider
+  }
+
+  if (providerType === 'jsAesCrypt') {
+    provider = new JsAesCryptWorkerProvider(aesCrypt);
+    currentProviderType = 'jsAesCrypt';
+  } else if (providerType === 'webCrypto') {
+    provider = new WebCryptoWorkerProvider();
+    currentProviderType = 'webCrypto';
+  } else {
+    throw new Error(`Unknown provider type: ${providerType}`);
+  }
+}
 
 /**
  * Handles incoming messages from main thread
@@ -34,39 +63,54 @@ onmessage = function(e) {
 	let data = e.data;
 	let action = data[0];
 
-	if( action === "ENCRYPT" || action === "DECRYPT" ) {
-		let aes = aesCrypt;
+	// Handle provider initialization
+	if (action === "INIT") {
+		const providerType = data[1] || 'jsAesCrypt';
+		try {
+			setProvider(providerType);
+			postMessage(["INIT_SUCCESS", providerType]);
+		} catch (error) {
+			postMessage(["INIT_ERROR", error.message]);
+		}
+		return;
+	}
 
+	// Handle encryption/decryption
+	if( action === "ENCRYPT" || action === "DECRYPT" ) {
 		let file = data[1];
+		let password = data[2];
 		let fileName = data[3];
-		let passw = data[2];
+		let providerType = data[4]; // Optional provider type
+
+		// Switch provider if specified and different from current
+		if (providerType && providerType !== currentProviderType) {
+			try {
+				setProvider(providerType);
+			} catch (error) {
+				postMessage(["ERROR", `Failed to switch provider: ${error.message}`, action]);
+				return;
+			}
+		}
 
 		if( action === "ENCRYPT" ) {
-				aes.encrypt(file, passw).then((r) => {
-					postMessage(["ENCRYPT", r, fileName + ".aes"]);
-				}).catch((error) => {
-					// AES library throws strings, not Error objects
-					const errorMessage = typeof error === 'string' ? error : (error.message || 'Unknown encryption error');
-					postMessage(["ERROR", errorMessage, "ENCRYPT"]);
-				});
-		} else {
-			aes.decrypt(file, passw).then((r) => {
-				postMessage(["DECRYPT", r, fileName.split('.').slice(0, -1).join('.')]);
+			provider.encrypt(file, password).then((result) => {
+				// Get file extension from provider info
+				const extension = provider.getInfo().fileExtension;
+				postMessage(["ENCRYPT", result, fileName + extension]);
 			}).catch((error) => {
-				// AES library throws strings, not Error objects
-				const errorMessage = typeof error === 'string' ? error : (error.message || 'Unknown decryption error');
-
-				// Provide user-friendly messages for common errors
-				let friendlyMessage = errorMessage;
-				if (errorMessage.includes("Wrong password")) {
-					friendlyMessage = "Incorrect password. Please check your password and try again.";
-				} else if (errorMessage.includes("Bad HMAC") || errorMessage.includes("corrupted")) {
-					friendlyMessage = "File appears to be corrupted or tampered with.";
-				} else if (errorMessage.includes("not an AES Crypt")) {
-					friendlyMessage = "This file is not a valid AES encrypted file.";
-				}
-
-				postMessage(["ERROR", friendlyMessage, "DECRYPT"]);
+				// Normalize error using provider
+				const normalizedError = provider.normalizeError(error);
+				postMessage(["ERROR", normalizedError.userMessage, "ENCRYPT"]);
+			});
+		} else {
+			provider.decrypt(file, password).then((result) => {
+				// Remove file extension (last part after final dot)
+				const outputFileName = fileName.split('.').slice(0, -1).join('.');
+				postMessage(["DECRYPT", result, outputFileName]);
+			}).catch((error) => {
+				// Normalize error using provider
+				const normalizedError = provider.normalizeError(error);
+				postMessage(["ERROR", normalizedError.userMessage, "DECRYPT"]);
 			});
 		}
 	}

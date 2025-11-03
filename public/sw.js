@@ -1,5 +1,5 @@
-// Debug flag - replaced during build (true in dev, false in production)
-const DEBUG = true;
+// Debug flag - disabled for production (enable only during development)
+const DEBUG = false;
 
 const CACHE_NAME = 'slurm-cache-v2.0.0';
 const urlsToCache = [
