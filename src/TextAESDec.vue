@@ -15,27 +15,16 @@
         Password
       </v-card-title>
       <v-card-text class="pa-4">
-        <v-row>
-          <v-col cols="12" sm="6">
-            <v-text-field
-              v-model="password"
-              label="Password"
-              type="password"
-              variant="outlined"
-              density="comfortable"
-              autocomplete="current-password"
-              maxlength="1024"
-              prepend-inner-icon="mdi-lock-open"
-              hint="Enter the password used for encryption"
-              hide-details
-            ></v-text-field>
-            <PasswordStrengthIndicator
-              :password="password"
-              :show-requirements="false"
-              :show-feedback="false"
-            />
-          </v-col>
-        </v-row>
+        <PasswordInput
+          v-model:password="password"
+          :require-confirmation="false"
+          :show-strength="true"
+          :show-requirements="false"
+          :show-feedback="false"
+          autocomplete="current-password"
+          password-placeholder="Enter the password used for encryption"
+          password-icon="mdi-lock-open"
+        />
       </v-card-text>
     </v-card>
 
@@ -109,7 +98,7 @@ import { useAESWorker } from '@/composables/useAESWorker';
 import { useClipboard } from '@/composables/useClipboard';
 import { useDebounce } from '@/composables/useDebounce';
 import { useSnackbar } from '@/composables/useSnackbar';
-import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator.vue';
+import PasswordInput from '@/components/PasswordInput.vue';
 import SharedSnackbar from '@/components/SharedSnackbar.vue';
 import TextInputWithActions from '@/components/TextInputWithActions.vue';
 import ToolPageHeader from '@/components/ToolPageHeader.vue';
@@ -117,7 +106,7 @@ import ToolPageHeader from '@/components/ToolPageHeader.vue';
 export default {
   name: 'TextAESDec',
   components: {
-    PasswordStrengthIndicator,
+    PasswordInput,
     SharedSnackbar,
     TextInputWithActions,
     ToolPageHeader

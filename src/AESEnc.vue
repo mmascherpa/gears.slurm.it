@@ -26,42 +26,15 @@
         Password Protection
       </v-card-title>
       <v-card-text class="pa-4">
-        <v-row>
-          <v-col cols="12" sm="6">
-            <v-text-field
-              v-model="password"
-              label="Password"
-              type="password"
-              variant="outlined"
-              density="comfortable"
-              autocomplete="new-password"
-              maxlength="1024"
-              placeholder="Enter encryption password"
-              prepend-inner-icon="mdi-lock"
-              hide-details>
-            </v-text-field>
-            <PasswordStrengthIndicator
-              :password="password"
-              :show-requirements="true"
-              :show-feedback="true" />
-          </v-col>
-          <v-col cols="12" sm="6">
-            <v-text-field
-              v-model="passwordConfirm"
-              label="Confirm Password"
-              type="password"
-              variant="outlined"
-              density="comfortable"
-              autocomplete="new-password"
-              maxlength="1024"
-              placeholder="Confirm encryption password"
-              prepend-inner-icon="mdi-lock-check"
-              :error="password !== '' && passwordConfirm !== '' && password !== passwordConfirm"
-              :success="isPasswordConfirmed"
-              hide-details>
-            </v-text-field>
-          </v-col>
-        </v-row>
+        <PasswordInput
+          v-model:password="password"
+          v-model:password-confirm="passwordConfirm"
+          :require-confirmation="true"
+          :show-strength="true"
+          :show-requirements="true"
+          :show-feedback="true"
+          autocomplete="new-password"
+        />
       </v-card-text>
     </v-card>
 
@@ -177,7 +150,7 @@ import { useAESWorker } from '@/composables/useAESWorker';
 import { useClipboard } from '@/composables/useClipboard';
 import { useSnackbar } from '@/composables/useSnackbar';
 import FileUploadWithValidation from '@/components/FileUploadWithValidation.vue';
-import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator.vue';
+import PasswordInput from '@/components/PasswordInput.vue';
 import SharedSnackbar from '@/components/SharedSnackbar.vue';
 import TextInputWithActions from '@/components/TextInputWithActions.vue';
 import ToolPageHeader from '@/components/ToolPageHeader.vue';
@@ -186,7 +159,7 @@ export default {
   name: 'AESEnc',
   components: {
     FileUploadWithValidation,
-    PasswordStrengthIndicator,
+    PasswordInput,
     SharedSnackbar,
     TextInputWithActions,
     ToolPageHeader

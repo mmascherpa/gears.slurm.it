@@ -1,16 +1,17 @@
 <template>
-    <div v-if="password" class="password-strength-indicator">
+    <div v-if="password" class="password-strength-indicator" tabindex="-1">
         <!-- Strength Bar -->
         <v-progress-linear
             :model-value="strength.percentage"
             :color="strength.color"
             height="8"
             rounded
-            class="mb-2">
+            class="mb-2"
+            tabindex="-1">
         </v-progress-linear>
 
         <!-- Strength Label and Feedback -->
-        <div class="d-flex align-center justify-space-between mb-2">
+        <div class="d-flex align-center justify-space-between mb-2" tabindex="-1">
             <div class="d-flex align-center">
                 <v-chip
                     :color="strength.color"
@@ -28,11 +29,11 @@
 
         <!-- Requirements Checklist (expanded view) -->
         <v-expand-transition>
-            <div v-if="showRequirements && strength.level !== 'empty'" class="mt-3">
+            <div v-if="showRequirements && strength.level !== 'empty'" class="mt-3" tabindex="-1">
                 <div class="text-caption text-medium-emphasis mb-2 font-weight-medium">
                     Password Requirements:
                 </div>
-                <v-list density="compact" class="pa-0">
+                <v-list density="compact" class="pa-0" tabindex="-1">
                     <v-list-item
                         v-for="(req, index) in strength.requirements"
                         :key="index"
@@ -44,7 +45,8 @@
                                 :icon="req.icon"
                                 :color="req.met ? 'success' : 'grey'"
                                 size="small"
-                                class="mr-2">
+                                class="mr-2"
+                                tabindex="-1">
                             </v-icon>
                         </template>
                         <v-list-item-title
@@ -59,12 +61,13 @@
 
         <!-- Feedback Messages -->
         <v-expand-transition>
-            <div v-if="strength.feedback.length > 0 && showFeedback" class="mt-2">
+            <div v-if="strength.feedback.length > 0 && showFeedback" class="mt-2" tabindex="-1">
                 <v-alert
                     :color="strength.color"
                     variant="tonal"
                     density="compact"
-                    class="text-caption pa-2">
+                    class="text-caption pa-2"
+                    tabindex="-1">
                     <ul class="mb-0 pl-4">
                         <li v-for="(msg, index) in strength.feedback" :key="index">
                             {{ msg }}

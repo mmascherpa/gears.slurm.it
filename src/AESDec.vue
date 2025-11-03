@@ -20,27 +20,17 @@
           Enter Password
         </v-card-title>
         <v-card-text class="pa-4">
-          <v-row>
-            <v-col cols="12" sm="6">
-              <v-text-field
-                v-model="password"
-                name="password"
-                label="Decryption Password"
-                type="password"
-                variant="outlined"
-                density="comfortable"
-                maxlength="1024"
-                placeholder="Enter the password used for encryption"
-                prepend-inner-icon="mdi-lock-open"
-                autocomplete="current-password"
-                hide-details>
-              </v-text-field>
-              <PasswordStrengthIndicator
-                :password="password"
-                :show-requirements="false"
-                :show-feedback="false" />
-            </v-col>
-          </v-row>
+          <PasswordInput
+            v-model:password="password"
+            :require-confirmation="false"
+            :show-strength="true"
+            :show-requirements="false"
+            :show-feedback="false"
+            autocomplete="current-password"
+            password-label="Decryption Password"
+            password-placeholder="Enter the password used for encryption"
+            password-icon="mdi-lock-open"
+          />
         </v-card-text>
       </v-card>
 
@@ -213,7 +203,7 @@ import { parseCSV } from '@/utils/csvParser';
 import { useAESWorker } from '@/composables/useAESWorker';
 import { useSnackbar } from '@/composables/useSnackbar';
 import FileUploadWithValidation from '@/components/FileUploadWithValidation.vue';
-import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator.vue';
+import PasswordInput from '@/components/PasswordInput.vue';
 import SharedSnackbar from '@/components/SharedSnackbar.vue';
 import ToolPageHeader from '@/components/ToolPageHeader.vue';
 
@@ -221,7 +211,7 @@ export default {
   name: 'AESDec',
   components: {
     FileUploadWithValidation,
-    PasswordStrengthIndicator,
+    PasswordInput,
     SharedSnackbar,
     ToolPageHeader
   },
