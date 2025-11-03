@@ -4,15 +4,17 @@
       <v-text-field
         :model-value="password"
         :label="passwordLabel"
-        type="password"
+        :type="showPassword ? 'text' : 'password'"
         variant="outlined"
         density="comfortable"
         :autocomplete="autocomplete"
         maxlength="1024"
         :placeholder="passwordPlaceholder"
         :prepend-inner-icon="passwordIcon"
+        :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
         hide-details
         @update:model-value="handlePasswordInput"
+        @click:append-inner="showPassword = !showPassword"
       ></v-text-field>
       <div v-if="showStrength" tabindex="-1">
         <PasswordStrengthIndicator
@@ -26,24 +28,26 @@
       <v-text-field
         :model-value="passwordConfirm"
         label="Confirm Password"
-        type="password"
+        :type="showPasswordConfirm ? 'text' : 'password'"
         variant="outlined"
         density="comfortable"
         :autocomplete="autocomplete"
         maxlength="1024"
         placeholder="Confirm encryption password"
         prepend-inner-icon="mdi-lock-check"
+        :append-inner-icon="showPasswordConfirm ? 'mdi-eye-off' : 'mdi-eye'"
         :error="showConfirmError"
         :success="isPasswordConfirmed"
         hide-details
         @update:model-value="handlePasswordConfirmInput"
+        @click:append-inner="showPasswordConfirm = !showPasswordConfirm"
       ></v-text-field>
     </v-col>
   </v-row>
 </template>
 
 <script>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator.vue';
 
 export default {
@@ -128,6 +132,10 @@ export default {
   },
   emits: ['update:password', 'update:password-confirm', 'is-valid'],
   setup(props, { emit }) {
+    // Reactive State
+    const showPassword = ref(false);
+    const showPasswordConfirm = ref(false);
+
     // Computed Properties
 
     /**
@@ -177,6 +185,10 @@ export default {
     };
 
     return {
+      // State
+      showPassword,
+      showPasswordConfirm,
+
       // Computed
       isPasswordConfirmed,
       showConfirmError,
