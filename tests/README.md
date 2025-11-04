@@ -40,7 +40,7 @@ npm run test:coverage
 
 ## Test Coverage
 
-**Current Status**: 94 tests passing
+**Current Status**: 423 tests passing (95.45% coverage)
 
 ### Unit Tests
 
@@ -51,6 +51,19 @@ npm run test:coverage
 
 #### **Composables** (31 tests)
 - ✅ **useAESWorker.js** (31 tests) - Worker lifecycle, encryption/decryption, error handling
+
+#### **Crypto Providers** (63 tests)
+- ✅ **CryptoProvider.js** (17 tests) - Abstract provider interface
+- ✅ **JsAesCryptProvider.js** (21 tests) - JsAesCrypt implementation
+- ✅ **WebCryptoProvider.js** (25 tests) - WebCrypto API implementation
+
+#### **Components** (266 tests)
+- ✅ **PasswordInput.vue** (40 tests) - Password visibility toggle, confirmation matching, validation
+- ✅ **PasswordStrengthIndicator.vue** (49 tests) - Strength calculation, requirements checklist, feedback
+- ✅ **FileUploadWithValidation.vue** (40 tests) - File input, size validation, button states, tooltips
+- ✅ **ToolPageHeader.vue** (36 tests) - Icon, title, description, avatar colors, typography
+- ✅ **TextInputWithActions.vue** (57 tests) - Textarea, button visibility, loading state, events
+- ✅ **SharedSnackbar.vue** (44 tests) - Visibility, colors, timeout, location, text content
 
 ## Writing Tests
 
@@ -344,5 +357,6 @@ if (typeof Blob === 'undefined') {
 
 ---
 
-**Last Updated**: 2025-11-02
-**Test Count**: 94 passing tests
+**Last Updated**: 2025-11-04
+**Test Count**: 423 passing tests
+**Coverage**: 95.45% overall (components: 91.66%, utilities: 93.78%, composables: 96.87%, crypto: 100%)

@@ -24,10 +24,20 @@ export default defineConfig({
     deps: {
       inline: ['vuetify'],
     },
+    server: {
+      deps: {
+        inline: ['vuetify'],
+      },
+    },
   },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
+  },
+  css: {
+    modules: {
+      classNameStrategy: 'non-scoped',
     },
   },
 })

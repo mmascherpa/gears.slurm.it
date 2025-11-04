@@ -1,5 +1,10 @@
 import { vi } from 'vitest'
 
+// Mock CSS imports for Vuetify and other CSS files
+vi.mock('*.css', () => ({}))
+vi.mock('*.scss', () => ({}))
+vi.mock('*.sass', () => ({}))
+
 // Mock console methods to reduce noise in test output
 global.console = {
   ...console,
@@ -59,9 +64,20 @@ if (!navigator.clipboard) {
 }
 
 // Helper to create mock files for testing
-export function createMockFile(content, filename = 'test.txt', type = 'text/plain') {
+export function createMockFile(content, filename = 'test.txt', type = 'text/plain', size = null) {
   const blob = new Blob([content], { type })
-  return new File([blob], filename, { type })
+  const file = new File([blob], filename, { type })
+
+  // Override size if specified (for testing file size validation)
+  if (size !== null) {
+    Object.defineProperty(file, 'size', {
+      value: size,
+      writable: false,
+      configurable: true
+    })
+  }
+
+  return file
 }
 
 // Helper to read blob as text
