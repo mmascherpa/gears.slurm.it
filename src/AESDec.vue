@@ -392,14 +392,17 @@ export default {
 
     // Watchers
 
-    watch(encryptedFile, () => {
-      if (isOutputPopulated.value || decryptedFileName.value) {
+    watch(encryptedFile, (newVal) => {
+      // Only clear outputs if user is changing to a different file
+      // Don't clear if encryptedFile is being set to null (clearing inputs after successful decryption)
+      if (newVal && (isOutputPopulated.value || decryptedFileName.value)) {
         clearOutputs();
       }
     });
 
-    watch(password, () => {
-      if (isOutputPopulated.value || decryptedFileName.value) {
+    watch(password, (newVal, oldVal) => {
+      // Only clear outputs if user is actively changing the password (not just clearing it)
+      if (newVal && newVal !== oldVal && (isOutputPopulated.value || decryptedFileName.value)) {
         clearOutputs();
       }
     });
