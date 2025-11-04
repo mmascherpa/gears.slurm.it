@@ -1,7 +1,7 @@
-// Debug flag - replaced during build (true in dev, false in production)
+// Debug flag - disabled for production (enable only during development)
 const DEBUG = false;
 
-const CACHE_NAME = 'slurm-cache-2025-11-02T18-01-34';
+const CACHE_NAME = 'slurm-cache-2025-11-04T14-02-24';
 const urlsToCache = [
     '/',
     '/index.html',
@@ -16,12 +16,12 @@ const urlsToCache = [
     '/icons/icon.svg',
     '/libs/enc-uint8array.min.js',
     '/libs/aes_crypt.min.js',
-    '/assets/index-4nu6XbR2.js',
-    '/assets/index-qcR2926f.css',
-    '/assets/materialdesignicons-webfont-6eb_lmTU.woff2',
-    '/assets/materialdesignicons-webfont-D15t_tsC.woff',
-    '/assets/materialdesignicons-webfont-e5j8FT_3.ttf',
-    '/assets/materialdesignicons-webfont-kq_ClZaA.eot',
+    '/assets/index-BhFAtkS_.js',
+    '/assets/index-Bn-90w2A.css',
+    '/assets/materialdesignicons-webfont-B7mPwVP_.ttf',
+    '/assets/materialdesignicons-webfont-CSr8KVlo.eot',
+    '/assets/materialdesignicons-webfont-Dp5v-WZN.woff2',
+    '/assets/materialdesignicons-webfont-PXm3-2wK.woff',
     'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/core.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/enc-utf16.min.js'
 ];
