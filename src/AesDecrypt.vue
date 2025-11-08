@@ -4,7 +4,7 @@
     <ToolPageHeader
       icon="mdi-lock-open"
       title="AES Decryption"
-      description="Decrypt password-protected AES encrypted files"
+      description="Decrypt password-protected AES encrypted files and text"
       avatar-color="primary-darken-1"
     />
 
@@ -34,6 +34,45 @@
         </v-card-text>
       </v-card>
 
+      <!-- Text Decryption Section -->
+      <v-card class="mb-4" elevation="2">
+        <v-card-title class="bg-surface-variant">
+          <v-icon icon="mdi-lock" class="mr-2"></v-icon>
+          Encrypted Text
+        </v-card-title>
+        <v-card-text class="pa-4">
+          <TextInputWithActions
+            v-model="encryptedText"
+            label="Paste encrypted Base64 text"
+            placeholder="Paste the encrypted text here..."
+            :rows="4"
+            :disabled="isFilePopulated"
+            :show-paste="!isFilePopulated"
+            :show-clear="true"
+            :show-copy="false"
+            @paste="handlePaste"
+            @clear="clearEncryptedText"
+            @input="handleEncryptedTextChange"
+          />
+
+          <v-divider v-if="isEncryptedTextPopulated" class="my-4"></v-divider>
+
+          <TextInputWithActions
+            v-if="isEncryptedTextPopulated"
+            v-model="decryptedText"
+            label="Decrypted Text"
+            placeholder="Decrypted output will appear here..."
+            :rows="4"
+            :is-loading="isLoading"
+            :readonly="true"
+            :show-paste="false"
+            :show-clear="false"
+            :show-copy="true"
+            @copy="handleCopy"
+          />
+        </v-card-text>
+      </v-card>
+
       <!-- File Upload Section -->
       <v-card class="mb-4" elevation="2">
         <v-card-title class="bg-surface-variant">
@@ -47,6 +86,7 @@
             accept=".aes"
             button-text="Decrypt"
             button-icon="mdi-lock-open"
+            :disabled="isEncryptedTextPopulated"
             :can-submit="canDecrypt"
             @submit="decryptFile"
             @validation-change="handleFileValidation"
@@ -201,18 +241,22 @@ import { computed, ref, watch } from 'vue';
 import { downloadFile } from '@/utils/fileDownload';
 import { parseCSV } from '@/utils/csvParser';
 import { useAESWorker } from '@/composables/useAESWorker';
+import { useClipboard } from '@/composables/useClipboard';
+import { useDebounce } from '@/composables/useDebounce';
 import { useSnackbar } from '@/composables/useSnackbar';
 import FileUploadWithValidation from '@/components/FileUploadWithValidation.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import SharedSnackbar from '@/components/SharedSnackbar.vue';
+import TextInputWithActions from '@/components/TextInputWithActions.vue';
 import ToolPageHeader from '@/components/ToolPageHeader.vue';
 
 export default {
-  name: 'AESDec',
+  name: 'AesDecrypt',
   components: {
     FileUploadWithValidation,
     PasswordInput,
     SharedSnackbar,
+    TextInputWithActions,
     ToolPageHeader
   },
   setup() {
@@ -222,7 +266,9 @@ export default {
     // Reactive State
     const decryptedData = ref(null);
     const decryptedFileName = ref('');
+    const decryptedText = ref('');
     const encryptedFile = ref(null);
+    const encryptedText = ref('');
     const error = ref('');
     const password = ref('');
     const plainText = ref('');
@@ -232,17 +278,25 @@ export default {
 
     // Composables
     const { snackbar, snackbarColor, snackbarText, showSnackbar } = useSnackbar();
+    const { copyToClipboard, pasteFromClipboard } = useClipboard();
 
     // AES Worker for decryption
     const { decrypt, isLoading } = useAESWorker(
       // onSuccess callback
       (data, fileName) => {
-        handleDecryptionSuccess(data, fileName);
+        // Text decryption: display inline
+        if (isEncryptedTextPopulated.value) {
+          handleTextDecryptionSuccess(data);
+        } else {
+          // File decryption: handle preview/download
+          handleDecryptionSuccess(data, fileName);
+        }
       },
       // onError callback
       (friendlyMessage, rawError) => {
         error.value = rawError;
         showSnackbar(friendlyMessage, 'error');
+        decryptedText.value = '';
       }
     );
 
@@ -252,7 +306,14 @@ export default {
      * Checks if decryption is possible with valid inputs.
      */
     const canDecrypt = computed(() => {
-      return isPasswordPopulated.value && isFilePopulated.value;
+      return isPasswordPopulated.value && (isFilePopulated.value || isEncryptedTextPopulated.value);
+    });
+
+    /**
+     * Checks if encrypted text has been entered.
+     */
+    const isEncryptedTextPopulated = computed(() => {
+      return encryptedText.value.trim() !== '';
     });
 
     /**
@@ -284,6 +345,7 @@ export default {
     const clearInputs = () => {
       password.value = '';
       encryptedFile.value = null;
+      encryptedText.value = '';
     };
 
     /**
@@ -291,11 +353,59 @@ export default {
      */
     const clearOutputs = () => {
       plainText.value = '';
+      decryptedText.value = '';
       tableData.value = [];
       tableHeaders.value = [];
       search.value = '';
       decryptedData.value = null;
       decryptedFileName.value = '';
+    };
+
+    /**
+     * Clears encrypted text and decrypted output.
+     */
+    const clearEncryptedText = () => {
+      encryptedText.value = '';
+      decryptedText.value = '';
+      error.value = '';
+      cancelDecryption();
+    };
+
+    /**
+     * Converts Base64 encrypted text to binary for decryption.
+     */
+    const convertFromBase64 = () => {
+      try {
+        const binaryString = atob(encryptedText.value);
+        const bytes = new Uint8Array(binaryString.length);
+
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+
+        const blob = new Blob([bytes]);
+        return blob;
+      } catch (err) {
+        console.error('Base64 decode error:', err);
+        error.value = 'Invalid Base64 format';
+        showSnackbar('❌ Invalid encrypted text format', 'error');
+        return null;
+      }
+    };
+
+    /**
+     * Decrypts text (for auto-decryption).
+     */
+    const decryptText = () => {
+      if (!canDecrypt.value) return;
+
+      error.value = '';
+      decryptedText.value = '';
+
+      const encryptedBlob = convertFromBase64();
+      if (!encryptedBlob) return;
+
+      decrypt(encryptedBlob, password.value, 'encrypted.aes');
     };
 
     /**
@@ -374,11 +484,67 @@ export default {
     };
 
     /**
+     * Handles successful text decryption.
+     */
+    const handleTextDecryptionSuccess = (data) => {
+      try {
+        const decodedText = new TextDecoder().decode(data);
+        decryptedText.value = decodedText;
+        showSnackbar('✓ Text decrypted successfully!', 'success');
+      } catch (err) {
+        console.error('Text decode error:', err);
+        error.value = 'Failed to decode decrypted data';
+        showSnackbar('❌ Decryption failed', 'error');
+      }
+    };
+
+    /**
      * Handles file validation (validation handled by FileUploadWithValidation component).
      */
     const handleFileValidation = () => {
       // Validation handled by FileUploadWithValidation component
     };
+
+    /**
+     * Copies decrypted text to clipboard.
+     */
+    const handleCopy = async () => {
+      await copyToClipboard(
+        decryptedText.value,
+        (message) => showSnackbar(message, 'success'),
+        (message) => showSnackbar(message, 'error')
+      );
+    };
+
+    /**
+     * Pastes encrypted text from clipboard.
+     */
+    const handlePaste = async () => {
+      await pasteFromClipboard(
+        (pastedText, message) => {
+          encryptedText.value = pastedText;
+          showSnackbar(message, 'success');
+          debouncedDecrypt();
+        },
+        (message) => showSnackbar(message, 'error')
+      );
+    };
+
+    /**
+     * Handles encrypted text input change.
+     */
+    const handleEncryptedTextChange = () => {
+      decryptedText.value = '';
+      error.value = '';
+      debouncedDecrypt();
+    };
+
+    // Debounced decryption (800ms for crypto operations)
+    const { cancel: cancelDecryption, debounce: debouncedDecrypt } = useDebounce(() => {
+      if (canDecrypt.value && isEncryptedTextPopulated.value) {
+        decryptText();
+      }
+    }, 800);
 
     /**
      * Determines if a file should be previewed as text based on extension and size.
@@ -405,12 +571,20 @@ export default {
       if (newVal && newVal !== oldVal && (isOutputPopulated.value || decryptedFileName.value)) {
         clearOutputs();
       }
+      // Trigger text decryption if encrypted text exists
+      if (isEncryptedTextPopulated.value) {
+        decryptedText.value = '';
+        error.value = '';
+        debouncedDecrypt();
+      }
     });
 
     return {
       // State
       decryptedFileName,
+      decryptedText,
       encryptedFile,
+      encryptedText,
       error,
       isLoading,
       password,
@@ -426,14 +600,19 @@ export default {
 
       // Computed
       canDecrypt,
+      isEncryptedTextPopulated,
       isFilePopulated,
       isPasswordPopulated,
 
       // Methods
+      clearEncryptedText,
       clearOutputs,
       decryptFile,
       downloadDecryptedText,
-      handleFileValidation
+      handleCopy,
+      handleEncryptedTextChange,
+      handleFileValidation,
+      handlePaste
     };
   }
 };

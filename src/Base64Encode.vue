@@ -79,7 +79,7 @@ import TextInputWithActions from '@/components/TextInputWithActions.vue';
 import ToolPageHeader from '@/components/ToolPageHeader.vue';
 
 export default {
-  name: 'Base64Enc',
+  name: 'Base64Encode',
   components: {
     FileUploadWithValidation,
     SharedSnackbar,

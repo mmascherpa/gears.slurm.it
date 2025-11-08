@@ -6,12 +6,10 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 import Slurm from './Slurm.vue'
 import About from './About.vue'
 import Home from './Home.vue'
-import Base64Enc from './Base64Enc.vue'
-import Base64Dec from './Base64Dec.vue'
-import AESEnc from './AESEnc.vue'
-import AESDec from './AESDec.vue'
-import TextAESEnc from './TextAESEnc.vue'
-import TextAESDec from './TextAESDec.vue'
+import Base64Encode from './Base64Encode.vue'
+import Base64Decode from './Base64Decode.vue'
+import AesEncrypt from './AesEncrypt.vue'
+import AesDecrypt from './AesDecrypt.vue'
 import PasswordGenerator from './PasswordGenerator.vue'
 
 // 2. Define some routes
@@ -19,12 +17,10 @@ import PasswordGenerator from './PasswordGenerator.vue'
 // We'll talk about nested routes later.
 const routes = [
   { path: '/', component: Home },
-  { path: '/base64enc', component: Base64Enc },
-  { path: '/base64dec', component: Base64Dec },
-  { path: '/aesenc', component: AESEnc },
-  { path: '/aesdec', component: AESDec },
-  { path: '/textaesenc', component: TextAESEnc },
-  { path: '/textaesdec', component: TextAESDec },
+  { path: '/base64-encode', component: Base64Encode },
+  { path: '/base64-decode', component: Base64Decode },
+  { path: '/aes-encrypt', component: AesEncrypt },
+  { path: '/aes-decrypt', component: AesDecrypt },
   { path: '/password-generator', component: PasswordGenerator },
   { path: '/about', component: About },
 ]

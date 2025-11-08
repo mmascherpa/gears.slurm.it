@@ -715,6 +715,42 @@ Or continue with **Phase 5 (Testing Infrastructure)** for long-term code quality
   - Reorganized "Next Steps" by priority hierarchy: Usability → Functionality → Uniqueness
   - Reflects user priorities: privacy-conscious users and aficionados with usability as top concern
 
+- **2025-11-08**: Consolidated AES Tools (4 → 2 components)
+  - **Merged functionality**: Combined text and file AES encryption/decryption into unified tools
+  - **AESEnc.vue enhanced** (+159 lines):
+    - Added text output display with Base64 encoding
+    - Auto-encryption with 800ms debounce for text input
+    - Copy-to-clipboard functionality for encrypted text
+    - Mutual exclusion: text disables file input, file disables text input
+  - **AESDec.vue enhanced** (+180 lines):
+    - Added encrypted text input section (paste Base64)
+    - Auto-decryption with 800ms debounce for text input
+    - Copy-to-clipboard functionality for decrypted text
+    - Base64-to-binary conversion for text decryption
+  - **Deleted redundant components**: TextAESEnc.vue (307 lines), TextAESDec.vue (317 lines)
+  - **Updated navigation**:
+    - main.js: Removed 2 routes (/textaesenc, /textaesdec)
+    - Home.vue: Reduced from 4 to 2 AES menu items
+    - Slurm.vue: Updated navigation drawer (4 → 2 AES tools)
+  - **Net impact**: -285 lines total, cleaner menu, preserved all 4 workflows
+  - **UX improvement**: Users can now switch between file/text encryption without navigation
+  - **Rationale**: Reduces menu clutter while maintaining full functionality in fewer, more versatile components
+
+- **2025-11-08**: Naming Convention Standardization
+  - **Renamed components** to follow Vue.js best practices (multi-word PascalCase):
+    - AESEnc.vue → AesEncrypt.vue
+    - AESDec.vue → AesDecrypt.vue
+    - Base64Enc.vue → Base64Encode.vue
+    - Base64Dec.vue → Base64Decode.vue
+  - **Updated component name exports** in all 4 renamed files
+  - **Refactored route URLs** to kebab-case for SEO and readability:
+    - /aesenc → /aes-encrypt
+    - /aesdec → /aes-decrypt
+    - /base64enc → /base64-encode
+    - /base64dec → /base64-decode
+  - **Updated all references** in main.js (imports + routes), Home.vue (menu items), Slurm.vue (navigation drawer)
+  - **Benefits**: Better code maintainability, SEO-friendly URLs, follows industry standards
+
 ### Key Insights
 - **Well-structured foundation**: Current codebase is clean and focused
 - **Scope management**: Avoiding feature creep by maintaining privacy/offline-first principles
@@ -730,4 +766,4 @@ Or continue with **Phase 5 (Testing Infrastructure)** for long-term code quality
 - [Code Structure](.claude/structure.md) - Current codebase organization
 - [Main Application Files](../) - Link to main code files
 
-Last Updated: 2025-11-02 (Added 6 new creative features: usability wins + unique differentiators)
+Last Updated: 2025-11-08 (Consolidated AES tools: 4 components → 2, cleaner UX while preserving all workflows)

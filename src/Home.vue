@@ -50,7 +50,7 @@ export default {
                 {
                     title: 'Base64 Encoder',
                     icon: 'mdi-arrow-down-bold-box',
-                    route: '/base64enc',
+                    route: '/base64-encode',
                     category: 'Encoding Tool',
                     color: 'secondary',
                     description: 'Convert text or files to Base64 format for safe transmission and storage.'
@@ -58,46 +58,28 @@ export default {
                 {
                     title: 'Base64 Decoder',
                     icon: 'mdi-arrow-up-bold-box',
-                    route: '/base64dec',
+                    route: '/base64-decode',
                     category: 'Encoding Tool',
                     color: 'secondary-darken-1',
                     description: 'Decode Base64 encoded text or files back to their original format.'
                 },
                 {
-                    title: 'AES File Encryption',
+                    title: 'AES Encryption',
                     icon: 'mdi-lock',
-                    route: '/aesenc',
+                    route: '/aes-encrypt',
                     category: 'Security Tool',
                     color: 'primary',
                     featured: true,
-                    description: 'Encrypt files with password protection using AES algorithm for maximum security.'
+                    description: 'Encrypt files and text with password protection using AES algorithm for maximum security.'
                 },
                 {
-                    title: 'AES File Decryption',
+                    title: 'AES Decryption',
                     icon: 'mdi-lock-open',
-                    route: '/aesdec',
+                    route: '/aes-decrypt',
                     category: 'Security Tool',
                     color: 'primary-darken-1',
                     featured: true,
-                    description: 'Decrypt password-protected AES encrypted files securely in your browser.'
-                },
-                {
-                    title: 'AES Text Encryption',
-                    icon: 'mdi-file-lock-outline',
-                    route: '/textaesenc',
-                    category: 'Security Tool',
-                    color: 'primary',
-                    featured: true,
-                    description: 'Quickly encrypt text with password protection - perfect for API keys and secrets.'
-                },
-                {
-                    title: 'AES Text Decryption',
-                    icon: 'mdi-lock-open-variant-outline',
-                    route: '/textaesdec',
-                    category: 'Security Tool',
-                    color: 'primary-darken-1',
-                    featured: true,
-                    description: 'Decrypt password-protected text and copy results instantly to clipboard.'
+                    description: 'Decrypt password-protected AES encrypted files and text securely in your browser.'
                 },
                 {
                     title: 'Password Generator',

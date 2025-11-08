@@ -3,9 +3,10 @@
 ## Purpose
 This file documents the file organization, component responsibilities, and architectural layers of the Slurm Tools codebase.
 
-**Last Updated**: 2025-11-02
-**Total Files**: 95 (88→95, +7 new files from encryption abstraction)
-**Total Lines of Code**: ~5,100 lines (+1,336 net from encryption abstraction)
+**Last Updated**: 2025-11-08
+**Total Files**: 93 (was 95, -2 from AES consolidation)
+**Total Lines of Code**: ~4,815 lines (-285 net from consolidation)
+**Tool Components**: 5 (Base64Encode, Base64Decode, AesEncrypt, AesDecrypt, PasswordGenerator)
 
 ---
 
@@ -32,16 +33,14 @@ slurm-spa/
 ### Source Directory (`/src/`)
 ```
 src/
-├── main.js                  # Application entry point (68 lines)
+├── main.js                  # Application entry point (62 lines)
 ├── theme.js                 # Vuetify theme system with 3 themes (172 lines)
 ├── Slurm.vue               # Root layout component with theme toggle (151 lines)
-├── Home.vue                # Landing page with tool grid (127 lines)
-├── Base64Enc.vue           # Base64 encoder page (252 lines)
-├── Base64Dec.vue           # Base64 decoder page (226 lines)
-├── TextAESEnc.vue          # Text AES encryption page (323 lines)
-├── TextAESDec.vue          # Text AES decryption page (322 lines)
-├── AESEnc.vue              # File AES encryption page (346 lines)
-├── AESDec.vue              # File AES decryption page (426 lines)
+├── Home.vue                # Landing page with tool grid (103 lines, 2 AES tools consolidated)
+├── Base64Encode.vue        # Base64 encoder page (252 lines)
+├── Base64Decode.vue        # Base64 decoder page (226 lines)
+├── AesEncrypt.vue          # AES encryption for files AND text (479 lines)
+├── AesDecrypt.vue          # AES decryption for files AND text (620 lines)
 ├── PasswordGenerator.vue   # Password generator tool (257 lines)
 ├── About.vue               # About page (178 lines)
 ├── components/             # Reusable Vue components
@@ -81,16 +80,14 @@ src/
 **Purpose**: Contains all Vue.js source code, components, and application logic.
 
 **Key Files**:
-- **main.js** (68 lines) - Application initialization, router setup, Vuetify configuration, Service Worker registration
+- **main.js** (62 lines) - Application initialization, router setup, Vuetify configuration, Service Worker registration
 - **theme.js** (172 lines) - Theme system with 3 modes (Default, Dark, Slurm) and shared CSS variables
 - **Slurm.vue** (151 lines) - Root layout with gradient app bar, theme toggle buttons, navigation drawer, localStorage persistence
-- **Home.vue** (127 lines) - Landing page with modernized tool cards in responsive grid (7 tools)
-- **Base64Enc.vue** (252 lines) - Text/file Base64 encoding with shared components, standardized patterns
-- **Base64Dec.vue** (226 lines) - Text/file Base64 decoding with shared components, standardized patterns
-- **TextAESEnc.vue** (323 lines) - Text AES encryption with password confirmation, auto-encryption
-- **TextAESDec.vue** (322 lines) - Text AES decryption with clipboard operations
-- **AESEnc.vue** (346 lines) - File AES encryption with Web Worker, CSV preview, password strength
-- **AESDec.vue** (426 lines) - File AES decryption with CSV preview, password strength
+- **Home.vue** (103 lines) - Landing page with modernized tool cards in responsive grid (5 tools: Base64 enc/dec, AES enc/dec, Password Gen, About)
+- **Base64Encode.vue** (252 lines) - Text/file Base64 encoding with shared components, standardized patterns
+- **Base64Decode.vue** (226 lines) - Text/file Base64 decoding with shared components, standardized patterns
+- **AesEncrypt.vue** (479 lines) - Unified AES encryption for files AND text with auto-encryption, CSV preview, Base64 output, password strength
+- **AesDecrypt.vue** (620 lines) - Unified AES decryption for files AND text with auto-decryption, CSV/text preview, Base64 input, password strength
 - **PasswordGenerator.vue** (257 lines) - Compact 2-column layout with regenerate button
 - **About.vue** (178 lines) - Comprehensive about page with privacy, security information
 - **components/FileUploadWithValidation.vue** (230 lines) - Reusable file upload with size validation and dynamic tooltips
@@ -206,8 +203,8 @@ scripts/
 
 ---
 
-### Base64Enc.vue (Base64 Encoder)
-**File**: [src/Base64Enc.vue](src/Base64Enc.vue)
+### Base64Encode.vue (Base64 Encoder)
+**File**: [src/Base64Encode.vue](src/Base64Encode.vue)
 **Lines**: ~250
 **Purpose**: Encode text or files to Base64 format
 
@@ -231,12 +228,12 @@ scripts/
 - global-styles.css for monospace styling
 
 **Used By**:
-- Router (/base64enc route)
+- Router (/base64-encode route)
 
 ---
 
-### Base64Dec.vue (Base64 Decoder)
-**File**: [src/Base64Dec.vue](src/Base64Dec.vue)
+### Base64Decode.vue (Base64 Decoder)
+**File**: [src/Base64Decode.vue](src/Base64Decode.vue)
 **Lines**: ~245
 **Purpose**: Decode Base64 text or files to original format
 
@@ -260,12 +257,12 @@ scripts/
 - global-styles.css for monospace styling
 
 **Used By**:
-- Router (/base64dec route)
+- Router (/base64-decode route)
 
 ---
 
-### AESEnc.vue (AES Encryption)
-**File**: [src/AESEnc.vue](src/AESEnc.vue)
+### AesEncrypt.vue (AES Encryption)
+**File**: [src/AesEncrypt.vue](src/AesEncrypt.vue)
 **Lines**: ~340
 **Purpose**: Password-protected file encryption with CSV preview
 
@@ -293,12 +290,12 @@ scripts/
 - Theme colors (primary = sage green)
 
 **Used By**:
-- Router (/aesenc route)
+- Router (/aes-encrypt route)
 
 ---
 
-### AESDec.vue (AES Decryption)
-**File**: [src/AESDec.vue](src/AESDec.vue)
+### AesDecrypt.vue (AES Decryption)
+**File**: [src/AesDecrypt.vue](src/AesDecrypt.vue)
 **Lines**: ~250
 **Purpose**: Password-protected file decryption with CSV preview
 
@@ -324,7 +321,7 @@ scripts/
 - Theme colors (primary-darken-1)
 
 **Used By**:
-- Router (/aesdec route)
+- Router (/aes-decrypt route)
 
 ---
 
@@ -382,7 +379,7 @@ scripts/
 - Material Design styling
 
 **Used By**:
-- All 7 tool pages (Base64Enc, Base64Dec, TextAESEnc, TextAESDec, AESEnc, AESDec, PasswordGenerator)
+- All 5 tool pages (Base64Encode, Base64Decode, AesEncrypt, AesDecrypt, PasswordGenerator)
 
 **Impact**: Saved ~72 lines of duplicated code
 
@@ -578,7 +575,7 @@ await pasteFromClipboard(
 );
 ```
 
-**Used By**: Base64Enc, Base64Dec, TextAESEnc, TextAESDec, PasswordGenerator
+**Used By**: Base64Encode, Base64Decode, AesEncrypt, AesDecrypt, PasswordGenerator
 
 **Impact**: Saved ~150 lines
 
@@ -623,7 +620,7 @@ watch(plainText, () => {
 });
 ```
 
-**Used By**: Base64Enc, Base64Dec, TextAESEnc, TextAESDec
+**Used By**: Base64Encode, Base64Decode, AesEncrypt, AesDecrypt
 
 **Impact**: Consistent debouncing, automatic cleanup
 
@@ -732,7 +729,7 @@ encryptFile(
 );
 ```
 
-**Used By**: TextAESEnc, TextAESDec, AESEnc, AESDec
+**Used By**: AesEncrypt, AesDecrypt
 
 **Impact**: Fixed critical memory leak affecting all AES components
 
@@ -1404,13 +1401,11 @@ AESEnc.vue/AESDec.vue
     - SharedSnackbar.vue (76 lines) - Reusable notifications
     - TextInputWithActions.vue (265 lines) - Configurable text input with action buttons
     - FileUploadWithValidation.vue (230 lines) - File upload with dynamic tooltips, saved ~180 lines
-  - **Refactored all 7 tool components** to use composables and shared components:
-    - Base64Enc.vue: 322→252 lines (-22%)
-    - Base64Dec.vue: 305→226 lines (-26%)
-    - TextAESEnc.vue: 466→323 lines (-31%)
-    - TextAESDec.vue: 444→322 lines (-27%)
-    - AESEnc.vue: 418→346 lines (-17%)
-    - AESDec.vue: 491→426 lines (-13%)
+  - **Refactored all 5 tool components** to use composables and shared components:
+    - Base64Encode.vue: 322→252 lines (-22%)
+    - Base64Decode.vue: 305→226 lines (-26%)
+    - AesEncrypt.vue: 418→346 lines (-17%) [later enhanced with text encryption functionality]
+    - AesDecrypt.vue: 491→426 lines (-13%) [later enhanced with text decryption functionality]
     - PasswordGenerator.vue: 281→257 lines (-9%)
   - **Created .claude/CODING-STANDARDS.md**: Comprehensive coding standards documentation
   - **Code quality improvements**:
@@ -1505,4 +1500,4 @@ AESEnc.vue/AESDec.vue
 - File sizes grow significantly (>200 line change)
 - Organizational patterns evolve
 
-**Last Updated**: 2025-11-01 (Updated for major refactoring: added composables directory, 4 new shared components, updated all 7 tool components)
+**Last Updated**: 2025-11-08 (AES consolidation: 4→2 components; Naming standardization: PascalCase components, kebab-case URLs)

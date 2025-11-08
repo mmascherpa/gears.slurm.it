@@ -4,7 +4,7 @@
     <ToolPageHeader
       icon="mdi-lock"
       title="AES Encryption"
-      description="Secure your files with password-protected AES encryption"
+      description="Encrypt files and text with password-protected AES encryption"
       avatar-color="primary"
     />
 
@@ -55,7 +55,24 @@
           :show-clear="true"
           :show-copy="false"
           @paste="handlePaste"
-          @clear="plainText = ''"
+          @clear="clearPlainText"
+          @input="handlePlainTextChange"
+        />
+
+        <v-divider v-if="isPlaintextPopulated" class="my-4"></v-divider>
+
+        <TextInputWithActions
+          v-if="isPlaintextPopulated"
+          v-model="encryptedText"
+          label="Encrypted Text (Base64)"
+          placeholder="Encrypted output will appear here..."
+          :rows="4"
+          :is-loading="isLoading"
+          :readonly="true"
+          :show-paste="false"
+          :show-clear="false"
+          :show-copy="true"
+          @copy="handleCopy"
         />
       </v-card-text>
     </v-card>
@@ -143,11 +160,12 @@
 </template>
 
 <script>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { downloadFile } from '@/utils/fileDownload';
 import { parseCSV } from '@/utils/csvParser';
 import { useAESWorker } from '@/composables/useAESWorker';
 import { useClipboard } from '@/composables/useClipboard';
+import { useDebounce } from '@/composables/useDebounce';
 import { useSnackbar } from '@/composables/useSnackbar';
 import FileUploadWithValidation from '@/components/FileUploadWithValidation.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
@@ -156,7 +174,7 @@ import TextInputWithActions from '@/components/TextInputWithActions.vue';
 import ToolPageHeader from '@/components/ToolPageHeader.vue';
 
 export default {
-  name: 'AESEnc',
+  name: 'AesEncrypt',
   components: {
     FileUploadWithValidation,
     PasswordInput,
@@ -166,6 +184,7 @@ export default {
   },
   setup() {
     // Reactive State
+    const encryptedText = ref('');
     const error = ref('');
     const password = ref('');
     const passwordConfirm = ref('');
@@ -177,20 +196,27 @@ export default {
 
     // Composables
     const { snackbar, snackbarColor, snackbarText, showSnackbar } = useSnackbar();
-    const { pasteFromClipboard } = useClipboard();
+    const { copyToClipboard, pasteFromClipboard } = useClipboard();
 
     // AES Worker for encryption
     const { encrypt, isLoading } = useAESWorker(
       // onSuccess callback
       (data, fileName) => {
-        downloadFile(data, fileName);
-        showSnackbar('✓ File encrypted successfully!', 'success');
-        clearInputs();
+        // Text encryption: convert to Base64 and display
+        if (isPlaintextPopulated.value) {
+          convertToBase64(data);
+        } else {
+          // File encryption: download as .aes file
+          downloadFile(data, fileName);
+          showSnackbar('✓ File encrypted successfully!', 'success');
+          clearInputs();
+        }
       },
       // onError callback
       (friendlyMessage, rawError) => {
         error.value = rawError;
         showSnackbar(friendlyMessage, 'error');
+        encryptedText.value = '';
       }
     );
 
@@ -241,6 +267,7 @@ export default {
       passwordConfirm.value = '';
       plainText.value = '';
       plainFile.value = null;
+      encryptedText.value = '';
       clearOutputs();
     };
 
@@ -252,6 +279,43 @@ export default {
       tableHeaders.value = [];
       search.value = '';
       error.value = '';
+    };
+
+    /**
+     * Clears plain text and encrypted output.
+     */
+    const clearPlainText = () => {
+      plainText.value = '';
+      encryptedText.value = '';
+      error.value = '';
+      cancelEncryption();
+    };
+
+    /**
+     * Converts encrypted binary data to Base64 string.
+     */
+    const convertToBase64 = (data) => {
+      try {
+        const blob = new Blob([data]);
+        const reader = new FileReader();
+
+        reader.onload = () => {
+          const base64 = reader.result.split(',')[1];
+          encryptedText.value = base64;
+          showSnackbar('✓ Text encrypted successfully!', 'success');
+        };
+
+        reader.onerror = () => {
+          error.value = 'Failed to convert encrypted data';
+          showSnackbar('❌ Encryption failed', 'error');
+        };
+
+        reader.readAsDataURL(blob);
+      } catch (err) {
+        console.error('Base64 conversion error:', err);
+        error.value = 'Failed to convert encrypted data';
+        showSnackbar('❌ Encryption failed', 'error');
+      }
     };
 
     /**
@@ -308,6 +372,36 @@ export default {
     };
 
     /**
+     * Encrypts text (for auto-encryption).
+     */
+    const encryptText = () => {
+      if (!canEncrypt.value) return;
+
+      error.value = '';
+      encryptedText.value = '';
+
+      try {
+        const textBlob = new Blob([plainText.value], { type: 'text/plain' });
+        encrypt(textBlob, password.value, 'plaintext.txt');
+      } catch (err) {
+        console.error('Encryption error:', err);
+        error.value = 'Failed to initiate encryption';
+        showSnackbar('❌ Encryption failed', 'error');
+      }
+    };
+
+    /**
+     * Copies encrypted text to clipboard.
+     */
+    const handleCopy = async () => {
+      await copyToClipboard(
+        encryptedText.value,
+        (message) => showSnackbar(message, 'success'),
+        (message) => showSnackbar(message, 'error')
+      );
+    };
+
+    /**
      * Pastes text from clipboard.
      */
     const handlePaste = async () => {
@@ -315,13 +409,40 @@ export default {
         (pastedText, message) => {
           plainText.value = pastedText;
           showSnackbar(message, 'success');
+          debouncedEncrypt();
         },
         (message) => showSnackbar(message, 'error')
       );
     };
 
+    /**
+     * Handles plain text input change.
+     */
+    const handlePlainTextChange = () => {
+      encryptedText.value = '';
+      error.value = '';
+      debouncedEncrypt();
+    };
+
+    // Debounced encryption (800ms for crypto operations)
+    const { cancel: cancelEncryption, debounce: debouncedEncrypt } = useDebounce(() => {
+      if (canEncrypt.value && isPlaintextPopulated.value) {
+        encryptText();
+      }
+    }, 800);
+
+    // Watchers
+    watch([password, passwordConfirm], () => {
+      if (isPlaintextPopulated.value) {
+        encryptedText.value = '';
+        error.value = '';
+        debouncedEncrypt();
+      }
+    });
+
     return {
       // State
+      encryptedText,
       error,
       isLoading,
       password,
@@ -346,9 +467,12 @@ export default {
 
       // Methods
       clearOutputs,
+      clearPlainText,
       encryptFile,
+      handleCopy,
       handleFileValidation,
-      handlePaste
+      handlePaste,
+      handlePlainTextChange
     };
   }
 };

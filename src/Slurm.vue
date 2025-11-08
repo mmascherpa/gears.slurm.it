@@ -116,44 +116,32 @@ theme.global.name.value = getSavedTheme();
 
                 <v-list-subheader>ENCODING TOOLS</v-list-subheader>
                 <v-list-item
-                    to="/base64enc"
+                    to="/base64-encode"
                     prepend-icon="mdi-arrow-down-bold-box"
                     title="Base64 Encoder"
-                    value="base64enc">
+                    value="base64-encode">
                 </v-list-item>
                 <v-list-item
-                    to="/base64dec"
+                    to="/base64-decode"
                     prepend-icon="mdi-arrow-up-bold-box"
                     title="Base64 Decoder"
-                    value="base64dec">
+                    value="base64-decode">
                 </v-list-item>
 
                 <v-divider class="my-2"></v-divider>
 
                 <v-list-subheader>ENCRYPTION TOOLS</v-list-subheader>
                 <v-list-item
-                    to="/aesenc"
+                    to="/aes-encrypt"
                     prepend-icon="mdi-lock"
-                    title="AES File Encrypt"
-                    value="aesenc">
+                    title="AES Encryption"
+                    value="aes-encrypt">
                 </v-list-item>
                 <v-list-item
-                    to="/aesdec"
+                    to="/aes-decrypt"
                     prepend-icon="mdi-lock-open"
-                    title="AES File Decrypt"
-                    value="aesdec">
-                </v-list-item>
-                <v-list-item
-                    to="/textaesenc"
-                    prepend-icon="mdi-file-lock-outline"
-                    title="AES Text Encrypt"
-                    value="textaesenc">
-                </v-list-item>
-                <v-list-item
-                    to="/textaesdec"
-                    prepend-icon="mdi-lock-open-variant-outline"
-                    title="AES Text Decrypt"
-                    value="textaesdec">
+                    title="AES Decryption"
+                    value="aes-decrypt">
                 </v-list-item>
                 <v-list-item
                     to="/password-generator"
