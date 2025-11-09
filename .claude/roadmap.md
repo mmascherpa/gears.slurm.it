@@ -173,9 +173,9 @@ This file tracks feature planning, completed work, and future development priori
 
 ## Phase 4: Security & Validation (Priority: HIGH)
 
-**Status**: ✅ Completed (4/4 features completed)
-**Estimated Effort**: 4-6 hours
-**Actual Effort**: 5 hours
+**Status**: ✅ Completed (7/7 features completed)
+**Estimated Effort**: 13-17 hours
+**Actual Effort**: 14.5 hours
 
 ### Features
 
@@ -195,14 +195,33 @@ This file tracks feature planning, completed work, and future development priori
   - **Benefit**: Prevents browser crashes, better UX, clear user feedback
   - **Completed**: 2025-10-26
 
+- [x] **PasswordInput Component** (1.5 hours) - Priority 2 ✅ COMPLETED
+  - Standardized password input with visibility toggle
+  - Password confirmation matching with visual validation
+  - Integration across all AES components
+  - **Benefit**: Consistent UX, improved password handling
+  - **Completed**: 2025-10-22 (Commit: 9d6d743)
+
+- [x] **Crypto Provider Abstraction** (4 hours) - Priority 1 ✅ COMPLETED
+  - Created pluggable crypto backend architecture (CryptoProvider.js)
+  - Implemented JsAesCryptProvider (legacy compatibility)
+  - Implemented WebCryptoProvider (native browser crypto, faster)
+  - 63 additional tests for provider abstraction
+  - **Benefit**: Flexible crypto backends, better performance, future-proof
+  - **Completed**: 2025-10-30 (Commit: 04d6432)
+
+- [x] **PWA Auto-Update System** (2 hours) - Priority 2 ✅ COMPLETED
+  - useServiceWorkerUpdate composable for intelligent update detection
+  - Offline detection with graceful degradation
+  - User notification for available updates
+  - **Benefit**: Improved PWA experience, seamless updates
+  - **Completed**: 2025-10-24 (Commit: 4d6f952)
+
 - [x] **Code Refactoring & Standardization** (2 hours) - Priority 1 ✅ COMPLETED
-  - Created 5 composables (useSnackbar, useClipboard, useDebounce, useFileSizeValidation, useAESWorker)
-  - Created 4 shared components (ToolPageHeader, SharedSnackbar, TextInputWithActions, FileUploadWithValidation)
-  - Refactored all 7 tool components to use Composition API
-  - Fixed memory leak: Workers now properly terminate on component unmount
-  - Standardized coding style across entire codebase (imports, naming, structure)
-  - Established comprehensive coding standards documentation
-  - **Benefit**: Eliminated 1,124 lines of duplicate code, improved maintainability, fixed critical bug
+  - Created 5 composables, 4 shared components
+  - Refactored all 7 tool components to Composition API
+  - Fixed memory leak in worker lifecycle
+  - **Benefit**: Eliminated 1,124 lines of duplicate code
   - **Completed**: 2025-11-01 (Commit: 25babb4)
 
 - [x] **UI/UX Polish** (1 hour) - Priority 2 ✅ COMPLETED
@@ -218,45 +237,36 @@ This file tracks feature planning, completed work, and future development priori
 
 ## Phase 5: Testing Infrastructure (Priority: MEDIUM)
 
-**Status**: ⚪ Not Started
+**Status**: 🔄 In Progress (3/4 features completed)
 **Estimated Effort**: 8-12 hours
+**Actual Effort**: 10 hours
 
 ### Features
 
-- [ ] **Setup Vitest** (2 hours) - Priority 1
-  - Install Vitest and @vue/test-utils
-  - Configure vite.config.js for tests
-  - Add npm test script
-  - Setup test file structure
-  - **Benefit**: Foundation for automated testing
+- [x] **Setup Vitest** (2 hours) - Priority 1 ✅ COMPLETED
+  - Vitest configured with Vue plugin, jsdom, test scripts
+  - **Completed**: 2025-10-26 (Commit: e541f4f)
 
-- [ ] **Unit Tests for Utilities** (3 hours) - Priority 2
-  - Test buffer utilities (src/assets/util/)
-  - Test base64 encoding/decoding logic
-  - Test CSV parsing functions
-  - **Benefit**: Catch regressions early
+- [x] **Unit Tests for Utilities** (4 hours) - Priority 2 ✅ COMPLETED
+  - 94 utility tests (csvParser, fileDownload, passwordGenerator, passwordStrength)
+  - **Completed**: 2025-10-27 (Commit: e541f4f)
 
-- [ ] **Component Tests** (4 hours) - Priority 2
-  - Test Base64Enc/Dec components
-  - Test AESEnc/Dec components
-  - Test Home.vue navigation
-  - **Benefit**: Ensure UI behaves correctly
+- [x] **Component Tests** (4 hours) - Priority 2 ✅ COMPLETED
+  - 266 component tests across 6 components
+  - **Achievement**: 423 total passing tests, 95.45% coverage
+  - **Completed**: 2025-11-01 (Commit: 00454ed)
 
-- [ ] **E2E Tests** (3 hours) - Priority 3
-  - Install Playwright or Cypress
-  - Test full encryption/decryption workflow
-  - Test offline PWA functionality
-  - Test clipboard operations
-  - **Benefit**: Confidence in production builds
-  - **Dependency**: Requires Phase 3.1 and 3.2 completion
+- [ ] **E2E Tests** (6-10 hours) - Priority 1 🔥 **NEXT PRIORITY**
+  - Install Playwright, test full workflows, offline PWA, clipboard ops
+  - **Effort Updated**: Increased from 3h to 6-10h for comprehensive coverage
 
 ---
 
 ## Phase 6: Additional UX Features (Priority: MEDIUM)
 
-**Status**: 🔄 In Progress (1/5 features completed)
-**Estimated Effort**: 6-10 hours
-**Actual Effort**: 3 hours (Theme Toggle)
+**Status**: 🔄 In Progress (2/6 features completed)
+**Estimated Effort**: 11-14 hours
+**Actual Effort**: 5 hours (Theme Toggle + Password Session)
 
 ### Features
 
@@ -301,21 +311,12 @@ This file tracks feature planning, completed work, and future development priori
   - **Privacy**: Memory-only, auto-clears on tab close
   - **Completed**: 2025-11-08
 
-- [ ] **Smart Content Detection** (2.5 hours) - Priority 2 🔥 **RECOMMENDED**
-  - Auto-detect pasted content type (Base64, JWT, encrypted AES text, URLs, hashes)
-  - Show intelligent tooltip: "This looks like a JWT token - decode it?"
-  - One-click switch to appropriate tool with pre-filled input
-  - Magic wand icon to manually trigger detection
-  - Support detection in all text input fields
-  - **Benefit**: Makes app intelligent, guides users to right tool
-  - **Use Case**: "Paste random string → app suggests 'This is Base64, want to decode?'"
-
 ---
 
 ## Phase 7: New Tool Features (Priority: MEDIUM-LOW)
 
-**Status**: 🔄 In Progress (2/13 features completed)
-**Estimated Effort**: 28-38 hours
+**Status**: 🔄 In Progress (2/12 features completed)
+**Estimated Effort**: 30-42 hours
 **Actual Effort**: 5 hours (Password Generator + Text AES Encryption)
 **Trigger**: After completing Phase 4-6, or when user feedback indicates demand
 
@@ -340,14 +341,6 @@ This file tracks feature planning, completed work, and future development priori
   - **Benefit**: Quick text encryption without file I/O overhead
   - **Use Case**: "I just want to encrypt this API key/secret quickly"
   - **Completed**: 2025-10-29 (Commit: 9755c9a)
-
-- [ ] **Hash Generator Tool** (3 hours) - Priority 1 🔥 **RECOMMENDED**
-  - Add new page for SHA-256, SHA-512, MD5 hashing
-  - File and text hashing support
-  - Compare two hashes (file integrity verification)
-  - Copy hash to clipboard
-  - **Benefit**: Natural companion to encryption, common workflow
-  - **Use Case**: "Encrypt file → share hash for verification"
 
 ### Developer Tools
 
@@ -439,7 +432,316 @@ This file tracks feature planning, completed work, and future development priori
 
 ---
 
-## Phase 8: TypeScript Migration (Priority: LOW)
+## Phase 8: DevOps & Quality Assurance (Priority: HIGH)
+
+**Status**: ⚪ Not Started
+**Estimated Effort**: 10-15 hours
+**Target**: Production-ready deployment with automated quality gates
+**Trigger**: After Phase 5 E2E tests complete
+
+### Features
+
+- [ ] **CI/CD Pipeline** (3-4 hours) - Priority 1 🔥 **CRITICAL**
+  - Setup GitHub Actions workflow
+  - Automated testing on every commit (run all 423+ tests)
+  - Automated builds for main branch
+  - Deployment to production on release tags
+  - Badge displays (build status, test coverage)
+  - **Benefit**: Prevent broken builds, automated deployment, confidence in releases
+  - **ROI**: Extremely high - catches bugs before production
+
+- [ ] **E2E Tests with Playwright** (6-10 hours) - Priority 1 🔥 **MOVED FROM PHASE 5**
+  - Install and configure Playwright
+  - Test full encryption/decryption workflows
+  - Test offline PWA functionality and service worker
+  - Test clipboard operations (copy/paste)
+  - Test file upload/download workflows
+  - Test theme persistence and switching
+  - Run in CI/CD pipeline
+  - **Benefit**: Test real user workflows, catch integration bugs
+  - **Critical**: You have 423 unit tests but no E2E - this is the gap
+
+- [ ] **Performance Monitoring** (2-3 hours) - Priority 2
+  - Lighthouse CI integration for PWA score tracking
+  - Performance budgets for bundle size
+  - Large file encryption benchmarking (track regression)
+  - Memory profiling for worker threads
+  - **Benefit**: Maintain fast app, catch performance regressions
+
+- [ ] **Error Tracking & Monitoring** (2 hours) - Priority 3
+  - Sentry integration (or privacy-respecting alternative)
+  - Client-side error reporting
+  - Performance metrics collection
+  - Offline-first error queue
+  - **Note**: Must be privacy-conscious, opt-in only
+
+---
+
+## Phase 9: Modern UX Polish (Priority: MEDIUM)
+
+**Status**: ⚪ Not Started
+**Estimated Effort**: 8-12 hours
+**Target**: Modern web app standards and power-user features
+**Trigger**: After Phase 6 partial completion
+
+### Features
+
+- [ ] **Keyboard Shortcuts** (3-4 hours) - Priority 1 🔥 **ELEVATED FROM PHASE 6**
+  - Global shortcuts: `Ctrl+V` paste, `Ctrl+C` copy, `Esc` clear
+  - Tool-specific shortcuts: `Ctrl+E` encrypt, `Ctrl+D` decrypt
+  - Shortcut hints in tooltips and help dialog
+  - Customizable shortcut settings (localStorage)
+  - Visual shortcut legend (`?` key to display)
+  - **Benefit**: Power user efficiency, modern app standard
+  - **Priority Elevated**: This is expected in productivity tools
+
+- [ ] **Undo/Redo Functionality** (2-3 hours) - Priority 2
+  - Undo destructive actions (clear text, remove file)
+  - Toast notifications with undo button
+  - History stack (last 10 actions)
+  - `Ctrl+Z` undo, `Ctrl+Shift+Z` redo
+  - **Benefit**: User confidence, prevent accidental data loss
+
+- [ ] **Auto Dark Mode Detection** (1 hour) - Priority 2
+  - Detect system preference (`prefers-color-scheme`)
+  - Auto-apply dark theme on first visit
+  - Respect user override in settings
+  - **Benefit**: Modern UX standard, better accessibility
+
+- [ ] **File Preview Thumbnails** (2-3 hours) - Priority 3
+  - Show image thumbnails before encryption
+  - Preview first few lines of text files
+  - File type icons for different formats
+  - **Benefit**: User confidence in file selection
+
+- [ ] **Advanced Progress Indicators** (2 hours) - Priority 3 **ENHANCED FROM PHASE 6**
+  - Actual progress bar (0-100%) for large file operations
+  - Time remaining estimate
+  - Cancel operation button
+  - **Current**: Only has loading spinner
+  - **Upgrade**: True progress tracking with Web Worker updates
+
+---
+
+## Phase 10: Privacy & Forensics Tools (Priority: MEDIUM-HIGH)
+
+**Status**: ⚪ Not Started
+**Estimated Effort**: 50-75 hours
+**Target Audience**: Privacy-conscious users, journalists, security professionals, forensic enthusiasts
+**Trigger**: After Phase 6-7 partial completion, high user value features
+**Note**: Time estimates corrected to reflect realistic complexity
+
+### Core Privacy Tools (Highest Priority)
+
+- [ ] **Metadata Editor & Steganography Tool** (12-18 hours) - Priority 1 🔥🔥🔥 **TOP PRIORITY**
+  - **Full EXIF/metadata viewer and editor** for images (JPEG, PNG, HEIC, TIFF)
+  - **View mode**: Display all metadata in organized sections (Camera, Location, Software, Timestamps, Copyright, etc.)
+  - **Edit mode**: Modify any metadata field individually
+    - Change GPS coordinates (latitude/longitude)
+    - Modify timestamps (DateTimeOriginal, CreateDate, ModifyDate)
+    - Edit camera info (Make, Model, LensModel)
+    - Change author, copyright, software fields
+    - Add/remove custom tags
+  - **Strip mode**: One-click remove all metadata (privacy sanitization)
+  - **Steganography mode**: Hide encrypted text in metadata fields
+    - Embed data in EXIF Comment, UserComment, or ImageDescription fields
+    - Obfuscation: Metadata appears normal but contains hidden messages
+    - Combine with AES text encryption for double-layer protection
+    - Warning: "Metadata steganography detected" when reading
+  - **Before/After comparison**: Side-by-side view of original vs modified metadata
+  - **Batch processing**: Apply same edits to multiple images at once
+  - **Warning system**: Alert user if GPS coordinates present ("⚠️ Location data detected!")
+  - **Presets**: Quick actions
+    - "Sanitize for sharing" (remove all identifying metadata)
+    - "Randomize timestamps" (preserve date but randomize time)
+    - "Remove GPS only" (keep camera info, strip location)
+    - "Photographer mode" (keep technical data, remove personal info)
+  - **Export options**: Save as new file or overwrite original
+  - **Visual indicators**: Icons showing which metadata sections are populated
+  - **Benefit**: Privacy protection + creative data hiding + metadata manipulation
+  - **Use Case 1 (Privacy)**: "Remove GPS coordinates from protest photos before sharing"
+  - **Use Case 2 (Steganography)**: "Hide encrypted credentials in vacation photo metadata"
+  - **Use Case 3 (Forensics)**: "Edit timestamp to match alibi" (ethical disclaimer required)
+  - **Tech**: piexifjs library (~50KB, browser-compatible, works offline)
+  - **Marketing**: Unique 3-in-1 feature rarely found in browser-based tools
+
+- [ ] **Hex Viewer & Binary Editor** (20-30 hours) - Priority 2 🔥🔥 **POWER USER FEATURE**
+  - **Hex dump viewer**: Classic three-column layout (Offset | Hex | ASCII)
+  - **Edit mode**: Click any byte to modify (hex or ASCII input)
+  - **Large file support**: Virtual scrolling for files up to 200MB without freezing browser
+  - **Search functionality**: Find byte patterns, text strings, hex sequences, regex
+  - **Jump to offset**: Navigate directly to specific byte position (decimal or hex)
+  - **Data interpretation panel**: View selected bytes as:
+    - Signed/unsigned integers (8/16/32/64-bit, little/big endian)
+    - Floating point (32/64-bit)
+    - UTF-8/UTF-16/ASCII text
+    - Unix timestamps
+  - **Binary diff**: Compare two files byte-by-byte with visual highlighting
+  - **Export selections**: Save specific byte ranges to new file
+  - **File structure detection**: Auto-identify headers, magic numbers, file sections
+  - **Color coding**: Syntax highlighting
+    - Printable ASCII (green)
+    - Null bytes (gray)
+    - Non-printable (red)
+    - Repeated patterns (blue)
+  - **Bookmarks**: Mark important offsets with labels
+  - **Undo/Redo**: Full edit history for safety
+  - **Read-only mode toggle**: Prevent accidental modifications
+  - **Benefit**: Forensic analysis, debugging encryption, understanding file formats, binary patching
+  - **Use Case 1**: "Inspect .aes file header structure to understand encryption format"
+  - **Use Case 2**: "Edit binary configuration file directly"
+  - **Use Case 3**: "Debug corrupted encrypted file by examining bytes"
+  - **Use Case 4**: "Patch game save files or modify binary data"
+  - **Tech**: Custom hex renderer with Canvas API for performance, virtual scrolling
+  - **Inspired by**: CyberChef's hex viewer, ImHex, HxD
+
+- [ ] **File Hash Generator & Integrity Verifier** (3 hours) - Priority 1 🔥 **ESSENTIAL TOOL**
+  - **Hash generation**: Support multiple algorithms
+    - SHA-256 (primary, most secure)
+    - SHA-512 (extra security)
+    - SHA-1 (legacy compatibility)
+    - MD5 (legacy compatibility, warn about weakness)
+  - **Multiple file hashing**: Upload multiple files, generate all hashes in batch
+  - **Text hashing**: Hash text input directly (useful for password hashing preview)
+  - **Checksum file support**: Import/export SHA256SUMS or MD5SUMS format
+  - **Integrity verification**:
+    - Paste expected hash + upload file → instant match/mismatch
+    - Visual feedback: ✅ green checkmark (match) or ❌ red X (mismatch)
+  - **Byte-by-byte file comparison**: Compare two files, show exact byte differences
+  - **Text diff mode**: Side-by-side comparison with line-level highlighting for text files
+  - **Roundtrip verification workflow**:
+    - Hash original file
+    - Encrypt → decrypt
+    - Hash result → compare
+    - Confirm no data loss
+  - **Progress indicator**: Show hashing progress for large files (>50MB)
+  - **Copy to clipboard**: One-click copy any hash for sharing
+  - **Hash history**: Remember last 5 hashes for comparison
+  - **Benefit**: Essential companion to encryption, verify file integrity, detect tampering
+  - **Use Case 1**: "Verify downloaded file matches published SHA-256 hash"
+  - **Use Case 2**: "Confirm encryption/decryption roundtrip didn't corrupt data"
+  - **Use Case 3**: "Compare two file versions to detect changes"
+  - **Tech**: Web Crypto API (crypto.subtle.digest), no dependencies, fully offline
+
+### Data Analysis Tools (Medium Priority)
+
+- [ ] **JSON/XML Formatter & Validator** (2-3 hours) - Priority 2
+  - **JSON beautifier**: Auto-format with syntax highlighting and proper indentation
+  - **JSON minifier**: Remove all whitespace for compact storage/transmission
+  - **JSON validator**: Check syntax, show precise error location (line/column)
+  - **JSONPath query**: Extract specific fields using query syntax ($.users[0].email)
+  - **XML formatter**: Beautify XML with proper indentation
+  - **JSON ↔ XML converter**: Transform between formats bidirectionally
+  - **Tree view explorer**: Collapsible/expandable JSON structure visualization
+  - **Diff mode**: Compare two JSON objects, highlight structural differences
+  - **Copy path**: Click any field to copy its JSONPath to clipboard
+  - **Schema validation**: Validate against JSON Schema (optional)
+  - **Escape/unescape**: Convert special characters for embedding
+  - **Benefit**: Essential for API work, config files, decrypted JSON data
+  - **Use Case**: "Decrypt API response → format for readability → extract specific field"
+  - **Tech**: JSON.parse + custom formatter, syntax highlighter (e.g., Prism.js or custom)
+
+- [ ] **Text Diff & Comparison Tool** (3 hours) - Priority 2
+  - **Side-by-side diff**: Two-pane view with synchronized scrolling
+  - **Inline diff**: Single view with additions/deletions marked inline
+  - **Character-level precision**: Highlight exact character changes within lines (not just line-level)
+  - **Unified diff format**: Export as standard .patch/.diff file
+  - **Context lines**: Configurable number of unchanged lines around diffs
+  - **Ignore whitespace option**: Skip formatting differences (useful for code)
+  - **Case-insensitive mode**: Compare ignoring letter case
+  - **Line numbers**: Show original and new line numbers
+  - **Copy differences**: Extract only added/removed lines
+  - **Multi-file diff**: Compare two sets of files
+  - **Statistics**: Show counts (lines added, removed, changed)
+  - **Benefit**: Compare document versions, find what changed after decryption
+  - **Use Case**: "Compare two contract versions after decryption to see edits"
+  - **Tech**: diff-match-patch library (~20KB) or custom LCS algorithm
+
+- [ ] **Regex Tester & Text Extractor** (2-3 hours) - Priority 3
+  - **Live regex testing**: Real-time pattern matching with instant highlighting
+  - **Pattern library**: Common presets
+    - Email addresses: `[\w\.-]+@[\w\.-]+\.\w+`
+    - Phone numbers (US, international formats)
+    - IP addresses (IPv4, IPv6)
+    - URLs (http/https)
+    - Credit card numbers (with Luhn validation)
+    - Social Security Numbers
+  - **Extract mode**: Pull all matches into copyable list
+  - **Replace mode**: Find-and-replace with regex (supports $1, $2 groups)
+  - **Test cases**: Save patterns for reuse
+  - **Capture groups**: Display numbered and named groups separately
+  - **Flags support**: i (case-insensitive), g (global), m (multiline), s (dotall), u (unicode)
+  - **Performance metrics**: Show match count and execution time
+  - **Export results**: Copy matched text to clipboard or download as file
+  - **Regex cheatsheet**: Built-in quick reference panel
+  - **Benefit**: Data extraction from large decrypted texts, pattern validation
+  - **Use Case**: "Extract all email addresses from 5MB CSV" OR "Find phone numbers in document"
+  - **Tech**: Native JavaScript RegExp, no dependencies
+
+### Advanced Privacy Features (Lower Priority)
+
+- [ ] **Character Encoding Detective** (2 hours) - Priority 3
+  - **Auto-detect encoding**: Identify character encoding automatically
+    - UTF-8 (most common)
+    - UTF-16 (LE/BE)
+    - Latin-1 (ISO-8859-1)
+    - Windows-1252
+    - ASCII
+    - Others (50+ encodings)
+  - **Encoding converter**: Transform between any encodings
+  - **Mojibake fixer**: Detect and repair double-encoded text (é → Ã© → fix)
+  - **BOM detection**: Identify and handle byte-order marks
+  - **Preview mode**: Show text in multiple encodings simultaneously for comparison
+  - **Confidence scoring**: "90% confident this is UTF-16LE"
+  - **Manual override**: Force specific encoding when auto-detect fails
+  - **Benefit**: Fix garbled text after decryption when wrong encoding assumed
+  - **Use Case**: "Decrypted file shows weird characters → auto-detect correct encoding"
+  - **Tech**: TextDecoder API + encoding detection heuristics (or chardet library if needed)
+
+- [ ] **File Entropy Analyzer** (2-3 hours) - Priority 3
+  - **Entropy calculation**: Measure data randomness (Shannon entropy)
+    - 0.0 = completely uniform (all same byte)
+    - 8.0 = perfectly random (ideal for encrypted data)
+  - **Visual histogram**: Show byte value distribution (0-255) as bar chart
+  - **Detection capabilities**:
+    - Identify if file is already compressed (high entropy)
+    - Detect if file is encrypted (very high entropy)
+    - Spot patterns (low entropy regions)
+  - **Compression test**: Estimate size reduction with gzip/brotli
+  - **Encryption overhead calculation**: Show size increase from AES encryption
+  - **Chi-square test**: Statistical randomness test
+  - **Recommendations**:
+    - "This file is already compressed (entropy 7.8), skip compression step"
+    - "Low entropy (2.3), compression will significantly reduce size"
+  - **Benefit**: Optimize encryption workflow, forensic analysis, detect file types
+  - **Use Case**: "Check if 50MB file worth compressing before encrypting"
+  - **Tech**: Shannon entropy formula, browser Compression Streams API
+
+- [ ] **Privacy Score Analyzer** (4 hours) - Priority 3 🌟 **UNIQUE FEATURE**
+  - **Privacy audit**: Comprehensive analysis of uploaded file
+  - **Scoring system**: 0-100 points (100 = perfectly private)
+  - **Risk factors detected**:
+    - **Metadata presence** (-20 pts): EXIF, GPS, timestamps
+    - **Identifiable filename** (-10 pts): Contains names, dates, sensitive keywords
+    - **Embedded personal info** (-15 pts): Author name, company, email in document properties
+    - **Document metadata** (-15 pts): MS Office tracked changes, comments, hidden sheets
+    - **Hidden data** (-20 pts): Steganography, alternate data streams
+    - **File format** (-10 pts): Proprietary formats that leak info
+    - **Timestamp leaks** (-10 pts): Creation/modification times reveal patterns
+  - **Detailed report**: Line-by-line findings with severity (Critical/High/Medium/Low)
+  - **Recommendations**: Actionable steps to improve score
+    - "Remove GPS coordinates from EXIF (-20 pts) → use Metadata Editor"
+    - "Filename 'secret-client-list.txt' reveals content (-10 pts) → rename to 'document-2024.txt'"
+  - **Before/After comparison**: Show score improvement after applying fixes
+  - **Export report**: PDF or text summary for compliance documentation
+  - **Privacy checklist**: Interactive checklist of privacy best practices
+  - **Benefit**: Comprehensive privacy check before encrypting and sharing files
+  - **Use Case**: "Audit file before sharing with journalist to ensure no identifying info"
+  - **Tech**: Multiple analyzers (EXIF reader, PDF metadata extractor, Office XML parser)
+
+---
+
+## Phase 11: TypeScript Migration (Priority: LOW)
 
 **Status**: ⚪ Not Started
 **Estimated Effort**: 10-15 hours
@@ -466,7 +768,7 @@ This file tracks feature planning, completed work, and future development priori
 
 ---
 
-## Phase 9: Accessibility & Internationalization (Priority: VERY LOW)
+## Phase 12: Accessibility & Internationalization (Priority: VERY LOW)
 
 **Status**: ⚪ Not Started
 **Estimated Effort**: 8-12 hours
@@ -490,7 +792,7 @@ This file tracks feature planning, completed work, and future development priori
 
 ---
 
-## Phase 10: Future Considerations (Priority: RESEARCH NEEDED)
+## Phase 13: Future Considerations (Priority: RESEARCH NEEDED)
 
 **Status**: ⚪ Not Started
 **Estimated Effort**: 10-12 hours
@@ -534,56 +836,77 @@ This file tracks feature planning, completed work, and future development priori
 
 ## Progress Summary
 
-**Total Planned Features**: 60
-**Completed**: 23 ✅
-**In Progress**: 2 🔄 (Phase 6, Phase 7)
-**Planned**: 35 📋
-**Research Needed**: 2 🔬 (Phase 10)
+**Total Planned Features**: 69
+- Phase 1: 5, Phase 2: 3, Phase 3: 3, Phase 3.5: 4
+- Phase 4: 7 (was 4, +3 discovered), Phase 5: 4, Phase 6: 6 (was 5), Phase 7: 12 (was 13)
+- Phase 8: 4 (NEW), Phase 9: 5 (NEW), Phase 10: 9 (was Phase 11), Phase 11-13: 7
+
+**Completed**: 29 ✅ (42% of total)
+- Phases 1-4: 22 features (100% complete)
+- Phase 5: 3 features (75% complete)
+- Phase 6-7: 4 features (partial)
+
+**In Progress**: 3 🔄 (Phases 5, 6, 7)
+**Planned**: 40 📋
+**Research Needed**: 2 🔬 (Phase 13)
 
 **Phase Completion**:
-- Phase 1 (Code Cleanup): ✅ 100% (5/5 features completed)
-- Phase 2 (UI Modernization): ✅ 100% (3/3 features completed)
-- Phase 3 (UX Enhancements): ✅ 100% (3/3 features completed)
-- Phase 3.5 (Offline & Code Quality): ✅ 100% (4/4 features completed)
-- Phase 4 (Security & Validation): ✅ 100% (4/4 features completed)
-- Phase 5 (Testing): 0% (0/4 features completed)
-- Phase 6 (Additional UX): 🔄 14% (1/7 features completed)
-- Phase 7 (New Tool Features): 🔄 13% (2/15 features completed)
-- Phase 8 (TypeScript): 0% (0/3 features completed)
-- Phase 9 (Accessibility/i18n): 0% (0/2 features completed)
-- Phase 10 (Future Considerations): 0% (0/2 features - research needed)
+- Phase 1 (Code Cleanup): ✅ 100% (5/5)
+- Phase 2 (UI Modernization): ✅ 100% (3/3)
+- Phase 3 (UX Enhancements): ✅ 100% (3/3)
+- Phase 3.5 (Offline & Code Quality): ✅ 100% (4/4)
+- Phase 4 (Security & Validation): ✅ 100% (7/7) **+3 features discovered**
+- Phase 5 (Testing): 🔄 75% (3/4) **423 passing tests**
+- Phase 6 (Additional UX): 🔄 33% (2/6)
+- Phase 7 (New Tool Features): 🔄 17% (2/12)
+- Phase 8 (DevOps & QA): 0% (0/4) **← NEW HIGH PRIORITY**
+- Phase 9 (Modern UX Polish): 0% (0/5) **← NEW**
+- Phase 10 (Privacy & Forensics): 0% (0/9) **← Was Phase 11**
+- Phase 11 (TypeScript): 0% (0/3)
+- Phase 12 (Accessibility/i18n): 0% (0/2)
+- Phase 13 (Future): 0% (0/2)
 
 ---
 
 ## Next Immediate Steps
 
-**Current Focus**: Phase 6 & 7 - Additional Features
+**Current Focus**: Production-Ready Quality → Modern UX → Advanced Features
 
 **Completed Phases**:
-- ✅ Phase 1: Code Cleanup & Quality (5/5 features)
-- ✅ Phase 2: UI Modernization (3/3 features)
-- ✅ Phase 3: UX Enhancements (3/3 features)
-- ✅ Phase 3.5: Offline Functionality & Code Quality (4/4 features)
-- ✅ Phase 4: Security & Validation (4/4 features)
+- ✅ Phase 1: Code Cleanup & Quality (5/5)
+- ✅ Phase 2: UI Modernization (3/3)
+- ✅ Phase 3: UX Enhancements (3/3)
+- ✅ Phase 3.5: Offline & Code Quality (4/4)
+- ✅ Phase 4: Security & Validation (7/7) **+3 discovered features**
+- 🔄 Phase 5: Testing (3/4) **423 tests passing!**
 
-**High-Value Next Features (Prioritized by Usability → Functionality → Uniqueness)**:
+**Recommended Priority Order (Based on Audit)**:
 
-**Usability Wins (Top Priority):**
-1. **Password Session Manager** (Phase 6, 2 hours) 🔥 - Eliminate re-typing password for multi-file encryption
-2. **Drag & Drop File Upload** (Phase 6, 2 hours) 🔥 - Modern UX everyone expects
-3. **Smart Content Detection** (Phase 6, 2.5 hours) 🔥 - Intelligent paste suggestions
-4. **Progress Indicators for Large Files** (Phase 6, 2.5 hours) - Better UX for long operations
+**Phase 8: Production Readiness (CRITICAL - Do First)** 🔥🔥🔥
+1. **CI/CD Pipeline** (3-4 hours) - Automated testing, prevent broken builds, huge ROI
+2. **E2E Tests** (6-10 hours) - Complete Phase 5, test real workflows (you have 423 unit tests but no E2E!)
+3. **Performance Monitoring** (2-3 hours) - Lighthouse CI, bundle budgets
 
-**Well-Designed Functionality (Second Priority):**
-5. **Hash Generator Tool** (Phase 7, 3 hours) 🔥 - Natural companion to encryption, file integrity verification
-6. **JWT Decoder** (Phase 7, 2.5 hours) - Popular developer tool for debugging auth tokens
-7. **Keyboard Shortcuts** (Phase 6, 1.5 hours) - Power user efficiency
+**Phase 9: Modern UX Standards (HIGH - Do Second)** 🔥🔥
+4. **Keyboard Shortcuts** (3-4 hours) - Expected in productivity tools, power-user essential
+5. **Undo/Redo** (2-3 hours) - Modern standard, prevent data loss
+6. **Auto Dark Mode** (1 hour) - System preference detection
 
-**Unique Features (Third Priority):**
-8. **Steganography Mode** (Phase 7, 6 hours) 🌟 - Hide encrypted text in images (unique differentiator)
-9. **Decryption Honeypot** (Phase 7, 3 hours) 🌟 - Plausible deniability feature
+**Phase 10: Privacy & Forensics (MEDIUM-HIGH - User Requested)** 🔥
+7. **Metadata Editor & Steganography** (12-18 hours) - TOP user request, unique feature
+8. **Hex Viewer & Binary Editor** (20-30 hours) - Power user favorite, major undertaking
+9. **File Hash Verifier** (3 hours) - Essential integrity checks
 
-Or continue with **Phase 5 (Testing Infrastructure)** for long-term code quality.
+**Phase 6 & 7: Remaining UX/Tools (MEDIUM):**
+10. **Drag & Drop** (Phase 6, 2 hours) - Modern UX standard
+11. **JWT Decoder** (Phase 7, 2.5 hours) - Developer tool
+12. **JSON Formatter** (Phase 10, 2-3 hours) - Data analysis
+
+**Why This Order?**
+- **CI/CD first**: Protect quality as codebase grows (you're at 4,815 lines with 423 tests - automate it!)
+- **E2E tests next**: Complete Phase 5 testing suite (the gap identified in audit)
+- **Modern UX**: Keyboard shortcuts and undo are table stakes for productivity tools
+- **Then advanced features**: Privacy tools after production quality is locked in
 
 ---
 
@@ -783,13 +1106,48 @@ Or continue with **Phase 5 (Testing Infrastructure)** for long-term code quality
   - **Total changes**: +188 lines (1 new composable, 2 modified components)
   - **Use case**: "Encrypting 10 company documents with same password - no re-typing"
 
+- **2025-11-09**: Roadmap Reorganization - Added Phase 11 Privacy & Forensics Tools
+  - **Added new Phase 11**: Privacy & Forensics Tools (9 features, 26-34 hours total)
+    - Priority 1: Metadata Editor & Steganography Tool (5-6 hours) 🔥🔥🔥 TOP PRIORITY
+    - Priority 2: Hex Viewer & Binary Editor (6-7 hours) 🔥🔥 POWER USER FEATURE
+    - Priority 1: File Hash Generator & Integrity Verifier (3 hours) 🔥 ESSENTIAL
+    - Plus 6 more analysis/privacy features
+  - **Removed features**:
+    - Smart Content Detection (Phase 6) - Low ROI for CSV/text-only detection
+    - Hash Generator (Phase 7) - Moved to Phase 11 with enhanced features
+  - **Renumbered phases**: Phase 8 → 12 (TypeScript), Phase 9 → 13 (Accessibility), Phase 10 → 14 (Future)
+  - **Updated statistics**: 60 → 67 total features (net +7 after removals)
+  - **Reprioritized recommendations**: Privacy & Forensics tools now highest priority
+  - **Rationale**: Focus on high-impact privacy features that align with target audience (privacy-conscious users, journalists, security professionals)
+  - **Metadata Editor innovation**: Combines privacy sanitization + steganography + forensic editing in one tool
+  - **Hex Editor scope**: Full binary editing with forensic features, inspired by CyberChef/ImHex
+  - **Target audience shift**: Emphasize power users who need forensic/privacy tools over basic utility users
+
+- **2025-11-09**: Comprehensive Roadmap Rationalization
+  - **Audit findings**:
+    - Phase 5 was 75% complete but marked 0% (423 passing tests discovered!)
+    - 3 missing features added to Phase 4 (PasswordInput, CryptoProvider, PWA Auto-Update)
+    - Feature counts corrected: Phase 6 (1/5→2/6), Phase 7 (2/13→2/12), Phase 4 (4→7)
+    - Total features: 67→69 (accurate count), Completed: 23→29 (42%)
+  - **Added new phases**:
+    - Phase 8: DevOps & Quality (CI/CD, E2E tests, performance monitoring) - HIGH PRIORITY
+    - Phase 9: Modern UX Polish (keyboard shortcuts, undo/redo, auto dark mode) - MEDIUM PRIORITY
+  - **Renumbered for sequential order**: Phase 11-14 → Phase 10-13
+  - **Time estimates corrected**:
+    - Metadata Editor: 5-6h → 12-18h (realistic for 3-in-1 feature)
+    - Hex Editor: 6-7h → 20-30h (realistic for complex binary editor)
+    - Phase 10 total: 26-34h → 50-75h
+  - **Priority reordering**: Production quality (CI/CD + E2E) now highest priority over new features
+  - **Rationale**: With 423 tests and 4,815 lines of code, need CI/CD automation before adding complexity
+
 ### Key Insights
-- **Well-structured foundation**: Current codebase is clean and focused
-- **Scope management**: Avoiding feature creep by maintaining privacy/offline-first principles
-- **Testing gap**: No automated tests is biggest technical debt item
-- **Security focus**: Password validation and self-hosted crypto lib are high-value wins
-- **Feature priorities**: Usability first, well-designed functionality second, unique features third
-- **Target audience**: Privacy-conscious users and aficionados value smooth UX over novelty
+- **Exceptional test coverage**: 423 passing tests with 95.45% coverage - significantly above industry standard
+- **Well-structured foundation**: Modular architecture with composables, shared components, crypto provider abstraction
+- **Production-ready gaps**: No CI/CD pipeline or E2E tests - critical for maintaining quality at scale
+- **Modern UX opportunities**: Keyboard shortcuts and undo/redo missing - expected in productivity tools
+- **Security focus**: Password validation, crypto provider flexibility, offline-first architecture
+- **Feature priorities**: Production quality first, modern UX second, unique features third
+- **Target audience**: Privacy-conscious power users value reliability and polish over novelty
 
 ---
 
@@ -798,4 +1156,4 @@ Or continue with **Phase 5 (Testing Infrastructure)** for long-term code quality
 - [Code Structure](.claude/structure.md) - Current codebase organization
 - [Main Application Files](../) - Link to main code files
 
-Last Updated: 2025-11-08 (Consolidated AES tools: 4 components → 2, cleaner UX while preserving all workflows)
+Last Updated: 2025-11-09 (Comprehensive rationalization: Fixed all counts, added missing features, restructured phases 8-13, corrected time estimates, reprioritized for production quality)
