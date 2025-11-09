@@ -31,6 +31,28 @@
             password-placeholder="Enter the password used for encryption"
             password-icon="mdi-lock-open"
           />
+
+          <v-checkbox
+            v-model="rememberPassword"
+            label="Remember password for this session"
+            hint="Password will be cleared when you close this tab"
+            persistent-hint
+            density="comfortable"
+            class="mt-2"
+          />
+
+          <v-chip
+            v-if="isPasswordRemembered"
+            color="info"
+            variant="tonal"
+            size="small"
+            prepend-icon="mdi-memory"
+            closable
+            @click:close="clearSessionPassword"
+            class="mt-2"
+          >
+            Password remembered for session
+          </v-chip>
         </v-card-text>
       </v-card>
 
@@ -243,6 +265,7 @@ import { parseCSV } from '@/utils/csvParser';
 import { useAESWorker } from '@/composables/useAESWorker';
 import { useClipboard } from '@/composables/useClipboard';
 import { useDebounce } from '@/composables/useDebounce';
+import { usePasswordSession } from '@/composables/usePasswordSession';
 import { useSnackbar } from '@/composables/useSnackbar';
 import FileUploadWithValidation from '@/components/FileUploadWithValidation.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
@@ -279,6 +302,19 @@ export default {
     // Composables
     const { snackbar, snackbarColor, snackbarText, showSnackbar } = useSnackbar();
     const { copyToClipboard, pasteFromClipboard } = useClipboard();
+    const {
+      rememberPassword,
+      isPasswordRemembered,
+      saveSessionPassword,
+      clearSessionPassword,
+      autoLoadPassword
+    } = usePasswordSession('decrypt');
+
+    // Auto-load saved password from session on mount
+    const storedPassword = autoLoadPassword();
+    if (storedPassword) {
+      password.value = storedPassword;
+    }
 
     // AES Worker for decryption
     const { decrypt, isLoading } = useAESWorker(
@@ -341,9 +377,13 @@ export default {
 
     /**
      * Clears all input fields.
+     * Preserves password if session memory is enabled.
      */
     const clearInputs = () => {
-      password.value = '';
+      // Only clear password if not remembered for session
+      if (!rememberPassword.value) {
+        password.value = '';
+      }
       encryptedFile.value = null;
       encryptedText.value = '';
     };
@@ -566,7 +606,20 @@ export default {
       }
     });
 
+    // Watch checkbox state - immediately save password when checkbox is checked
+    watch(rememberPassword, (shouldRemember) => {
+      if (shouldRemember && password.value) {
+        saveSessionPassword(password.value);
+      }
+    });
+
+    // Watch password changes - save to session if checkbox is checked
     watch(password, (newVal, oldVal) => {
+      // Save password to session if checkbox is checked and password exists
+      if (rememberPassword.value && newVal) {
+        saveSessionPassword(newVal);
+      }
+
       // Only clear outputs if user is actively changing the password (not just clearing it)
       if (newVal && newVal !== oldVal && (isOutputPopulated.value || decryptedFileName.value)) {
         clearOutputs();
@@ -592,6 +645,11 @@ export default {
       search,
       tableData,
       tableHeaders,
+
+      // Password Session
+      rememberPassword,
+      isPasswordRemembered,
+      clearSessionPassword,
 
       // Snackbar
       snackbar,

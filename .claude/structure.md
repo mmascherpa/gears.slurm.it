@@ -54,6 +54,7 @@ src/
 │   ├── useClipboard.js     # Clipboard operations (74 lines)
 │   ├── useDebounce.js      # Debounced function calls (66 lines)
 │   ├── useFileSizeValidation.js  # File size validation logic (99 lines)
+│   ├── usePasswordSession.js    # Password session storage management (132 lines)
 │   └── useSnackbar.js      # Snackbar state management (41 lines)
 ├── crypto/                 # Encryption provider abstraction layer (NEW - Phase 2)
 │   ├── CryptoProvider.js   # Base provider interface and factory (157 lines)
@@ -732,6 +733,62 @@ encryptFile(
 **Used By**: AesEncrypt, AesDecrypt
 
 **Impact**: Fixed critical memory leak affecting all AES components
+
+---
+
+### usePasswordSession.js
+**File**: [src/composables/usePasswordSession.js](src/composables/usePasswordSession.js)
+**Lines**: 132
+**Purpose**: Session-based password memory for multi-file encryption/decryption workflows
+
+**Exports**:
+- `rememberPassword` (Ref<Boolean>) - Checkbox v-model state
+- `isPasswordRemembered` (Ref<Boolean>) - Visual indicator state
+- `saveSessionPassword(password)` - Save password to sessionStorage
+- `getSessionPassword()` - Retrieve password from sessionStorage
+- `clearSessionPassword()` - Clear password from sessionStorage
+- `autoLoadPassword()` - Auto-load saved password on component mount
+
+**Key Features**:
+- **Separate contexts**: Uses different storage keys for 'encrypt' vs 'decrypt'
+- **Privacy-first**: sessionStorage only (memory-only, tab-scoped, never persisted)
+- **Auto-clear**: Browser clears sessionStorage when tab/window closes
+- **Manual clear**: Checkbox watcher clears storage when unchecked
+- **Error handling**: Comprehensive try-catch for storage operations
+
+**Storage Keys**:
+```javascript
+'slurm_aes_encrypt_session_password'  // Encryption context
+'slurm_aes_decrypt_session_password'  // Decryption context
+```
+
+**Usage Pattern**:
+```javascript
+const {
+  rememberPassword,
+  isPasswordRemembered,
+  saveSessionPassword,
+  clearSessionPassword,
+  autoLoadPassword
+} = usePasswordSession('encrypt');
+
+// Auto-load on mount
+const storedPassword = autoLoadPassword();
+if (storedPassword) {
+  password.value = storedPassword;
+}
+
+// Watch password changes to save
+watch(password, (newPassword) => {
+  if (rememberPassword.value && newPassword) {
+    saveSessionPassword(newPassword);
+  }
+});
+```
+
+**Used By**: AesEncrypt, AesDecrypt
+
+**Impact**: Eliminates password re-entry for multi-file operations
 
 ---
 
