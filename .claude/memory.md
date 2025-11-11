@@ -143,7 +143,7 @@ Cache name automatically updated on each build by `scripts/update-sw-cache.js`:
 ```bash
 npm install                # Install dependencies
 npm run dev                # Start Vite dev server (port 5173)
-npm run build              # Production build to ../slurm.it/
+npm run build              # Production build to ./deploy/
 npm run preview            # Preview production build locally
 npm run generate-icons     # Generate PNG icons from SVG
 ```
@@ -164,7 +164,7 @@ npm run build
   - Scans `dist/` for generated asset filenames
   - Updates service worker cache list with correct hashed filenames
   - Updates cache name with timestamp for versioning
-- Output directory: `../slurm.it/` (external folder)
+- Output directory: `./deploy/`
 
 ---
 

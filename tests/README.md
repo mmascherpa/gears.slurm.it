@@ -2,40 +2,81 @@
 
 ## Overview
 
-This project uses **Vitest** as the testing framework, providing fast and modern testing capabilities for Vue 3 applications.
+This project uses a comprehensive testing strategy with two layers:
+- **Vitest**: Fast unit tests (423 tests, 95.45% coverage)
+- **Playwright**: End-to-end tests (47 tests, all critical paths)
 
 ## Test Structure
 
 ```
 tests/
 ├── setup/
-│   └── test-utils.js          # Shared test utilities and mocks
+│   └── test-utils.js                # Shared test utilities and mocks (Vitest)
 ├── mocks/
-│   └── WorkerMock.js           # Web Worker mock for testing
-├── unit/
-│   ├── utils/                  # Utility function tests
+│   └── WorkerMock.js                # Web Worker mock for Vitest
+├── unit/                            # Unit tests (Vitest - 423 tests)
+│   ├── utils/
 │   │   ├── csvParser.spec.js
 │   │   ├── fileDownload.spec.js
 │   │   └── passwordGenerator.spec.js
-│   └── composables/            # Composable tests
-│       └── useAESWorker.spec.js
-└── integration/                # Integration tests (future)
+│   ├── composables/
+│   │   └── useAESWorker.spec.js
+│   ├── crypto/
+│   │   └── [3 crypto provider tests]
+│   └── components/
+│       └── [6 component tests]
+├── e2e/                             # E2E tests (Playwright - 47 tests)
+│   ├── base64.spec.js               # 6 Base64 encode/decode tests
+│   ├── aes-text.spec.js             # 6 AES text encryption tests
+│   ├── aes-file.spec.js             # 10 AES file encryption tests
+│   ├── tools-and-theme.spec.js      # 13 password generator + theme tests
+│   ├── offline-pwa.spec.js          # 12 offline PWA functionality tests
+│   ├── helpers.js                   # Shared E2E test utilities
+│   └── fixtures/                    # Test data files
+│       ├── test.txt
+│       └── test-data.csv
+└── README.md                        # This file
 ```
 
 ## Running Tests
 
-```bash
-# Run all tests
-npm test
+### Unit Tests (Vitest)
 
-# Run tests in watch mode
+```bash
+# Run all unit tests
+npm run test
+
+# Run unit tests in watch mode (auto-run on changes)
 npm run test:watch
 
-# Run tests with UI
+# Run unit tests with visual UI
 npm run test:ui
 
-# Run tests with coverage
+# Generate coverage report
 npm run test:coverage
+```
+
+### E2E Tests (Playwright)
+
+```bash
+# Run all E2E tests (CLI - fastest)
+npm run test:e2e
+
+# Run E2E tests with visual runner (interactive, great for debugging)
+npm run test:e2e:ui
+
+# Debug E2E tests (step through with inspector)
+npm run test:e2e:debug
+```
+
+### Pre-Deployment Workflow
+
+```bash
+# Always run this before deploying to gears.slurm.it
+npm run test              # Unit tests (~30 sec)
+npm run test:e2e          # E2E tests (~5-7 min)
+npm run build
+npm run preview           # Manual test of built version
 ```
 
 ## Test Coverage
@@ -299,18 +340,114 @@ it('should call function', () => {
 })
 ```
 
+## E2E Tests (Playwright)
+
+### Overview
+
+E2E tests verify full user workflows without mocks. They test the real browser, service worker, and offline functionality. **47 tests across 5 suites** cover all critical paths.
+
+### Running E2E Tests
+
+```bash
+# Fast CLI mode (recommended for pre-deployment)
+npm run test:e2e
+
+# Interactive visual mode (great for development/debugging)
+npm run test:e2e:ui
+
+# Step-through debug mode
+npm run test:e2e:debug
+```
+
+### Test Suites
+
+**1. Base64 Encode/Decode** (6 tests)
+- Text encoding to Base64
+- Base64 decoding to text
+- Clipboard copy/paste
+- Special character handling
+- Round-trip verification
+
+**2. AES Text Encryption/Decryption** (6 tests)
+- Plain text encryption with password
+- Base64 text decryption with password
+- Password validation
+- Error handling (wrong password)
+- Unicode support
+
+**3. AES File Encryption/Decryption** (10 tests)
+- File upload and encryption
+- CSV file preview on encryption
+- Password confirmation validation
+- File size validation (60MB warning, 200MB limit)
+- Download trigger
+- Clear/reset functionality
+
+**4. Tools & Theme Switching** (13 tests)
+- Password generator (generate, regenerate, copy)
+- Password strength indicator
+- Theme switching (Default, Dark, Slurm)
+- Theme persistence via localStorage
+- Session password manager
+- Character type toggles
+
+**5. Offline PWA Functionality** (12 tests) - **Critical**
+- Service worker registration
+- Asset caching on first visit
+- Encryption works offline
+- Decryption works offline
+- All pages accessible offline
+- Theme persists offline
+- State survives offline/online transitions
+- Manifest.json validation
+- Cache updates handling
+
+### E2E Test Structure
+
+```javascript
+import { test, expect } from '@playwright/test'
+
+test('should describe the user workflow', async ({ page }) => {
+  // Navigate to page
+  await page.goto('/#/aes-encrypt')
+  await page.waitForLoadState('networkidle')
+
+  // Interact with page
+  await page.locator('textarea').fill('test data')
+  await page.locator('button:has-text("Encrypt")').click()
+
+  // Verify results
+  const output = page.locator('[data-testid="output"]')
+  await expect(output).toContainText('encrypted')
+})
+```
+
+### Best Practices for E2E Tests
+
+1. **Use data-testid attributes** for reliable element selection
+2. **Wait for network** (`waitForLoadState('networkidle')`)
+3. **Test real user flows** - don't test implementation details
+4. **Handle timing** - use `waitFor()` instead of arbitrary delays
+5. **Test critical paths** - encryption, offline, file handling
+6. **Test error cases** - wrong password, invalid file, missing input
+
 ## Future Work
 
-### Integration Tests
-- Component integration with encryption workflow
-- File upload and encryption end-to-end
-- Text encryption and clipboard interaction
-- CSV parsing and preview
+### Additional Unit Tests
+- More edge cases for crypto providers
+- Performance benchmarking tests
+- Memory leak detection for long-running operations
 
-### E2E Tests (Optional)
-- Full user workflows in real browser
-- Offline functionality testing
-- PWA installation and update flows
+### Integration Tests
+- Component integration with encryption workflow (beyond E2E)
+- Multi-file encryption workflows
+- Large file handling benchmarks (100MB+)
+
+### E2E Test Enhancements
+- PWA installation and update flow testing
+- Browser compatibility matrix (Chrome, Firefox, Safari)
+- Mobile-specific E2E tests (touch interactions, small screens)
+- Performance budgets for E2E operations
 
 ## Troubleshooting
 
@@ -357,6 +494,8 @@ if (typeof Blob === 'undefined') {
 
 ---
 
-**Last Updated**: 2025-11-04
-**Test Count**: 423 passing tests
+**Last Updated**: 2025-11-11
+**Unit Tests**: 423 passing tests (95.45% coverage)
+**E2E Tests**: 47 passing tests (all critical paths covered)
+**Total Tests**: 470 tests
 **Coverage**: 95.45% overall (components: 91.66%, utilities: 93.78%, composables: 96.87%, crypto: 100%)

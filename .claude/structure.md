@@ -1305,7 +1305,7 @@ AESEnc.vue/AESDec.vue
 
 **Key Settings**:
 - Vue plugin enabled
-- Output directory: `../slurm.it/` (external deployment folder)
+- Output directory: `./deploy/` (external deployment folder)
 - Path aliases: `@/` → `./src/`
 
 ### Path Aliases
@@ -1395,7 +1395,7 @@ AESEnc.vue/AESDec.vue
 
 ### Production Build
 - Command: `npm run build`
-- Output: `../slurm.it/` directory (external folder)
+- Output: `./deploy/` directory (external folder)
 - Minified and optimized assets
 - Service Worker and Web Worker copied to output
 
@@ -1530,7 +1530,7 @@ AESEnc.vue/AESDec.vue
   - Cleaned up .gitignore and committed Service Worker changes
 
 - **2025-10-18**: Layout improvements for small screens (commit a3b5812)
-- **Recent**: Updated deployment directory to `../slurm.it/`
+- **Recent**: Updated deployment directory to `./deploy/`
 - **Recent**: Adopted v-data-table for CSV display in AES components
 
 ### Future Structural Considerations

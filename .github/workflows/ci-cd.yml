@@ -1,0 +1,230 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # Stage 1: Test and Build Verification (all events)
+  test-and-build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm run test -- --run
+
+      - name: Generate coverage report
+        run: npm run test:coverage -- --run
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/coverage-final.json
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+      - name: Build production bundle
+        run: npm run build
+
+      - name: Check build artifacts
+        run: |
+          if [ ! -d "deploy" ]; then
+            echo "Build failed: deploy directory not created"
+            exit 1
+          fi
+          if [ ! -f "deploy/index.html" ]; then
+            echo "Build failed: index.html not found"
+            exit 1
+          fi
+          echo "✓ Build successful"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts
+          path: deploy/
+
+  # Stage 2: E2E Tests (all events)
+  e2e-tests:
+    runs-on: ubuntu-latest
+
+    needs: test-and-build
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Build for testing
+        run: npm run build
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+        timeout-minutes: 10
+
+      - name: Upload E2E test report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: e2e-test-report
+          path: html/
+
+      - name: Upload E2E test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: e2e-test-results
+          path: test-results/
+
+  # Stage 3: PWA Quality (only on main branch pushes)
+  pwa-quality:
+    runs-on: ubuntu-latest
+
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    needs: test-and-build
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production bundle
+        run: npm run build
+
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v10
+        with:
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+          configPath: './lighthouserc.json'
+          runs: 1
+
+  # Stage 4: Deploy to Production (only on main branch pushes, after all tests pass)
+  deploy:
+    runs-on: ubuntu-latest
+
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    needs: [test-and-build, e2e-tests]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production bundle
+        run: npm run build
+
+      - name: Configure git
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+
+      - name: Clone deploy repository
+        run: |
+          git clone https://x-access-token:${{ secrets.DEPLOY_TOKEN }}@github.com/mmascherpa/gears.slurm.it.git deploy-repo
+
+      - name: Sync build artifacts to deploy repo
+        run: |
+          cd deploy-repo
+
+          # Remove old files but keep .git, .gitignore, CNAME, robots.txt
+          find . -maxdepth 1 -type f \( ! -name ".gitignore" ! -name "CNAME" ! -name "robots.txt" ! -name ".nojekyll" ! -name "LICENSE" ! -name "README.md" \) -delete
+          find . -maxdepth 1 -type d \( ! -name ".git" ! -name "." ! -name ".." \) -exec rm -rf {} + 2>/dev/null || true
+
+          # Copy new build
+          cp -r ../deploy/* .
+
+          # Preserve special files if they were deleted
+          if [ ! -f ".nojekyll" ]; then
+            touch .nojekyll
+          fi
+
+      - name: Commit and push to deploy repo
+        run: |
+          cd deploy-repo
+
+          if git diff --quiet; then
+            echo "No changes to deploy"
+          else
+            git add -A
+            git commit -m "Deploy: ${{ github.event.head_commit.message || github.event.pull_request.title || 'Automated deployment' }}"
+            git push origin main
+            echo "✓ Deployment successful"
+          fi
+
+      - name: Create deployment notification
+        if: success()
+        run: |
+          echo "## 🚀 Deployment Successful" >> $GITHUB_STEP_SUMMARY
+          echo "Build and E2E tests passed. Changes deployed to [gears.slurm.it](https://slurm.it)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit**: [\`${{ github.sha }}\`](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})" >> $GITHUB_STEP_SUMMARY
+
+      - name: Create failure notification
+        if: failure()
+        run: |
+          echo "## ❌ Deployment Failed" >> $GITHUB_STEP_SUMMARY
+          echo "See logs above for details" >> $GITHUB_STEP_SUMMARY
+
+  # Summary status check
+  status-check:
+    runs-on: ubuntu-latest
+
+    if: always()
+
+    needs: [test-and-build, e2e-tests]
+
+    steps:
+      - name: Check job status
+        run: |
+          if [ "${{ needs.test-and-build.result }}" != "success" ] || [ "${{ needs.e2e-tests.result }}" != "success" ]; then
+            echo "❌ Quality gates failed"
+            exit 1
+          fi
+          echo "✓ All quality checks passed"

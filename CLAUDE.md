@@ -16,7 +16,7 @@ npm install                # Install dependencies
 npm run dev                # Start dev server (port 5173)
 
 # Production
-npm run build              # Build to ../slurm.it/ + auto-update service worker
+npm run build              # Build to ./deploy/ + auto-update service worker
 npm run preview            # Preview production build
 
 # Utilities
@@ -68,7 +68,7 @@ self.postMessage(["ERROR", errorMessage, operationType])
 - **[.claude/memory.md](.claude/memory.md)** - Code style, patterns, how to write code for this project
 - **[.claude/structure.md](.claude/structure.md)** - File organization, what each component does, detailed architecture
 - **[.claude/roadmap.md](.claude/roadmap.md)** - Feature planning, completed work, what's next
-- **[OFFLINE-FUNCTIONALITY.md](OFFLINE-FUNCTIONALITY.md)** - PWA installation, offline testing, deployment checklist
+
 
 ## Quick Patterns Reference
 

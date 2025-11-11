@@ -6,3 +6,9 @@
 /deploy
 /archive
 /coverage
+
+# E2E test artifacts
+/test-results
+/html
+/playwright-report
+/.auth
