@@ -1,5 +1,5 @@
 <template>
-  <div class="d-flex align-center mb-6">
+  <div class="d-flex align-center mb-6" data-testid="page-title">
     <v-avatar :color="avatarColor" size="48" class="mr-4">
       <v-icon :icon="icon" size="28" color="white"></v-icon>
     </v-avatar>

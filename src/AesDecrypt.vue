@@ -72,6 +72,7 @@
             :show-paste="!isFilePopulated"
             :show-clear="true"
             :show-copy="false"
+            test-id="encrypted-text-input"
             @paste="handlePaste"
             @clear="clearEncryptedText"
             @input="handleEncryptedTextChange"
@@ -90,6 +91,7 @@
             :show-paste="false"
             :show-clear="false"
             :show-copy="true"
+            test-id="output-text"
             @copy="handleCopy"
           />
         </v-card-text>
@@ -135,7 +137,7 @@
 
     <!-- Plain Text Output -->
     <v-card v-if="plainText" variant="tonal" elevation="2" class="mb-4">
-      <v-card-title class="d-flex align-center">
+      <v-card-title class="d-flex align-center" data-testid="file-info">
         <v-icon icon="mdi-text" class="mr-2"></v-icon>
         Decrypted Text
         <v-spacer></v-spacer>
@@ -160,13 +162,14 @@
           readonly
           bg-color="grey-lighten-4"
           placeholder="Decrypted text"
+          data-testid="file-preview"
           hide-details>
         </v-textarea>
       </v-card-text>
     </v-card>
 
     <!-- CSV Preview -->
-    <v-card v-if="tableData.length" variant="tonal" elevation="2" class="mb-4">
+    <v-card v-if="tableData.length" variant="tonal" elevation="2" class="mb-4" data-testid="file-preview">
       <v-card-title class="d-flex align-center">
         <v-icon icon="mdi-table" class="mr-2"></v-icon>
         CSV Preview

@@ -21,6 +21,7 @@
           :show-clear="true"
           :show-copy="false"
           row-class="mb-4"
+          test-id="plain-text-input"
           @paste="handlePaste"
           @clear="handleClear"
           @input="scheduleEncode" />
@@ -38,6 +39,7 @@
           :show-clear="false"
           :show-copy="true"
           textarea-class="monospace-output"
+          test-id="output-text"
           @copy="handleCopy" />
       </v-card-text>
     </v-card>

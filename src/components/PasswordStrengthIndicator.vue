@@ -1,5 +1,5 @@
 <template>
-    <div v-if="password" class="password-strength-indicator" tabindex="-1">
+    <div v-if="password" class="password-strength-indicator" data-testid="strength-indicator" tabindex="-1">
         <!-- Strength Bar -->
         <v-progress-linear
             :model-value="strength.percentage"
@@ -29,7 +29,7 @@
 
         <!-- Requirements Checklist (expanded view) -->
         <v-expand-transition>
-            <div v-if="showRequirements && strength.level !== 'empty'" class="mt-3" tabindex="-1">
+            <div v-if="showRequirements && strength.level !== 'empty'" class="mt-3" data-testid="requirements" tabindex="-1">
                 <div class="text-caption text-medium-emphasis mb-2 font-weight-medium">
                     Password Requirements:
                 </div>

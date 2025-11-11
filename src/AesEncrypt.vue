@@ -76,6 +76,7 @@
           :show-paste="!isFilePopulated"
           :show-clear="true"
           :show-copy="false"
+          test-id="plain-text-input"
           @paste="handlePaste"
           @clear="clearPlainText"
           @input="handlePlainTextChange"
@@ -94,6 +95,7 @@
           :show-paste="false"
           :show-clear="false"
           :show-copy="true"
+          test-id="output-text"
           @copy="handleCopy"
         />
       </v-card-text>

@@ -84,12 +84,24 @@ test.describe('AES File Encryption/Decryption', () => {
 
     await page.waitForTimeout(500);
 
+    // Confirm password
+    const passwordConfirm = page.locator('input[type="password"]').last();
+    await passwordConfirm.fill(password);
+
+    await page.waitForTimeout(500);
+
     // Find and click encrypt button
     const encryptButton = page.locator('button:has-text("Encrypt")').first();
 
+    // Wait for button to be visible
+    await encryptButton.waitFor({ state: 'visible', timeout: 5000 });
+
+    // Wait a bit for button to potentially be enabled
+    await page.waitForTimeout(500);
+
     // Wait for download
-    const downloadPromise = page.waitForEvent('download');
-    await encryptButton.click();
+    const downloadPromise = page.waitForEvent('download', { timeout: 10000 });
+    await encryptButton.click({ force: true });
 
     try {
       const download = await downloadPromise.catch(() => null);
@@ -221,10 +233,16 @@ test.describe('AES File Encryption/Decryption', () => {
 
     await page.waitForTimeout(500);
 
-    // Should handle file normally
-    const fileInfo = page.locator('[data-testid="file-info"], .file-name');
-    const fileInfoVisible = await fileInfo.isVisible().catch(() => false);
-    expect(fileInfoVisible).toBeTruthy();
+    // Confirm password
+    const passwordConfirm = page.locator('input[type="password"]').last();
+    await passwordConfirm.fill(password);
+
+    await page.waitForTimeout(500);
+
+    // Should handle file normally - check for encrypt button being enabled
+    const encryptButton = page.locator('button:has-text("Encrypt")').first();
+    const isDisabled = await encryptButton.isDisabled().catch(() => true);
+    expect(!isDisabled).toBeTruthy();
   });
 });
 

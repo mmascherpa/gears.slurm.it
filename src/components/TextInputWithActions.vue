@@ -12,6 +12,7 @@
         :readonly="readonly"
         :disabled="disabled"
         :class="textareaClass"
+        :data-testid="testId"
         hide-details>
       </v-textarea>
     </v-col>
@@ -128,6 +129,13 @@ export default {
     modelValue: {
       type: String,
       default: ''
+    },
+    /**
+     * Test ID for the textarea (for E2E testing)
+     */
+    testId: {
+      type: String,
+      default: 'text-area'
     },
     /**
      * Textarea label

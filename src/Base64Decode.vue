@@ -21,6 +21,7 @@
           :show-paste="true"
           :show-clear="true"
           :show-copy="false"
+          test-id="encoded-text-input"
           @paste="handlePaste"
           @clear="handleClear"
           class="mb-4" />
@@ -36,7 +37,8 @@
           :readonly="true"
           :show-paste="false"
           :show-clear="false"
-          :show-copy="true" />
+          :show-copy="true"
+          test-id="output-text" />
       </v-card-text>
     </v-card>
 
