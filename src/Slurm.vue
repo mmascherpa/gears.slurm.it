@@ -152,6 +152,16 @@ theme.global.name.value = getSavedTheme();
 
                 <v-divider class="my-2"></v-divider>
 
+                <v-list-subheader>PRIVACY TOOLS</v-list-subheader>
+                <v-list-item
+                    to="/metadata-editor"
+                    prepend-icon="mdi-image-filter-hdr"
+                    title="Metadata Editor"
+                    value="metadata-editor">
+                </v-list-item>
+
+                <v-divider class="my-2"></v-divider>
+
                 <v-list-item
                     to="/about"
                     prepend-icon="mdi-information"

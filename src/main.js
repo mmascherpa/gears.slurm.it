@@ -11,6 +11,7 @@ import Base64Decode from './Base64Decode.vue'
 import AesEncrypt from './AesEncrypt.vue'
 import AesDecrypt from './AesDecrypt.vue'
 import PasswordGenerator from './PasswordGenerator.vue'
+import MetadataEditor from './MetadataEditor.vue'
 
 // 2. Define some routes
 // Each route should map to a component.
@@ -22,6 +23,7 @@ const routes = [
   { path: '/aes-encrypt', component: AesEncrypt },
   { path: '/aes-decrypt', component: AesDecrypt },
   { path: '/password-generator', component: PasswordGenerator },
+  { path: '/metadata-editor', component: MetadataEditor },
   { path: '/about', component: About },
 ]
 

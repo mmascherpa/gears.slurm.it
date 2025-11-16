@@ -4,7 +4,7 @@
     <ToolPageHeader
       icon="mdi-image-filter-hdr"
       title="Metadata Editor"
-      description="View, edit, and remove EXIF metadata from images for complete privacy control"
+      description="View, edit, and remove metadata from JPEG and PNG images for complete privacy control"
       avatar-color="warning"
     />
 
@@ -22,8 +22,8 @@
             <v-card-text class="pa-3">
               <v-file-input
                 v-model="selectedFile"
-                label="Select JPEG"
-                accept=".jpg,.jpeg"
+                label="Select Image"
+                accept=".jpg,.jpeg,.png"
                 prepend-icon="mdi-camera"
                 variant="outlined"
                 density="compact"
@@ -31,6 +31,9 @@
                 show-size
                 hide-details
               />
+              <div class="text-caption text-medium-emphasis mt-2">
+                Supported formats: JPEG, PNG
+              </div>
             </v-card-text>
           </v-card>
 
@@ -396,8 +399,17 @@
       @cancel="closeFieldEditor"
     />
 
-    <!-- Add Custom Field Dialog -->
+    <!-- Add Custom Field Dialog (JPEG) -->
     <AddCustomFieldDialog
+      v-if="imageFormat === IMAGE_FORMATS.JPEG"
+      v-model="showAddFieldDialog"
+      @add-field="addCustomFieldToImage"
+      @cancel="showAddFieldDialog = false"
+    />
+
+    <!-- Add PNG Field Dialog -->
+    <AddPngFieldDialog
+      v-if="imageFormat === IMAGE_FORMATS.PNG"
       v-model="showAddFieldDialog"
       @add-field="addCustomFieldToImage"
       @cancel="showAddFieldDialog = false"
@@ -454,20 +466,32 @@
 <script>
 import { computed, ref, watch } from 'vue';
 import { downloadFile } from '@/utils/fileDownload';
+
+// Metadata manager for multi-format support
 import {
-  addCustomField,
+  detectImageFormat,
+  loadMetadata,
+  editMetadataField as editMetadataFieldManager,
+  removeMetadataField as removeMetadataFieldManager,
+  removeAllMetadata as removeAllMetadataManager,
+  addCustomField as addCustomFieldManager,
+  getMetadataStats as getMetadataStatsManager,
+  getFileExtension,
+  getMimeType,
+  IMAGE_FORMATS
+} from '@/utils/metadataManager';
+
+// JPEG-specific utilities (still needed for some helper functions)
+import {
   base64ToBlob,
   clearAllMetadataValues,
-  editMetadataField,
   fileToBase64,
-  getMetadataStats,
-  loadExifData,
-  removeAllMetadata,
-  removeMetadataField,
   validateImageData
 } from '@/utils/metadataEditor';
+
 import { useSnackbar } from '@/composables/useSnackbar';
 import AddCustomFieldDialog from '@/components/AddCustomFieldDialog.vue';
+import AddPngFieldDialog from '@/components/AddPngFieldDialog.vue';
 import MetadataFieldEditor from '@/components/MetadataFieldEditor.vue';
 import MetadataViewer from '@/components/MetadataViewer.vue';
 import SharedSnackbar from '@/components/SharedSnackbar.vue';
@@ -477,6 +501,7 @@ export default {
   name: 'MetadataEditor',
   components: {
     AddCustomFieldDialog,
+    AddPngFieldDialog,
     MetadataFieldEditor,
     MetadataViewer,
     SharedSnackbar,
@@ -490,6 +515,7 @@ export default {
     const fileName = ref('');
     const fileSize = ref('');
     const imageBase64 = ref(null);
+    const imageFormat = ref(IMAGE_FORMATS.UNKNOWN); // Track detected image format
     const imagePreviewUrl = ref(null);
     const isProcessing = ref(false);
     const loadingMessage = ref('Processing...');
@@ -646,28 +672,30 @@ export default {
         const base64Data = await fileToBase64(file);
         imageBase64.value = base64Data;
 
-        // Create preview URL
-        imagePreviewUrl.value = base64Data;
+        // Detect image format
+        const format = detectImageFormat(file);
+        imageFormat.value = format;
 
-        // Validate image format
-        const validation = validateImageData(base64Data);
-        if (!validation.valid) {
-          showSnackbar(`❌ ${validation.error}`, 'error');
+        if (format === IMAGE_FORMATS.UNKNOWN) {
+          showSnackbar('❌ Unsupported image format. Please use JPEG or PNG.', 'error');
           return;
         }
 
-        // Load EXIF data
-        const exifData = await loadExifData(base64Data);
-        metadata.value = exifData;
-        originalMetadata.value = JSON.parse(JSON.stringify(exifData));
+        // Create preview URL
+        imagePreviewUrl.value = base64Data;
+
+        // Load metadata using format-specific loader
+        const metadataData = await loadMetadata(base64Data, format);
+        metadata.value = metadataData;
+        originalMetadata.value = JSON.parse(JSON.stringify(metadataData));
         originalImageBase64.value = base64Data;
 
         // Check if any metadata was found
-        if (Object.keys(exifData).length === 0) {
-          showSnackbar('ℹ️ No EXIF metadata found in this image', 'info');
+        if (Object.keys(metadataData).length === 0) {
+          showSnackbar(`ℹ️ No metadata found in this ${format} image`, 'info');
         } else {
-          const stats = getMetadataStats(exifData);
-          showSnackbar(`✓ Found ${stats.populatedFields} populated field${stats.populatedFields !== 1 ? 's' : ''} in the image`, 'success');
+          const stats = getMetadataStatsManager(metadataData, format);
+          showSnackbar(`✓ Found ${stats.populatedFields} populated field${stats.populatedFields !== 1 ? 's' : ''} in the ${format} image`, 'success');
         }
 
         // Reset state
@@ -694,12 +722,19 @@ export default {
       loadingMessage.value = 'Removing all metadata...';
 
       try {
-        const cleanedBase64 = await removeAllMetadata(imageBase64.value);
+        const cleanedBase64 = await removeAllMetadataManager(imageBase64.value, imageFormat.value);
 
-        // Create download URL
-        cleanedImageUrl.value = 'data:image/jpeg;base64,' + cleanedBase64;
+        // Create download URL with correct MIME type
+        const mimeType = getMimeType(imageFormat.value);
+        cleanedImageUrl.value = `data:${mimeType};base64,` + cleanedBase64;
 
         showSnackbar('✓ All metadata removed successfully!', 'success');
+
+        // Trigger download immediately
+        const blob = base64ToBlob(cleanedImageUrl.value);
+        const extension = getFileExtension(imageFormat.value);
+        const cleanFileName = fileName.value.replace(/\.[^/.]+$/, '') + `_clean.${extension}`;
+        downloadFile(blob, cleanFileName);
 
         // Clear metadata display
         metadata.value = null;
@@ -718,7 +753,8 @@ export default {
       if (!cleanedImageUrl.value) return;
 
       const blob = base64ToBlob(cleanedImageUrl.value);
-      const cleanFileName = fileName.value.replace(/\.[^/.]+$/, '') + '_clean.jpg';
+      const extension = getFileExtension(imageFormat.value);
+      const cleanFileName = fileName.value.replace(/\.[^/.]+$/, '') + `_clean.${extension}`;
 
       downloadFile(blob, cleanFileName);
       showSnackbar('✓ Clean image downloaded!', 'success');
@@ -750,14 +786,15 @@ export default {
       loadingMessage.value = 'Saving changes...';
 
       try {
-        const modifiedBase64 = await editMetadataField(imageBase64.value, field, newValue);
+        const modifiedBase64 = await editMetadataFieldManager(imageBase64.value, imageFormat.value, field, newValue);
 
-        // Update image
-        imageBase64.value = 'data:image/jpeg;base64,' + modifiedBase64;
+        // Update image with correct MIME type
+        const mimeType = getMimeType(imageFormat.value);
+        imageBase64.value = `data:${mimeType};base64,` + modifiedBase64;
         modifiedImageUrl.value = imageBase64.value;
 
         // Reload metadata
-        const newMetadata = await loadExifData(imageBase64.value);
+        const newMetadata = await loadMetadata(imageBase64.value, imageFormat.value);
         metadata.value = newMetadata;
 
         // Track edit with field object (not just label)
@@ -787,14 +824,15 @@ export default {
       loadingMessage.value = 'Removing field...';
 
       try {
-        const modifiedBase64 = await removeMetadataField(imageBase64.value, field);
+        const modifiedBase64 = await removeMetadataFieldManager(imageBase64.value, imageFormat.value, field);
 
-        // Update image
-        imageBase64.value = 'data:image/jpeg;base64,' + modifiedBase64;
+        // Update image with correct MIME type
+        const mimeType = getMimeType(imageFormat.value);
+        imageBase64.value = `data:${mimeType};base64,` + modifiedBase64;
         modifiedImageUrl.value = imageBase64.value;
 
         // Reload metadata
-        const newMetadata = await loadExifData(imageBase64.value);
+        const newMetadata = await loadMetadata(imageBase64.value, imageFormat.value);
         metadata.value = newMetadata;
 
         // Track edit
@@ -821,7 +859,8 @@ export default {
       if (!modifiedImageUrl.value) return;
 
       const blob = base64ToBlob(modifiedImageUrl.value);
-      const modifiedFileName = fileName.value.replace(/\.[^/.]+$/, '') + '_modified.jpg';
+      const extension = getFileExtension(imageFormat.value);
+      const modifiedFileName = fileName.value.replace(/\.[^/.]+$/, '') + `_modified.${extension}`;
 
       downloadFile(blob, modifiedFileName);
       showSnackbar('✓ Modified image downloaded!', 'success');
@@ -847,6 +886,12 @@ export default {
     const clearMetadataValues = async () => {
       if (!imageBase64.value) return;
 
+      // This feature is only supported for JPEG images
+      if (imageFormat.value !== IMAGE_FORMATS.JPEG) {
+        showSnackbar('Clear all values is only supported for JPEG images. Use "Download Clean" to remove all PNG metadata.', 'info');
+        return;
+      }
+
       isProcessing.value = true;
       loadingMessage.value = 'Clearing metadata values...';
 
@@ -854,11 +899,12 @@ export default {
         const clearedBase64 = await clearAllMetadataValues(imageBase64.value);
 
         // Update image
-        imageBase64.value = 'data:image/jpeg;base64,' + clearedBase64;
+        const mimeType = getMimeType(imageFormat.value);
+        imageBase64.value = `data:${mimeType};base64,` + clearedBase64;
         modifiedImageUrl.value = imageBase64.value;
 
         // Reload metadata (will show all fields as empty)
-        const newMetadata = await loadExifData(imageBase64.value);
+        const newMetadata = await loadMetadata(imageBase64.value, imageFormat.value);
         metadata.value = newMetadata;
 
         // Track as a change
@@ -888,24 +934,25 @@ export default {
       loadingMessage.value = 'Adding custom field...';
 
       try {
-        const modifiedBase64 = await addCustomField(
-          imageBase64.value,
-          customField.ifd,
-          customField.tagId,
-          customField.value,
-          customField.type
-        );
+        const modifiedBase64 = await addCustomFieldManager(imageBase64.value, imageFormat.value, customField);
 
-        // Update image
-        imageBase64.value = 'data:image/jpeg;base64,' + modifiedBase64;
+        // Update image with correct MIME type
+        const mimeType = getMimeType(imageFormat.value);
+        imageBase64.value = `data:${mimeType};base64,` + modifiedBase64;
         modifiedImageUrl.value = imageBase64.value;
 
         // Reload metadata
-        const newMetadata = await loadExifData(imageBase64.value);
+        const newMetadata = await loadMetadata(imageBase64.value, imageFormat.value);
         metadata.value = newMetadata;
 
         // Find the newly added field in metadata to track it properly
-        const fieldKey = `${customField.ifd}.${customField.tagId}`;
+        let fieldKey;
+        if (imageFormat.value === IMAGE_FORMATS.JPEG) {
+          fieldKey = `${customField.ifd}.${customField.tagId}`;
+        } else if (imageFormat.value === IMAGE_FORMATS.PNG) {
+          fieldKey = customField.keyword;
+        }
+
         let addedField = null;
         for (const section of Object.values(newMetadata)) {
           addedField = section.fields.find(f => f.key === fieldKey);
@@ -914,13 +961,13 @@ export default {
 
         // Track edit
         editHistory.value.push({
-          field: addedField || { key: fieldKey, label: customField.label },
+          field: addedField || { key: fieldKey, label: customField.label || customField.keyword },
           oldValue: '[Not set]',
           newValue: customField.value,
           timestamp: new Date()
         });
 
-        showSnackbar(`✓ Custom field "${customField.label}" added successfully!`, 'success');
+        showSnackbar(`✓ Custom field "${customField.label || customField.keyword}" added successfully!`, 'success');
       } catch (error) {
         console.error('Add custom field error:', error);
         showSnackbar(`❌ Failed to add custom field: ${error.message}`, 'error');
@@ -950,6 +997,7 @@ export default {
         // Clear all state when file is removed
         metadata.value = null;
         imageBase64.value = null;
+        imageFormat.value = IMAGE_FORMATS.UNKNOWN;
         imagePreviewUrl.value = null;
         cleanedImageUrl.value = null;
         modifiedImageUrl.value = null;
@@ -980,6 +1028,7 @@ export default {
       editCount,
       fileName,
       fileSize,
+      imageFormat,
       imagePreviewUrl,
       isModified,
       isProcessing,
@@ -997,6 +1046,9 @@ export default {
       snackbar,
       snackbarColor,
       snackbarText,
+
+      // Constants
+      IMAGE_FORMATS,
 
       // Methods
       addCustomFieldToImage,

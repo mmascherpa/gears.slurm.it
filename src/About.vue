@@ -74,28 +74,23 @@
                             </v-list-item>
                             <v-divider class="my-2"></v-divider>
                             <v-list-item prepend-icon="mdi-lock">
-                                <v-list-item-title class="font-weight-bold">AES File Encryption</v-list-item-title>
-                                <v-list-item-subtitle>Secure your files with password-protected AES encryption</v-list-item-subtitle>
+                                <v-list-item-title class="font-weight-bold">AES Encryption</v-list-item-title>
+                                <v-list-item-subtitle>Encrypt files and text with password protection using AES algorithm for maximum security</v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-2"></v-divider>
                             <v-list-item prepend-icon="mdi-lock-open">
-                                <v-list-item-title class="font-weight-bold">AES File Decryption</v-list-item-title>
-                                <v-list-item-subtitle>Decrypt password-protected AES encrypted files</v-list-item-subtitle>
-                            </v-list-item>
-                            <v-divider class="my-2"></v-divider>
-                            <v-list-item prepend-icon="mdi-file-lock-outline">
-                                <v-list-item-title class="font-weight-bold">AES Text Encryption</v-list-item-title>
-                                <v-list-item-subtitle>Quickly encrypt text with password protection - perfect for API keys and secrets</v-list-item-subtitle>
-                            </v-list-item>
-                            <v-divider class="my-2"></v-divider>
-                            <v-list-item prepend-icon="mdi-lock-open-variant-outline">
-                                <v-list-item-title class="font-weight-bold">AES Text Decryption</v-list-item-title>
-                                <v-list-item-subtitle>Decrypt password-protected text and copy results instantly to clipboard</v-list-item-subtitle>
+                                <v-list-item-title class="font-weight-bold">AES Decryption</v-list-item-title>
+                                <v-list-item-subtitle>Decrypt password-protected AES encrypted files and text securely in your browser</v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-2"></v-divider>
                             <v-list-item prepend-icon="mdi-form-textbox-password">
                                 <v-list-item-title class="font-weight-bold">Password Generator</v-list-item-title>
                                 <v-list-item-subtitle>Generate strong random passwords with customizable length and character types</v-list-item-subtitle>
+                            </v-list-item>
+                            <v-divider class="my-2"></v-divider>
+                            <v-list-item prepend-icon="mdi-image-filter-hdr">
+                                <v-list-item-title class="font-weight-bold">Metadata Editor</v-list-item-title>
+                                <v-list-item-subtitle>View, edit, and remove EXIF metadata from images for complete privacy control</v-list-item-subtitle>
                             </v-list-item>
                         </v-list>
                     </v-card-text>

@@ -90,6 +90,15 @@ export default {
                     description: 'Generate strong random passwords with customizable length and character types.'
                 },
                 {
+                    title: 'Metadata Editor',
+                    icon: 'mdi-image-filter-hdr',
+                    route: '/metadata-editor',
+                    category: 'Privacy Tool',
+                    color: 'warning',
+                    featured: true,
+                    description: 'View, edit, and remove EXIF metadata from images for complete privacy control.'
+                },
+                {
                     title: 'About',
                     icon: 'mdi-information',
                     route: '/about',
