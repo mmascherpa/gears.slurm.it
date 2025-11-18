@@ -19,19 +19,20 @@ export const THEME_MODES = {
 // COLOR PALETTES
 // ============================================================================
 
-// Default palette - https://coolors.co/73877b-402e2a-bdbbb6-4464ad-3943b7
+// Default palette - "Forest Tech" - https://coolors.co/5f8a6f-4a7058-2e3b34-3a7ca5-2c5f7f
 const DEFAULT_PALETTE = {
-  sage: '#73877B',
-  coffee: '#402E2A',
-  royalBlue: '#4464AD',
-  deepBlue: '#3943B7',
+  sage: '#5F8A6F',          // Rich forest green (was #73877B)
+  sageAccent: '#4A7058',    // Darker sage for variety
+  coffee: '#2E3B34',        // Dark forest green (was #402E2A brown)
+  tealBlue: '#3A7CA5',      // Tech teal (was #4464AD royal blue)
+  deepTeal: '#2C5F7F',      // Deep teal (was #3943B7)
   silver: '#BDBBB6',
   white: '#FFFFFF',
   black: '#000000',
   success: '#4CAF50',
   warning: '#FF9800',
   error: '#F44336',
-  info: '#2196F3',
+  info: '#3A7CA5',          // Use teal for info too
 }
 
 // Crazy palette (original) - https://coolors.co/0caee9-92b257-718c40-754668-59364f
@@ -50,10 +51,35 @@ const CRAZY_PALETTE = {
 // ============================================================================
 
 const COMMON_VARIABLES = {
+  // Opacity controls
   'border-opacity': 0.12,
   'high-emphasis-opacity': 0.87,
   'medium-emphasis-opacity': 0.60,
   'disabled-opacity': 0.38,
+  'activated-opacity': 0.12,
+  'hover-opacity': 0.08,
+  'focus-opacity': 0.12,
+  'selected-opacity': 0.16,
+
+  // Spacing scale (modern minimalist - generous breathing room)
+  'spacing-xs': '4px',
+  'spacing-sm': '8px',
+  'spacing-md': '16px',
+  'spacing-lg': '24px',
+  'spacing-xl': '32px',
+  'spacing-2xl': '48px',
+
+  // Border radius (subtle rounded corners for modern feel)
+  'border-radius-sm': '4px',
+  'border-radius-md': '8px',
+  'border-radius-lg': '12px',
+  'border-radius-xl': '16px',
+
+  // Shadow definitions (subtle elevations)
+  'shadow-sm': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+  'shadow-md': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+  'shadow-lg': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+  'shadow-xl': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
 }
 
 // ============================================================================
@@ -61,19 +87,19 @@ const COMMON_VARIABLES = {
 // ============================================================================
 
 export const themes = {
-  // Default (Light) Theme
+  // Default (Light) Theme - "Forest Tech"
   default: {
     dark: false,
     colors: {
       primary: DEFAULT_PALETTE.sage,
-      'primary-darken-1': DEFAULT_PALETTE.coffee,
-      secondary: DEFAULT_PALETTE.royalBlue,
-      'secondary-darken-1': DEFAULT_PALETTE.deepBlue,
-      background: '#FAFAFA',
+      'primary-darken-1': DEFAULT_PALETTE.sageAccent,
+      secondary: DEFAULT_PALETTE.tealBlue,
+      'secondary-darken-1': DEFAULT_PALETTE.deepTeal,
+      background: '#F7F9F8',        // Subtle green tint (was #FAFAFA)
       surface: DEFAULT_PALETTE.white,
       'surface-bright': DEFAULT_PALETTE.white,
       'surface-light': '#F5F5F5',
-      'surface-variant': '#E8E6E3',
+      'surface-variant': '#DFE8E3',  // Greener tint (was #E8E6E3)
       'on-surface-variant': DEFAULT_PALETTE.coffee,
       'on-primary': DEFAULT_PALETTE.white,
       'on-secondary': DEFAULT_PALETTE.white,
@@ -81,11 +107,19 @@ export const themes = {
       error: DEFAULT_PALETTE.error,
       warning: DEFAULT_PALETTE.warning,
       info: DEFAULT_PALETTE.info,
-      blue: DEFAULT_PALETTE.royalBlue,
-      'blue-darken-2': DEFAULT_PALETTE.deepBlue,
-      green: DEFAULT_PALETTE.success,
-      'green-darken-2': '#388E3C',
+      blue: DEFAULT_PALETTE.tealBlue,
+      'blue-darken-2': DEFAULT_PALETTE.deepTeal,
+      green: DEFAULT_PALETTE.sage,
+      'green-darken-2': DEFAULT_PALETTE.sageAccent,
       grey: '#9E9E9E',
+
+      // Semantic color tokens for consistent usage
+      'text-primary': DEFAULT_PALETTE.coffee,
+      'text-secondary': '#5A6D62',   // Forest-toned grey (was #666666)
+      'text-muted': '#8A9D93',       // Sage-toned muted (was #999999)
+      'border-subtle': '#D5E0D8',    // Green-tinted border (was #E0E0E0)
+      'overlay-light': 'rgba(255, 255, 255, 0.9)',
+      'overlay-dark': 'rgba(0, 0, 0, 0.6)',
     },
     variables: {
       ...COMMON_VARIABLES,
@@ -97,14 +131,14 @@ export const themes = {
     }
   },
 
-  // Dark Theme
+  // Dark Theme - "Forest Tech Dark"
   dark: {
     dark: true,
     colors: {
-      primary: '#8FA599',           // Lighter sage for dark mode
-      'primary-darken-1': '#5C6B63',
-      secondary: '#5C7BC4',         // Brighter royal blue
-      'secondary-darken-1': '#4464AD',
+      primary: '#7AAA8A',           // Lighter forest green for dark mode (updated)
+      'primary-darken-1': '#5F8A6F',
+      secondary: '#5B9AC9',         // Brighter teal for dark mode (updated)
+      'secondary-darken-1': '#3A7CA5',
       background: '#121212',        // Material Design dark
       surface: '#1E1E1E',
       'surface-bright': '#2C2C2C',
@@ -122,6 +156,14 @@ export const themes = {
       green: '#66BB6A',
       'green-darken-2': '#4CAF50',
       grey: '#757575',
+
+      // Semantic color tokens for dark mode
+      'text-primary': '#E0E0E0',
+      'text-secondary': '#B0B0B0',
+      'text-muted': '#808080',
+      'border-subtle': '#404040',
+      'overlay-light': 'rgba(255, 255, 255, 0.1)',
+      'overlay-dark': 'rgba(0, 0, 0, 0.8)',
     },
     variables: {
       ...COMMON_VARIABLES,
@@ -130,6 +172,11 @@ export const themes = {
       'theme-on-kbd': '#FFFFFF',
       'theme-code': '#2C2C2C',
       'theme-on-code': '#E0E0E0',
+      // Dark mode specific shadows (lighter for visibility)
+      'shadow-sm': '0 1px 2px 0 rgba(0, 0, 0, 0.5)',
+      'shadow-md': '0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3)',
+      'shadow-lg': '0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3)',
+      'shadow-xl': '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3)',
     }
   },
 
@@ -158,6 +205,14 @@ export const themes = {
       green: CRAZY_PALETTE.limeGreen,
       'green-darken-2': CRAZY_PALETTE.oliveGreen,
       grey: '#9E9E9E',
+
+      // Semantic color tokens for crazy theme (high contrast on bright background)
+      'text-primary': '#1A1A1A',
+      'text-secondary': '#333333',
+      'text-muted': '#666666',
+      'border-subtle': 'rgba(0, 0, 0, 0.2)',
+      'overlay-light': 'rgba(255, 255, 255, 0.8)',
+      'overlay-dark': 'rgba(0, 0, 0, 0.7)',
     },
     variables: {
       ...COMMON_VARIABLES,
@@ -166,6 +221,11 @@ export const themes = {
       'theme-on-kbd': '#FFFFFF',
       'theme-code': '#F5F5F5',
       'theme-on-code': '#000000',
+      // Crazy theme shadows (darker for contrast on bright cyan)
+      'shadow-sm': '0 1px 2px 0 rgba(0, 0, 0, 0.15)',
+      'shadow-md': '0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.12)',
+      'shadow-lg': '0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1)',
+      'shadow-xl': '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.08)',
     }
   }
 }

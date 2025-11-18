@@ -1,45 +1,144 @@
-/* Global UX improvements for Slurm Tools */
+/**
+ * Slurm Tools Global Styles
+ * Modern Minimalist Design System
+ */
 
-/* Monospace font for encoded/encrypted outputs */
+/* ============================================================================
+   ROOT VARIABLES (CSS Custom Properties)
+   ============================================================================ */
+
+:root {
+  /* Transitions */
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slower: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================================================
+   MONOSPACE OUTPUTS
+   ============================================================================ */
+
 .monospace-output textarea,
 .monospace-output .v-field__input {
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+  font-family: var(--font-mono) !important;
   font-size: 0.9rem !important;
   letter-spacing: 0.5px !important;
   line-height: 1.5 !important;
 }
 
-/* Smooth button transitions */
+/* ============================================================================
+   BUTTONS - Modern Minimalist Style
+   ============================================================================ */
+
 .v-btn {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition: all var(--transition-base) !important;
+  border-radius: 4px !important; /* Sharper corners for distinctive look */
 }
 
 .v-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.15) !important;
 }
 
 .v-btn:active:not(:disabled) {
   transform: translateY(0);
+  transition: all var(--transition-fast) !important;
 }
 
-/* Better card hover effects */
+/* Icon buttons - circular for elegance */
+.v-btn--icon {
+  border-radius: 50% !important;
+}
+
+/* ============================================================================
+   CARDS - Elevation and Hover Effects
+   ============================================================================ */
+
 .v-card {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition: all var(--transition-slow) !important;
+  border-radius: 6px !important; /* Sharper corners for distinctive look */
 }
 
-/* Smooth loading indicator */
-.v-progress-circular {
-  transition: opacity 0.3s ease;
+.v-card:hover {
+  transform: translateY(-2px);
 }
 
-/* Better focus states for accessibility */
+/* Card headers with surface-variant background */
+.v-card-title.bg-surface-variant {
+  border-radius: 6px 6px 0 0 !important;
+}
+
+/* ============================================================================
+   INPUTS - Enhanced Focus States
+   ============================================================================ */
+
+.v-text-field,
+.v-textarea,
+.v-file-input,
+.v-select,
+.v-autocomplete {
+  transition: all var(--transition-base) !important;
+}
+
 .v-text-field:focus-within,
 .v-textarea:focus-within,
-.v-file-input:focus-within {
+.v-file-input:focus-within,
+.v-select:focus-within,
+.v-autocomplete:focus-within {
   transform: translateY(-1px);
 }
 
-/* Fade-in animation for results */
+/* Enhanced focus ring for accessibility */
+.v-field--focused {
+  box-shadow: 0 0 0 3px rgba(var(--v-theme-primary), 0.1) !important;
+}
+
+/* ============================================================================
+   CHIPS - Refined Style
+   ============================================================================ */
+
+.v-chip {
+  border-radius: 4px !important;
+  font-weight: 500;
+}
+
+/* ============================================================================
+   ALERTS - Better Spacing
+   ============================================================================ */
+
+.v-alert {
+  border-radius: 4px !important;
+  margin-bottom: 16px;
+}
+
+/* ============================================================================
+   TOOLTIPS - Refined Appearance
+   ============================================================================ */
+
+.v-tooltip > .v-overlay__content {
+  border-radius: 6px !important;
+  backdrop-filter: blur(8px);
+  font-size: 0.875rem;
+  padding: 8px 12px !important;
+}
+
+/* ============================================================================
+   LOADING INDICATORS
+   ============================================================================ */
+
+.v-progress-circular {
+  transition: opacity var(--transition-slow);
+}
+
+.v-progress-linear {
+  border-radius: 4px !important;
+}
+
+/* ============================================================================
+   ANIMATIONS
+   ============================================================================ */
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -52,5 +151,172 @@
 }
 
 .fade-in {
-  animation: fadeIn 0.3s ease-out;
+  animation: fadeIn var(--transition-slow) ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-in-up {
+  animation: slideInUp var(--transition-slower) ease-out;
+}
+
+/* ============================================================================
+   SCROLLBARS - Modern Minimalist Style
+   ============================================================================ */
+
+/* Light theme scrollbars */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(var(--v-theme-surface-light), 1);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(var(--v-theme-primary), 0.3);
+  border-radius: 6px;
+  transition: background var(--transition-base);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--v-theme-primary), 0.5);
+}
+
+/* Dark theme scrollbars */
+.v-theme--dark ::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.v-theme--dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.v-theme--dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ============================================================================
+   SPACING UTILITIES
+   ============================================================================ */
+
+.breathing-room {
+  padding: 24px;
+}
+
+.generous-spacing {
+  margin-bottom: 32px;
+}
+
+/* Semantic spacing utilities */
+.card-spacing {
+  margin-bottom: 16px; /* Standard spacing between cards (mb-4) */
+}
+
+.section-spacing {
+  margin-bottom: 32px; /* Large spacing between major sections (mb-8) */
+}
+
+.header-spacing {
+  margin-bottom: 24px; /* Spacing below headers (mb-6) */
+}
+
+.tight-spacing {
+  margin-bottom: 8px; /* Tight spacing between related elements (mb-2) */
+}
+
+/* ============================================================================
+   TABLE UTILITIES
+   ============================================================================ */
+
+.table-col-label {
+  width: 40%;
+}
+
+.table-col-actions-sm {
+  width: 120px;
+  text-align: right;
+}
+
+.table-col-actions-md {
+  width: 160px;
+  text-align: right;
+}
+
+/* ============================================================================
+   TOOLTIP UTILITIES
+   ============================================================================ */
+
+.tooltip-content {
+  max-width: 300px;
+  display: block;
+}
+
+/* ============================================================================
+   ICON SPACING
+   ============================================================================ */
+
+.icon-before-text {
+  margin-right: 8px; /* Standard spacing for icons before text (mr-2) */
+}
+
+.icon-after-text {
+  margin-left: 8px; /* Standard spacing for icons after text (ml-2) */
+}
+
+/* ============================================================================
+   INTERACTIVE LIST ITEMS
+   ============================================================================ */
+
+.list-item-hover {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.list-item-hover:hover {
+  background-color: rgba(var(--v-theme-primary), 0.08);
+}
+
+/* ============================================================================
+   ACCESSIBILITY ENHANCEMENTS
+   ============================================================================ */
+
+/* Enhanced focus visible for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid rgb(var(--v-theme-primary));
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Remove default focus for mouse users */
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Skip to main content link */
+.skip-to-main {
+  position: absolute;
+  left: -9999px;
+  z-index: 999;
+  padding: 12px;
+  background: rgb(var(--v-theme-primary));
+  color: rgb(var(--v-theme-on-primary));
+  text-decoration: none;
+  border-radius: 0 0 4px 4px;
+}
+
+.skip-to-main:focus {
+  left: 50%;
+  transform: translateX(-50%);
 }

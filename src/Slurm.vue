@@ -250,15 +250,15 @@ theme.global.name.value = getSavedTheme();
     margin: 0 auto;
 }
 
-/* Theme toggle buttons */
+/* Theme toggle buttons - theme-aware overlays */
 .theme-toggle {
-    background-color: rgba(255, 255, 255, 0.2) !important;
+    background-color: rgba(var(--v-theme-overlay-light), 0.2) !important;
     border-radius: 4px;
     overflow: hidden;
 }
 
 .theme-toggle :deep(.v-btn) {
-    color: rgba(255, 255, 255, 0.9);
+    color: rgb(var(--v-theme-on-primary));
     transition: all 0.2s ease;
 }
 
@@ -271,12 +271,12 @@ theme.global.name.value = getSavedTheme();
 }
 
 .theme-toggle :deep(.v-btn--variant-flat) {
-    background-color: rgba(255, 255, 255, 0.3);
-    color: white;
+    background-color: rgba(var(--v-theme-overlay-light), 0.3);
+    color: rgb(var(--v-theme-on-primary));
 }
 
 .theme-toggle :deep(.v-btn:hover) {
-    background-color: rgba(255, 255, 255, 0.15);
+    background-color: rgba(var(--v-theme-overlay-light), 0.15);
 }
 
 /* Page transition */

@@ -15,7 +15,7 @@
         <div class="sidebar-sticky">
           <!-- Upload Card -->
           <v-card elevation="2" class="mb-3">
-            <v-card-title class="bg-surface-variant pa-3">
+            <v-card-title class="bg-surface-variant pa-2">
               <v-icon icon="mdi-upload" size="small" class="mr-2"></v-icon>
               <span class="text-body-1">Upload Image</span>
             </v-card-title>
@@ -39,7 +39,7 @@
 
           <!-- Image Preview Card (when metadata loaded) -->
           <v-card v-if="metadata && imagePreviewUrl" elevation="2">
-            <v-card-title class="bg-surface-variant pa-3">
+            <v-card-title class="bg-surface-variant pa-2">
               <v-icon icon="mdi-image" size="small" class="mr-2"></v-icon>
               <span class="text-body-1">Preview</span>
               <v-chip
@@ -95,7 +95,7 @@
           <!-- Categories Column (Left) -->
           <v-col cols="12" md="4">
             <v-card elevation="2">
-              <v-card-title class="bg-surface-variant pa-3">
+              <v-card-title class="bg-surface-variant pa-2">
                 <v-icon icon="mdi-format-list-bulleted" size="small" class="mr-2"></v-icon>
                 <span class="text-body-1">Categories</span>
               </v-card-title>
@@ -106,7 +106,7 @@
                   :value="sectionKey"
                   :active="selectedSection === sectionKey"
                   @click="selectedSection = sectionKey"
-                  class="category-item"
+                  class="list-item-hover"
                 >
                   <template v-slot:prepend>
                     <v-icon
@@ -138,7 +138,7 @@
 
             <!-- Actions Card -->
             <v-card elevation="2" class="mt-3">
-              <v-card-title class="bg-surface-variant pa-3">
+              <v-card-title class="bg-surface-variant pa-2">
                 <v-icon icon="mdi-cog" size="small" class="mr-2"></v-icon>
                 <span class="text-body-1">Actions</span>
               </v-card-title>
@@ -221,7 +221,7 @@
           <v-col cols="12" md="8">
             <v-card v-if="currentSection" elevation="2">
               <!-- Section Header -->
-              <v-card-title class="bg-surface-variant pa-3">
+              <v-card-title class="bg-surface-variant pa-2">
                 <v-icon
                   :icon="currentSection.icon"
                   :color="currentSection.color"
@@ -249,7 +249,7 @@
                     v-for="field in currentSection.fields"
                     :key="field.key"
                   >
-                    <td style="width: 40%;" class="text-body-2 font-weight-medium">
+                    <td class="table-col-label text-body-2 font-weight-medium">
                       <v-icon
                         :icon="field.icon"
                         size="x-small"
@@ -281,7 +281,7 @@
                             class="ml-1"
                           ></v-icon>
                         </template>
-                        <span style="max-width: 300px; display: block;">{{ field.editWarning }}</span>
+                        <span class="tooltip-content">{{ field.editWarning }}</span>
                       </v-tooltip>
                     </td>
                     <td class="text-body-2">
@@ -297,7 +297,7 @@
                         empty
                       </v-chip>
                     </td>
-                    <td style="width: 160px;" class="text-right">
+                    <td class="table-col-actions-md">
                       <v-btn
                         v-if="isFieldModified(field) || isClearedField(field)"
                         icon="mdi-restore"
@@ -1108,15 +1108,8 @@ export default {
   opacity: 1;
 }
 
-/* Category item hover effect */
-.category-item {
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.category-item:hover {
-  background-color: rgba(var(--v-theme-primary), 0.08);
-}
+/* Category item hover effect - moved to global-styles.css */
+/* .category-item -> .list-item-hover (now global) */
 
 /* Cursor pointer for clickable image */
 .cursor-pointer {

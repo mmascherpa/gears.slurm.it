@@ -5,7 +5,7 @@
       <!-- Left: Category List -->
       <v-col cols="12" md="4" lg="3">
         <v-card elevation="2">
-          <v-card-title class="bg-surface-variant pa-3">
+          <v-card-title class="bg-surface-variant pa-2">
             <span class="text-body-1">Categories</span>
           </v-card-title>
           <v-list density="compact" class="pa-0">
@@ -15,7 +15,7 @@
               :value="sectionKey"
               :active="selectedSection === sectionKey"
               @click="selectedSection = sectionKey"
-              class="category-item"
+              class="list-item-hover"
             >
               <template v-slot:prepend>
                 <v-icon
@@ -41,7 +41,7 @@
       <v-col cols="12" md="8" lg="9">
         <v-card v-if="currentSection" elevation="2">
           <!-- Section Header -->
-          <v-card-title class="bg-surface-variant pa-3">
+          <v-card-title class="bg-surface-variant pa-2">
             <v-icon
               :icon="currentSection.icon"
               :color="currentSection.color"
@@ -69,7 +69,7 @@
                 v-for="field in currentSection.fields"
                 :key="field.key"
               >
-                <td style="width: 40%;" class="text-body-2 font-weight-medium">
+                <td class="table-col-label text-body-2 font-weight-medium">
                   <v-icon
                     :icon="field.icon"
                     size="x-small"
@@ -87,7 +87,7 @@
                         class="ml-1"
                       ></v-icon>
                     </template>
-                    <span style="max-width: 300px; display: block;">{{ field.editWarning }}</span>
+                    <span class="tooltip-content">{{ field.editWarning }}</span>
                   </v-tooltip>
                 </td>
                 <td class="text-body-2">
@@ -106,7 +106,7 @@
                     empty
                   </v-chip>
                 </td>
-                <td style="width: 120px;" class="text-right">
+                <td class="table-col-actions-sm">
                   <v-btn
                     v-if="editable && field.editable"
                     icon="mdi-pencil"
@@ -245,12 +245,6 @@ export default {
 </script>
 
 <style scoped>
-.category-item {
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.category-item:hover {
-  background-color: rgba(var(--v-theme-primary), 0.08);
-}
+/* All styles moved to global-styles.css for centralization */
+/* .category-item -> .list-item-hover (now global) */
 </style>

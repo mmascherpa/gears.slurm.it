@@ -1,0 +1,162 @@
+/**
+ * Slurm Tools Typography System
+ *
+ * Custom font configuration with theme-specific adjustments.
+ * Uses Inter for body text (UI-optimized) and Space Grotesk for headings (geometric, distinctive).
+ */
+
+/* ============================================================================
+   FONT FAMILY VARIABLES
+   ============================================================================ */
+
+:root {
+  /* Primary font families */
+  --font-heading: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'Consolas', 'Monaco', 'Courier New', monospace;
+
+  /* Font sizes (modern scale) */
+  --text-xs: 0.75rem;      /* 12px */
+  --text-sm: 0.875rem;     /* 14px */
+  --text-base: 1rem;       /* 16px */
+  --text-lg: 1.125rem;     /* 18px */
+  --text-xl: 1.25rem;      /* 20px */
+  --text-2xl: 1.5rem;      /* 24px */
+  --text-3xl: 1.875rem;    /* 30px */
+  --text-4xl: 2.25rem;     /* 36px */
+}
+
+/* ============================================================================
+   BASE TYPOGRAPHY
+   ============================================================================ */
+
+body,
+.v-application {
+  font-family: var(--font-body);
+  font-weight: 400;
+  letter-spacing: -0.011em; /* Inter's recommended tracking for optimal readability */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================================
+   HEADINGS
+   ============================================================================ */
+
+h1, h2, h3, h4, h5, h6,
+.text-h1, .text-h2, .text-h3, .text-h4, .text-h5, .text-h6,
+.v-card-title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: -0.02em; /* Tighter tracking for geometric fonts */
+}
+
+/* Specific heading adjustments */
+h1, .text-h1 {
+  font-weight: 700;
+}
+
+h2, .text-h2 {
+  font-weight: 700;
+}
+
+h3, .text-h3 {
+  font-weight: 700;
+}
+
+h4, .text-h4 {
+  font-weight: 600;
+}
+
+h5, .text-h5 {
+  font-weight: 600;
+}
+
+h6, .text-h6 {
+  font-weight: 600;
+}
+
+/* ============================================================================
+   BUTTONS (Space Grotesk for impact)
+   ============================================================================ */
+
+.v-btn {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* ============================================================================
+   THEME-SPECIFIC ADJUSTMENTS
+   ============================================================================ */
+
+/* Dark Mode - Increase weight and spacing for better readability on dark backgrounds */
+.v-theme--dark {
+  body,
+  .v-application {
+    font-weight: 500; /* Slightly heavier for dark backgrounds */
+    letter-spacing: 0.005em; /* Slightly looser to prevent blur */
+  }
+
+  /* Dark mode text size adjustment for better readability */
+  font-size: 1.0625rem; /* 17px instead of 16px */
+}
+
+.v-theme--dark h1,
+.v-theme--dark h2,
+.v-theme--dark h3,
+.v-theme--dark .text-h1,
+.v-theme--dark .text-h2,
+.v-theme--dark .text-h3 {
+  font-weight: 700; /* Keep headings bold */
+}
+
+/* Crazy Theme - Extra bold for impact on bright cyan background */
+.v-theme--crazy {
+  body,
+  .v-application {
+    font-weight: 500; /* Heavier weight for bright backgrounds */
+  }
+}
+
+.v-theme--crazy h1,
+.v-theme--crazy h2,
+.v-theme--crazy h3,
+.v-theme--crazy .text-h1,
+.v-theme--crazy .text-h2,
+.v-theme--crazy .text-h3,
+.v-theme--crazy .v-card-title {
+  font-weight: 800; /* Extra bold for maximum impact */
+}
+
+.v-theme--crazy .v-btn {
+  font-weight: 700; /* Bolder buttons for crazy theme */
+}
+
+/* ============================================================================
+   MONOSPACE (for code, encoded text, etc.)
+   ============================================================================ */
+
+code,
+pre,
+.monospace-output,
+kbd,
+.v-code {
+  font-family: var(--font-mono);
+}
+
+/* ============================================================================
+   UTILITY CLASSES
+   ============================================================================ */
+
+.font-heading {
+  font-family: var(--font-heading);
+}
+
+.font-body {
+  font-family: var(--font-body);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
