@@ -78,10 +78,9 @@
             @input="handleEncryptedTextChange"
           />
 
-          <v-divider v-if="isEncryptedTextPopulated" class="my-4"></v-divider>
+          <v-divider class="my-4"></v-divider>
 
           <TextInputWithActions
-            v-if="isEncryptedTextPopulated"
             v-model="decryptedText"
             label="Decrypted Text"
             placeholder="Decrypted output will appear here..."

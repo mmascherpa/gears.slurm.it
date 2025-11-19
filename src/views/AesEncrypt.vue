@@ -87,10 +87,9 @@
           @input="handlePlainTextChange"
         />
 
-        <v-divider v-if="isPlaintextPopulated" class="my-4"></v-divider>
+        <v-divider class="my-4"></v-divider>
 
         <TextInputWithActions
-          v-if="isPlaintextPopulated"
           v-model="encryptedText"
           label="Encrypted Text (Base64)"
           placeholder="Encrypted output will appear here..."
