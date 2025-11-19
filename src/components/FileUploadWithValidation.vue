@@ -2,19 +2,14 @@
   <div>
     <v-row>
       <v-col cols="12" sm="8">
-        <v-file-input
+        <FileUpload
           :model-value="modelValue"
           @update:model-value="handleFileChange"
-          @click:clear="handleClear"
+          @clear="handleClear"
+          @validation-change="handleValidationChange"
           :label="label"
           :accept="accept"
-          variant="outlined"
-          prepend-icon=""
-          prepend-inner-icon="mdi-paperclip"
-          :hint="fileSizeHint"
-          :disabled="disabled"
-          persistent-hint>
-        </v-file-input>
+          :disabled="disabled" />
       </v-col>
       <v-col cols="12" sm="4">
         <v-tooltip :text="buttonTooltip" location="top">
@@ -33,30 +28,6 @@
         </v-tooltip>
       </v-col>
     </v-row>
-
-    <!-- File Size Error Alert -->
-    <v-alert
-      v-if="fileSizeError"
-      type="error"
-      variant="tonal"
-      class="mt-4"
-      density="compact"
-      closable
-      @click:close="fileSizeError = ''">
-      {{ fileSizeError }}
-    </v-alert>
-
-    <!-- File Size Warning Alert -->
-    <v-alert
-      v-if="showFileSizeWarning"
-      type="warning"
-      variant="tonal"
-      class="mt-4"
-      density="compact"
-      closable
-      @click:close="showFileSizeWarning = false">
-      {{ fileSizeWarningMessage }}
-    </v-alert>
   </div>
 </template>
 
@@ -64,19 +35,16 @@
 /**
  * FileUploadWithValidation Component
  *
- * Reusable file upload component with built-in size validation, error/warning display,
- * and action button. Provides a standardized file upload experience across all
- * file-based tool components.
+ * Wrapper around FileUpload component that adds an action button for submit-based workflows.
+ * Provides a standardized file upload + submit button experience for Base64 and AES tools.
  *
  * Features:
- * - Automatic file size validation
- * - Error and warning alerts
- * - Formatted file size display
- * - Customizable action button
- * - Consistent layout (file input + button)
- * - Dynamic tooltip based on validation state
- *
- * Uses the useFileSizeValidation composable internally.
+ * - Uses FileUpload component internally (consistent styling)
+ * - Automatic file size validation (via FileUpload)
+ * - Error and warning alerts (via FileUpload)
+ * - Customizable action button with tooltip
+ * - Two-column layout (file input + button)
+ * - Dynamic tooltip based on validation and submit state
  *
  * @component
  * @example
@@ -91,17 +59,20 @@
  *   @validation-change="handleValidation"
  * />
  */
-import { computed } from 'vue';
-import { useFileSizeValidation } from '@/composables/useFileSizeValidation';
+import { computed, ref } from 'vue';
+import FileUpload from './FileUpload.vue';
 
 export default {
   name: 'FileUploadWithValidation',
+  components: {
+    FileUpload
+  },
   props: {
     /**
-     * Selected file(s) (v-model)
+     * Selected file (v-model)
      */
     modelValue: {
-      type: Array,
+      type: File,
       default: null
     },
     /**
@@ -156,40 +127,30 @@ export default {
   },
   emits: ['update:modelValue', 'submit', 'validation-change'],
   setup(props, { emit }) {
-    const {
-      isFileSizeValid,
-      showFileSizeWarning,
-      fileSizeWarningMessage,
-      fileSizeError,
-      fileSizeHint,
-      clearFileValidation,
-      handleFileSelection
-    } = useFileSizeValidation();
+    // Track validation state from FileUpload component
+    const isFileSizeValid = ref(true);
 
     /**
-     * Handle file selection
-     * Validates file size and emits validation result
+     * Handle file selection - pass through to parent
      */
-    const handleFileChange = (files) => {
-      emit('update:modelValue', files);
-
-      if (files && files.length > 0) {
-        const result = handleFileSelection(files[0]);
-        emit('validation-change', result);
-      } else {
-        clearFileValidation();
-        emit('validation-change', { isValid: true });
-      }
+    const handleFileChange = (file) => {
+      emit('update:modelValue', file);
     };
 
     /**
-     * Handle file input clear button
-     * Clears validation state and emits null value
+     * Handle validation changes from FileUpload component
+     */
+    const handleValidationChange = (validation) => {
+      isFileSizeValid.value = validation.isValid;
+      emit('validation-change', validation);
+    };
+
+    /**
+     * Handle file input clear button - pass through to parent
      */
     const handleClear = () => {
-      clearFileValidation();
       emit('update:modelValue', null);
-      emit('validation-change', { isValid: true });
+      emit('validation-change', { isValid: true, hasError: false, hasWarning: false });
     };
 
     /**
@@ -197,7 +158,7 @@ export default {
      */
     const buttonTooltip = computed(() => {
       // No file selected
-      if (!props.modelValue || props.modelValue.length === 0) {
+      if (!props.modelValue) {
         return 'Please select a file first';
       }
 
@@ -217,11 +178,8 @@ export default {
 
     return {
       isFileSizeValid,
-      showFileSizeWarning,
-      fileSizeWarningMessage,
-      fileSizeError,
-      fileSizeHint,
       handleFileChange,
+      handleValidationChange,
       handleClear,
       buttonTooltip
     };

@@ -1,16 +1,16 @@
 <template>
     <div>
         <div class="text-center mb-8">
-            <v-icon icon="mdi-shield-key" size="64" color="primary" class="mb-4"></v-icon>
-            <h1 class="text-h3 font-weight-bold mb-2">Slurm Tools</h1>
-            <p class="text-h6 text-medium-emphasis mb-4">
+            <v-icon icon="mdi-shield-key" :size="$vuetify.display.xs ? 48 : 64" color="primary" class="mb-4"></v-icon>
+            <h1 class="text-h4 text-sm-h3 font-weight-bold mb-2">Slurm Tools</h1>
+            <p class="text-subtitle-1 text-sm-h6 text-medium-emphasis mb-4">
                 Privacy-focused cryptographic utilities that work entirely in your browser
             </p>
-            <v-chip variant="tonal" color="success" size="small" class="mr-2">
+            <v-chip variant="tonal" color="success" size="small" class="mr-2 mb-2">
                 <v-icon start icon="mdi-shield-check"></v-icon>
                 100% Client-Side
             </v-chip>
-            <v-chip variant="tonal" color="info" size="small">
+            <v-chip variant="tonal" color="info" size="small" class="mb-2">
                 <v-icon start icon="mdi-wifi-off"></v-icon>
                 Works Offline
             </v-chip>
@@ -97,6 +97,14 @@ export default {
                     color: 'warning',
                     featured: true,
                     description: 'View, edit, and remove EXIF metadata from images for complete privacy control.'
+                },
+                {
+                    title: 'Hex Viewer',
+                    icon: 'mdi-file-code',
+                    route: '/hex-viewer',
+                    category: 'Analysis Tool',
+                    color: 'info',
+                    description: 'View and analyze binary files with hex dump display and data interpretation.'
                 },
                 {
                     title: 'About',

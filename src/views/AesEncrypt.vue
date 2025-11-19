@@ -20,48 +20,53 @@
     </v-alert>
 
     <!-- Password Protection Section -->
-    <v-card class="mb-4" elevation="2">
+    <v-card class="mb-4">
       <v-card-title class="bg-surface-variant">
         <v-icon icon="mdi-key" class="mr-2"></v-icon>
         Password Protection
       </v-card-title>
       <v-card-text class="pa-4">
-        <PasswordInput
-          v-model:password="password"
-          v-model:password-confirm="passwordConfirm"
-          :require-confirmation="true"
-          :show-strength="true"
-          :show-requirements="true"
-          :show-feedback="true"
-          autocomplete="new-password"
-        />
+        <form @submit.prevent>
+          <!-- Hidden username field for browser accessibility compliance -->
+          <input type="text" name="username" autocomplete="username" style="display: none;" aria-hidden="true">
 
-        <v-checkbox
-          v-model="rememberPassword"
-          label="Remember password for this session"
-          hint="Password will be cleared when you close this tab"
-          persistent-hint
-          density="comfortable"
-          class="mt-2"
-        />
+          <PasswordInput
+            v-model:password="password"
+            v-model:password-confirm="passwordConfirm"
+            :require-confirmation="true"
+            :show-strength="true"
+            :show-requirements="true"
+            :show-feedback="true"
+            autocomplete="new-password"
+          />
 
-        <v-chip
-          v-if="isPasswordRemembered"
-          color="info"
-          variant="tonal"
-          size="small"
-          prepend-icon="mdi-memory"
-          closable
-          @click:close="clearSessionPassword"
-          class="mt-2"
-        >
-          Password remembered for session
-        </v-chip>
+          <v-checkbox
+            v-model="rememberPassword"
+            label="Remember password for this session"
+            hint="Password will be cleared when you close this tab"
+            persistent-hint
+            density="comfortable"
+            class="mt-2"
+          />
+
+          <v-chip
+            v-if="isPasswordRemembered"
+            color="info"
+            variant="tonal"
+            size="small"
+            prepend-icon="mdi-memory"
+            closable
+            @click:close="clearSessionPassword"
+            class="mt-2"
+          >
+            Password remembered for session
+          </v-chip>
+        </form>
       </v-card-text>
     </v-card>
 
     <!-- Text Encryption Section -->
-    <v-card class="mb-4" elevation="2">
+    <v-card class="mb-4">
       <v-card-title class="bg-surface-variant">
         <v-icon icon="mdi-text" class="mr-2"></v-icon>
         Text Encryption
@@ -102,7 +107,7 @@
     </v-card>
 
     <!-- File Encryption Section -->
-    <v-card class="mb-4" elevation="2">
+    <v-card class="mb-4">
       <v-card-title class="bg-surface-variant">
         <v-icon icon="mdi-file" class="mr-2"></v-icon>
         File Encryption
@@ -122,7 +127,7 @@
     </v-card>
 
     <!-- CSV Preview (if applicable) -->
-    <v-card v-if="isOutputPopulated" variant="tonal" elevation="2">
+    <v-card v-if="isOutputPopulated" variant="tonal">
       <v-card-title class="d-flex align-center">
         <v-icon icon="mdi-table" class="mr-2"></v-icon>
         CSV Preview
@@ -272,7 +277,7 @@ export default {
      * Checks if a file has been uploaded.
      */
     const isFilePopulated = computed(() => {
-      return plainFile.value && plainFile.value.length > 0;
+      return !!plainFile.value;
     });
 
     /**
@@ -379,8 +384,8 @@ export default {
         fileData = new Blob([plainText.value], { type: 'text/plain' });
         fileName = 'plaintext.txt';
       } else if (isFilePopulated.value) {
-        fileData = plainFile.value[0];
-        fileName = plainFile.value[0].name;
+        fileData = plainFile.value;
+        fileName = plainFile.value.name;
       }
 
       if (fileData && fileName) {
@@ -392,8 +397,8 @@ export default {
      * Handles file validation and CSV preview.
      */
     const handleFileValidation = (result) => {
-      if (plainFile.value && plainFile.value.length > 0 && result.isValid) {
-        const selectedFile = plainFile.value[0];
+      if (plainFile.value && result.isValid) {
+        const selectedFile = plainFile.value;
         if (selectedFile.type === "text/csv") {
           const reader = new FileReader();
           reader.onload = () => {

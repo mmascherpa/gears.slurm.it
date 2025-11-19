@@ -6,7 +6,7 @@
       icon="mdi-arrow-down-bold-box"
       avatar-color="secondary" />
 
-    <v-card class="mb-4" elevation="2">
+    <v-card class="mb-4">
       <v-card-title class="bg-surface-variant">
         <v-icon icon="mdi-text" class="mr-2"></v-icon>
         Text Encoding
@@ -44,7 +44,7 @@
       </v-card-text>
     </v-card>
 
-    <v-card elevation="2">
+    <v-card>
       <v-card-title class="bg-surface-variant">
         <v-icon icon="mdi-file" class="mr-2"></v-icon>
         File Encoding
@@ -101,7 +101,7 @@ export default {
 
     // Computed Properties
     const canEncodeFile = computed(() => {
-      return !!plainFile.value && plainFile.value.length > 0;
+      return !!plainFile.value;
     });
 
     // Functions
@@ -180,12 +180,12 @@ export default {
      * Encodes file to Base64 and triggers download
      */
     const encodeFile = () => {
-      if (!plainFile.value || plainFile.value.length === 0) {
+      if (!plainFile.value) {
         showSnackbar('❌ Please select a file', 'error');
         return;
       }
 
-      const file = plainFile.value[0];
+      const file = plainFile.value;
       const reader = new FileReader();
 
       reader.onload = () => {

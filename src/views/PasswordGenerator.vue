@@ -6,7 +6,7 @@
       icon="mdi-form-textbox-password"
       avatar-color="primary" />
 
-    <v-card class="mb-4" elevation="2">
+    <v-card class="mb-4">
       <v-card-title class="bg-surface-variant">
         <v-icon icon="mdi-cog" class="mr-2"></v-icon>
         Password Options
@@ -80,7 +80,7 @@
       </v-card-text>
     </v-card>
 
-    <v-card class="mb-4" elevation="2">
+    <v-card class="mb-4">
       <v-card-title class="bg-surface-variant">
         <v-icon icon="mdi-form-textbox-password" class="mr-2"></v-icon>
         Generated Password
@@ -129,7 +129,7 @@
       </v-card-text>
     </v-card>
 
-    <v-card v-if="generatedPassword" elevation="2">
+    <v-card v-if="generatedPassword">
       <v-card-title class="bg-surface-variant">
         <v-icon icon="mdi-shield-check" class="mr-2"></v-icon>
         Password Strength

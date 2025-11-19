@@ -14,45 +14,38 @@
       <v-col cols="12" lg="4" md="5" class="sidebar-column">
         <div class="sidebar-sticky">
           <!-- Upload Card -->
-          <v-card elevation="2" class="mb-3">
-            <v-card-title class="bg-surface-variant pa-2">
-              <v-icon icon="mdi-upload" size="small" class="mr-2"></v-icon>
-              <span class="text-body-1">Upload Image</span>
+          <v-card class="mb-3">
+            <v-card-title class="bg-surface-variant">
+              <v-icon icon="mdi-image" class="mr-2"></v-icon>
+              Edit image metadata
             </v-card-title>
             <v-card-text class="pa-3">
-              <v-file-input
+              <FileUpload
                 v-model="selectedFile"
                 label="Select Image"
                 accept=".jpg,.jpeg,.png"
                 prepend-icon="mdi-camera"
-                variant="outlined"
-                density="compact"
-                clearable
-                show-size
-                hide-details
+                hint="Supported formats: JPEG, PNG"
               />
-              <div class="text-caption text-medium-emphasis mt-2">
-                Supported formats: JPEG, PNG
-              </div>
             </v-card-text>
           </v-card>
 
           <!-- Image Preview Card (when metadata loaded) -->
-          <v-card v-if="metadata && imagePreviewUrl" elevation="2">
-            <v-card-title class="bg-surface-variant pa-2">
-              <v-icon icon="mdi-image" size="small" class="mr-2"></v-icon>
-              <span class="text-body-1">Preview</span>
-              <v-chip
-                v-if="isModified"
-                size="x-small"
-                color="warning"
-                variant="flat"
-                class="ml-2"
-              >
-                <v-icon start icon="mdi-pencil" size="x-small"></v-icon>
-                Modified
-              </v-chip>
-            </v-card-title>
+          <v-card v-if="metadata && imagePreviewUrl">
+            <CardSectionHeader title="Preview" icon="mdi-image">
+              <template #actions>
+                <v-chip
+                  v-if="isModified"
+                  size="x-small"
+                  color="warning"
+                  variant="flat"
+                  class="ml-2"
+                >
+                  <v-icon start icon="mdi-pencil" size="x-small"></v-icon>
+                  Modified
+                </v-chip>
+              </template>
+            </CardSectionHeader>
             <v-card-text class="pa-3">
               <v-img
                 :src="isModified ? modifiedImageUrl : imagePreviewUrl"
@@ -94,11 +87,8 @@
         <v-row v-if="metadata">
           <!-- Categories Column (Left) -->
           <v-col cols="12" md="4">
-            <v-card elevation="2">
-              <v-card-title class="bg-surface-variant pa-2">
-                <v-icon icon="mdi-format-list-bulleted" size="small" class="mr-2"></v-icon>
-                <span class="text-body-1">Categories</span>
-              </v-card-title>
+            <v-card>
+              <CardSectionHeader title="Categories" icon="mdi-format-list-bulleted" />
               <v-list density="compact" class="pa-0">
                 <v-list-item
                   v-for="(section, sectionKey) in metadata"
@@ -137,11 +127,8 @@
             </v-card>
 
             <!-- Actions Card -->
-            <v-card elevation="2" class="mt-3">
-              <v-card-title class="bg-surface-variant pa-2">
-                <v-icon icon="mdi-cog" size="small" class="mr-2"></v-icon>
-                <span class="text-body-1">Actions</span>
-              </v-card-title>
+            <v-card class="mt-3">
+              <CardSectionHeader title="Actions" icon="mdi-cog" />
               <v-card-text class="pa-3">
                 <!-- Attribute Actions Section -->
                 <div class="text-caption text-medium-emphasis mb-2 font-weight-medium">
@@ -219,7 +206,7 @@
 
           <!-- Fields Column (Right) -->
           <v-col cols="12" md="8">
-            <v-card v-if="currentSection" elevation="2">
+            <v-card v-if="currentSection">
               <!-- Section Header -->
               <v-card-title class="bg-surface-variant pa-2">
                 <v-icon
@@ -243,98 +230,180 @@
               </v-alert>
 
               <!-- Fields Table -->
-              <v-table density="compact">
-                <tbody>
-                  <tr
+              <div class="metadata-fields-table">
+                <v-table density="compact" class="d-none d-sm-table">
+                  <tbody>
+                    <tr
+                      v-for="field in currentSection.fields"
+                      :key="field.key"
+                    >
+                      <td class="table-col-label text-body-2 font-weight-medium">
+                        <v-icon
+                          :icon="field.icon"
+                          size="x-small"
+                          color="grey"
+                          class="mr-2"
+                        ></v-icon>
+                        {{ field.label }}
+                        <v-icon
+                          v-if="isFieldModified(field) && !isClearedField(field)"
+                          icon="mdi-pencil"
+                          size="x-small"
+                          color="warning"
+                          class="ml-1"
+                        ></v-icon>
+                        <v-icon
+                          v-if="isClearedField(field)"
+                          icon="mdi-delete"
+                          size="x-small"
+                          color="error"
+                          class="ml-1"
+                        ></v-icon>
+                        <v-tooltip v-if="field.editWarning" location="top">
+                          <template v-slot:activator="{ props }">
+                            <v-icon
+                              v-bind="props"
+                              icon="mdi-information-outline"
+                              size="x-small"
+                              color="info"
+                              class="ml-1"
+                            ></v-icon>
+                          </template>
+                          <span class="tooltip-content">{{ field.editWarning }}</span>
+                        </v-tooltip>
+                      </td>
+                      <td class="text-body-2" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        <span v-if="field.isPopulated || isFieldModified(field)">
+                          {{ field.value }}
+                        </span>
+                        <v-chip
+                          v-if="!field.isPopulated && !isFieldModified(field)"
+                          size="x-small"
+                          variant="text"
+                          color="grey"
+                        >
+                          empty
+                        </v-chip>
+                      </td>
+                      <td class="table-col-actions-md">
+                        <v-btn
+                          v-if="isFieldModified(field) || isClearedField(field)"
+                          icon="mdi-restore"
+                          size="x-small"
+                          variant="text"
+                          color="success"
+                          @click="restoreField(field)"
+                        >
+                          <v-icon size="small">mdi-restore</v-icon>
+                          <v-tooltip activator="parent" location="top">Restore original value</v-tooltip>
+                        </v-btn>
+                        <v-btn
+                          v-if="field.editable"
+                          icon="mdi-pencil"
+                          size="x-small"
+                          variant="text"
+                          color="primary"
+                          @click="openFieldEditor(field)"
+                        >
+                          <v-icon size="small">mdi-pencil</v-icon>
+                          <v-tooltip activator="parent" location="top">Edit field</v-tooltip>
+                        </v-btn>
+                        <v-btn
+                          v-if="field.editable"
+                          icon="mdi-delete"
+                          size="x-small"
+                          variant="text"
+                          color="error"
+                          @click="confirmRemoveField(field)"
+                        >
+                          <v-icon size="small">mdi-delete</v-icon>
+                          <v-tooltip activator="parent" location="top">Remove this field</v-tooltip>
+                        </v-btn>
+                      </td>
+                    </tr>
+                  </tbody>
+                </v-table>
+
+                <!-- Mobile Card Layout -->
+                <div class="d-sm-none">
+                  <v-card
                     v-for="field in currentSection.fields"
                     :key="field.key"
+                    variant="outlined"
+                    class="mb-2"
                   >
-                    <td class="table-col-label text-body-2 font-weight-medium">
-                      <v-icon
-                        :icon="field.icon"
-                        size="x-small"
-                        color="grey"
-                        class="mr-2"
-                      ></v-icon>
-                      {{ field.label }}
-                      <v-icon
-                        v-if="isFieldModified(field) && !isClearedField(field)"
-                        icon="mdi-pencil"
-                        size="x-small"
-                        color="warning"
-                        class="ml-1"
-                      ></v-icon>
-                      <v-icon
-                        v-if="isClearedField(field)"
-                        icon="mdi-delete"
-                        size="x-small"
-                        color="error"
-                        class="ml-1"
-                      ></v-icon>
-                      <v-tooltip v-if="field.editWarning" location="top">
-                        <template v-slot:activator="{ props }">
-                          <v-icon
-                            v-bind="props"
-                            icon="mdi-information-outline"
-                            size="x-small"
-                            color="info"
-                            class="ml-1"
-                          ></v-icon>
-                        </template>
-                        <span class="tooltip-content">{{ field.editWarning }}</span>
-                      </v-tooltip>
-                    </td>
-                    <td class="text-body-2">
-                      <span v-if="field.isPopulated || isFieldModified(field)">
-                        {{ field.value }}
-                      </span>
-                      <v-chip
-                        v-if="!field.isPopulated && !isFieldModified(field)"
-                        size="x-small"
-                        variant="text"
-                        color="grey"
-                      >
-                        empty
-                      </v-chip>
-                    </td>
-                    <td class="table-col-actions-md">
-                      <v-btn
-                        v-if="isFieldModified(field) || isClearedField(field)"
-                        icon="mdi-restore"
-                        size="x-small"
-                        variant="text"
-                        color="success"
-                        @click="restoreField(field)"
-                      >
-                        <v-icon size="small">mdi-restore</v-icon>
-                        <v-tooltip activator="parent" location="top">Restore original value</v-tooltip>
-                      </v-btn>
-                      <v-btn
-                        v-if="field.editable"
-                        icon="mdi-pencil"
-                        size="x-small"
-                        variant="text"
-                        color="primary"
-                        @click="openFieldEditor(field)"
-                      >
-                        <v-icon size="small">mdi-pencil</v-icon>
-                        <v-tooltip activator="parent" location="top">Edit field</v-tooltip>
-                      </v-btn>
-                      <v-btn
-                        v-if="field.editable"
-                        icon="mdi-delete"
-                        size="x-small"
-                        variant="text"
-                        color="error"
-                        @click="confirmRemoveField(field)"
-                      >
-                        <v-icon size="small">mdi-delete</v-icon>
-                        <v-tooltip activator="parent" location="top">Remove this field</v-tooltip>
-                      </v-btn>
-                    </td>
-                  </tr>
-                </tbody>
-              </v-table>
+                    <v-card-text class="pa-3">
+                      <div class="d-flex align-center mb-2">
+                        <v-icon
+                          :icon="field.icon"
+                          size="small"
+                          color="grey"
+                          class="mr-2"
+                        ></v-icon>
+                        <span class="text-body-2 font-weight-medium">{{ field.label }}</span>
+                        <v-spacer></v-spacer>
+                        <v-icon
+                          v-if="isFieldModified(field) && !isClearedField(field)"
+                          icon="mdi-pencil"
+                          size="small"
+                          color="warning"
+                        ></v-icon>
+                        <v-icon
+                          v-if="isClearedField(field)"
+                          icon="mdi-delete"
+                          size="small"
+                          color="error"
+                        ></v-icon>
+                      </div>
+                      <div class="text-body-2 mb-2" style="word-break: break-word;">
+                        <span v-if="field.isPopulated || isFieldModified(field)">
+                          {{ field.value }}
+                        </span>
+                        <v-chip
+                          v-if="!field.isPopulated && !isFieldModified(field)"
+                          size="x-small"
+                          variant="text"
+                          color="grey"
+                        >
+                          empty
+                        </v-chip>
+                      </div>
+                      <div class="d-flex gap-2">
+                        <v-btn
+                          v-if="isFieldModified(field) || isClearedField(field)"
+                          size="small"
+                          variant="outlined"
+                          color="success"
+                          @click="restoreField(field)"
+                        >
+                          <v-icon start size="small">mdi-restore</v-icon>
+                          Restore
+                        </v-btn>
+                        <v-btn
+                          v-if="field.editable"
+                          size="small"
+                          variant="outlined"
+                          color="primary"
+                          @click="openFieldEditor(field)"
+                        >
+                          <v-icon start size="small">mdi-pencil</v-icon>
+                          Edit
+                        </v-btn>
+                        <v-btn
+                          v-if="field.editable"
+                          size="small"
+                          variant="outlined"
+                          color="error"
+                          @click="confirmRemoveField(field)"
+                        >
+                          <v-icon start size="small">mdi-delete</v-icon>
+                          Remove
+                        </v-btn>
+                      </div>
+                    </v-card-text>
+                  </v-card>
+                </div>
+              </div>
             </v-card>
 
             <!-- Empty state when no section selected -->
@@ -349,39 +418,8 @@
             </v-card>
           </v-col>
         </v-row>
-
-        <!-- Empty State (no metadata) -->
-        <v-card v-if="!metadata" variant="tonal" color="grey-lighten-4" elevation="0">
-          <v-card-text class="text-center pa-8">
-            <v-icon icon="mdi-image-off" size="64" color="grey"></v-icon>
-            <p class="text-h6 text-medium-emphasis mt-4">No Image Loaded</p>
-            <p class="text-body-2 text-medium-emphasis">
-              Upload a JPEG image to view and edit its EXIF metadata.
-            </p>
-          </v-card-text>
-        </v-card>
       </v-col>
     </v-row>
-
-    <!-- Success Message (after removal) -->
-    <v-card v-if="cleanedImageUrl" variant="tonal" color="success" elevation="2" class="mb-4">
-      <v-card-text class="d-flex align-center pa-4">
-        <v-icon icon="mdi-check-circle" size="48" class="mr-4"></v-icon>
-        <div class="flex-grow-1">
-          <div class="text-h6 font-weight-medium">Metadata Successfully Removed</div>
-          <div class="text-body-2">Your image is now clean and ready to share safely.</div>
-        </div>
-        <v-btn
-          color="success"
-          variant="elevated"
-          size="large"
-          prepend-icon="mdi-download"
-          @click="downloadCleanImage"
-        >
-          Download Clean Image
-        </v-btn>
-      </v-card-text>
-    </v-card>
 
     <!-- Snackbar -->
     <SharedSnackbar
@@ -492,6 +530,8 @@ import {
 import { useSnackbar } from '@/composables/useSnackbar';
 import AddCustomFieldDialog from '@/components/AddCustomFieldDialog.vue';
 import AddPngFieldDialog from '@/components/AddPngFieldDialog.vue';
+import CardSectionHeader from '@/components/CardSectionHeader.vue';
+import FileUpload from '@/components/FileUpload.vue';
 import MetadataFieldEditor from '@/components/MetadataFieldEditor.vue';
 import MetadataViewer from '@/components/MetadataViewer.vue';
 import SharedSnackbar from '@/components/SharedSnackbar.vue';
@@ -502,6 +542,8 @@ export default {
   components: {
     AddCustomFieldDialog,
     AddPngFieldDialog,
+    CardSectionHeader,
+    FileUpload,
     MetadataFieldEditor,
     MetadataViewer,
     SharedSnackbar,
@@ -736,8 +778,7 @@ export default {
         const cleanFileName = fileName.value.replace(/\.[^/.]+$/, '') + `_clean.${extension}`;
         downloadFile(blob, cleanFileName);
 
-        // Clear metadata display
-        metadata.value = null;
+        // Keep metadata display so user can continue editing
       } catch (error) {
         console.error('Metadata removal error:', error);
         showSnackbar(`❌ Failed to remove metadata: ${error.message}`, 'error');
@@ -990,9 +1031,10 @@ export default {
     // Watchers
 
     watch(selectedFile, (newVal) => {
-      if (newVal && newVal.length > 0) {
+      if (newVal) {
         // Auto-analyze when file is selected
-        analyzeImage(newVal[0]);
+        // FileUpload component returns a File object (not an array)
+        analyzeImage(newVal);
       } else {
         // Clear all state when file is removed
         metadata.value = null;
@@ -1122,5 +1164,11 @@ export default {
     position: relative;
     top: 0;
   }
+}
+
+/* Mobile field buttons spacing */
+.gap-2 {
+  gap: 8px;
+  flex-wrap: wrap;
 }
 </style>

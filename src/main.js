@@ -5,14 +5,15 @@ import { createApp } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
 
 import Slurm from './Slurm.vue'
-import About from './About.vue'
-import Home from './Home.vue'
-import Base64Encode from './Base64Encode.vue'
-import Base64Decode from './Base64Decode.vue'
-import AesEncrypt from './AesEncrypt.vue'
-import AesDecrypt from './AesDecrypt.vue'
-import PasswordGenerator from './PasswordGenerator.vue'
-import MetadataEditor from './MetadataEditor.vue'
+import About from './views/About.vue'
+import Home from './views/Home.vue'
+import Base64Encode from './views/Base64Encode.vue'
+import Base64Decode from './views/Base64Decode.vue'
+import AesEncrypt from './views/AesEncrypt.vue'
+import AesDecrypt from './views/AesDecrypt.vue'
+import PasswordGenerator from './views/PasswordGenerator.vue'
+import MetadataEditor from './views/MetadataEditor.vue'
+import HexViewer from './views/HexViewer.vue'
 
 // 2. Define some routes
 // Each route should map to a component.
@@ -25,6 +26,7 @@ const routes = [
   { path: '/aes-decrypt', component: AesDecrypt },
   { path: '/password-generator', component: PasswordGenerator },
   { path: '/metadata-editor', component: MetadataEditor },
+  { path: '/hex-viewer', component: HexViewer },
   { path: '/about', component: About },
 ]
 
@@ -79,6 +81,7 @@ const iconMap = {
   'mdi-download': 'Download',
   'mdi-upload': 'Upload',
   'mdi-file': 'File',
+  'mdi-file-code': 'FileCode',
   'mdi-text': 'FileText',
   'mdi-paperclip': 'Paperclip',
 

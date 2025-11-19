@@ -14,7 +14,7 @@
       <input type="text" name="username" autocomplete="username" style="display: none;" aria-hidden="true">
 
       <!-- Password Section -->
-      <v-card class="mb-4" elevation="2">
+      <v-card class="mb-4">
         <v-card-title class="bg-surface-variant">
           <v-icon icon="mdi-key" class="mr-2"></v-icon>
           Enter Password
@@ -57,7 +57,7 @@
       </v-card>
 
       <!-- Text Decryption Section -->
-      <v-card class="mb-4" elevation="2">
+      <v-card class="mb-4">
         <v-card-title class="bg-surface-variant">
           <v-icon icon="mdi-lock" class="mr-2"></v-icon>
           Encrypted Text
@@ -98,7 +98,7 @@
       </v-card>
 
       <!-- File Upload Section -->
-      <v-card class="mb-4" elevation="2">
+      <v-card class="mb-4">
         <v-card-title class="bg-surface-variant">
           <v-icon icon="mdi-file-lock" class="mr-2"></v-icon>
           Encrypted File
@@ -120,7 +120,7 @@
     </form>
 
     <!-- Error Card -->
-    <v-card v-if="error" variant="tonal" color="error" elevation="2" class="mb-4">
+    <v-card v-if="error" variant="tonal" color="error" class="mb-4">
       <v-card-text class="pa-4">
         <div class="d-flex align-start">
           <v-icon icon="mdi-alert-circle" size="32" color="error" class="mr-4 mt-1"></v-icon>
@@ -136,7 +136,7 @@
     </v-card>
 
     <!-- Plain Text Output -->
-    <v-card v-if="plainText" variant="tonal" elevation="2" class="mb-4">
+    <v-card v-if="plainText" variant="tonal" class="mb-4">
       <v-card-title class="d-flex align-center" data-testid="file-info">
         <v-icon icon="mdi-text" class="mr-2"></v-icon>
         Decrypted Text
@@ -169,7 +169,7 @@
     </v-card>
 
     <!-- CSV Preview -->
-    <v-card v-if="tableData.length" variant="tonal" elevation="2" class="mb-4" data-testid="file-preview">
+    <v-card v-if="tableData.length" variant="tonal" class="mb-4" data-testid="file-preview">
       <v-card-title class="d-flex align-center">
         <v-icon icon="mdi-table" class="mr-2"></v-icon>
         CSV Preview
@@ -221,7 +221,7 @@
     </v-card>
 
     <!-- Success Card (file decrypted but no preview) -->
-    <v-card v-if="decryptedFileName && !plainText && !tableData.length" variant="tonal" color="success" elevation="2">
+    <v-card v-if="decryptedFileName && !plainText && !tableData.length" variant="tonal" color="success">
       <v-card-text class="d-flex align-center pa-4">
         <v-icon icon="mdi-check-circle" size="32" class="mr-4"></v-icon>
         <div class="flex-grow-1">
@@ -359,7 +359,7 @@ export default {
      * Checks if a file has been uploaded.
      */
     const isFilePopulated = computed(() => {
-      return encryptedFile.value && encryptedFile.value.length > 0;
+      return !!encryptedFile.value;
     });
 
     /**
@@ -461,7 +461,7 @@ export default {
       }
 
       error.value = '';
-      decrypt(encryptedFile.value[0], password.value, encryptedFile.value[0].name);
+      decrypt(encryptedFile.value, password.value, encryptedFile.value.name);
     };
 
     /**

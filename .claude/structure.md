@@ -33,42 +33,64 @@ slurm-spa/
 ### Source Directory (`/src/`)
 ```
 src/
-├── main.js                  # Application entry point (62 lines)
+├── main.js                  # Application entry point (253 lines with icon mapping)
 ├── theme.js                 # Vuetify theme system with 3 themes (172 lines)
-├── Slurm.vue               # Root layout component with theme toggle (151 lines)
-├── Home.vue                # Landing page with tool grid (103 lines, 2 AES tools consolidated)
-├── Base64Encode.vue        # Base64 encoder page (252 lines)
-├── Base64Decode.vue        # Base64 decoder page (226 lines)
-├── AesEncrypt.vue          # AES encryption for files AND text (479 lines)
-├── AesDecrypt.vue          # AES decryption for files AND text (620 lines)
-├── PasswordGenerator.vue   # Password generator tool (257 lines)
-├── About.vue               # About page (178 lines)
+├── Slurm.vue               # Root layout component with theme toggle (313 lines)
 ├── components/             # Reusable Vue components
+│   ├── CardSectionHeader.vue          # Reusable card section header (79 lines)
 │   ├── FileUploadWithValidation.vue   # File upload with validation (230 lines)
 │   ├── PasswordStrengthIndicator.vue  # Password strength meter (140 lines)
 │   ├── SharedSnackbar.vue             # Reusable snackbar (76 lines)
 │   ├── TextInputWithActions.vue       # Text input with action buttons (265 lines)
-│   └── ToolPageHeader.vue             # Standardized page header (65 lines)
+│   ├── ToolPageHeader.vue             # Standardized page header (65 lines)
+│   ├── AddCustomFieldDialog.vue       # Metadata custom field dialog
+│   ├── AddPngFieldDialog.vue          # PNG metadata field dialog
+│   ├── MetadataFieldEditor.vue        # Metadata field editor component
+│   ├── MetadataViewer.vue             # Metadata viewer component
+│   └── PasswordInput.vue              # Password input component
 ├── composables/            # Reusable composition functions
-│   ├── useAESWorker.js     # AES worker management with auto-cleanup (163 lines)
-│   ├── useClipboard.js     # Clipboard operations (74 lines)
-│   ├── useDebounce.js      # Debounced function calls (66 lines)
-│   ├── useFileSizeValidation.js  # File size validation logic (99 lines)
+│   ├── useAESWorker.js          # AES worker management with auto-cleanup (163 lines)
+│   ├── useClipboard.js          # Clipboard operations (74 lines)
+│   ├── useDebounce.js           # Debounced function calls (66 lines)
+│   ├── useFileSizeValidation.js # File size validation logic (99 lines)
+│   ├── useHexViewer.js          # Hex viewer state management (NEW)
 │   ├── usePasswordSession.js    # Password session storage management (132 lines)
-│   └── useSnackbar.js      # Snackbar state management (41 lines)
-├── crypto/                 # Encryption provider abstraction layer (NEW - Phase 2)
+│   ├── useServiceWorkerUpdate.js # Service worker update detection
+│   ├── useSnackbar.js           # Snackbar state management (41 lines)
+│   └── useVirtualScroll.js      # Virtual scrolling for large datasets (NEW)
+├── crypto/                 # Encryption provider abstraction layer (Phase 2)
 │   ├── CryptoProvider.js   # Base provider interface and factory (157 lines)
 │   └── providers/          # Concrete provider implementations
 │       ├── JsAesCryptProvider.js   # jsAesCrypt wrapper (142 lines)
 │       └── WebCryptoProvider.js    # Web Crypto API implementation (232 lines)
 ├── utils/                  # Shared utility functions
-│   ├── fileDownload.js     # File download helper (19 lines)
-│   ├── csvParser.js        # CSV parsing utilities (67 lines)
-│   ├── passwordStrength.js # Password strength calculator (160 lines)
-│   └── passwordGenerator.js # Cryptographic password generator (127 lines)
+│   ├── byteConverter.js     # Byte interpretation utilities (223 lines, NEW)
+│   ├── csvParser.js         # CSV parsing utilities (67 lines)
+│   ├── debug.js             # Debug logging utilities
+│   ├── exifTags.js          # EXIF metadata tag definitions
+│   ├── fileDownload.js      # File download helper (19 lines)
+│   ├── fileSizeValidator.js # File size validation (104 lines)
+│   ├── hexFormatter.js      # Hex formatting utilities (131 lines, NEW)
+│   ├── metadataEditor.js    # Metadata editing utilities
+│   ├── metadataManager.js   # Metadata management utilities
+│   ├── passwordGenerator.js # Cryptographic password generator (127 lines)
+│   ├── passwordStrength.js  # Password strength calculator (160 lines)
+│   ├── pngMetadataEditor.js # PNG metadata utilities
+│   └── pngTags.js           # PNG metadata tag definitions
+├── views/                  # Tool page components (ALL PAGES MOVED HERE)
+│   ├── About.vue            # About page (178 lines)
+│   ├── AesDecrypt.vue       # AES decryption for files AND text (620 lines)
+│   ├── AesEncrypt.vue       # AES encryption for files AND text (479 lines)
+│   ├── Base64Decode.vue     # Base64 decoder page (226 lines)
+│   ├── Base64Encode.vue     # Base64 encoder page (252 lines)
+│   ├── HexViewer.vue        # Binary file hex viewer (689 lines, NEW)
+│   ├── Home.vue             # Landing page with tool grid (121 lines)
+│   ├── MetadataEditor.vue   # Image metadata editor (947 lines)
+│   └── PasswordGenerator.vue # Password generator tool (257 lines)
 └── assets/                 # Static assets and utilities
     ├── base.css            # Global CSS variables
     ├── global-styles.css   # Global UX styles
+    ├── typography.css      # Typography styles
     ├── logo.svg            # Vue logo
     └── util/               # Buffer utilities
         ├── util.js         # Stream/buffer operations
@@ -1413,6 +1435,39 @@ AESEnc.vue/AESDec.vue
 ## Notes
 
 ### Recent Structural Changes
+- **2025-11-17**: Code Review & Refactoring - File Organization & Component Consolidation
+  - **File Organization** - Moved all tool pages to `/src/views/` for consistency:
+    - Moved: About.vue, AesDecrypt.vue, AesEncrypt.vue, Base64Decode.vue, Base64Encode.vue
+    - Moved: HexViewer.vue, Home.vue, MetadataEditor.vue, PasswordGenerator.vue
+    - Updated all import paths in main.js router configuration
+    - Clear separation: `src/` (root + Slurm.vue), `views/` (pages), `components/` (reusable)
+  - **Created CardSectionHeader.vue** (79 lines) - Reusable card section header component:
+    - Standardizes card headers with icon, title, and optional actions slot
+    - Used in HexViewer for consistent styling
+    - Saves ~30 lines of duplicated markup across components
+  - **Utility Consolidation**:
+    - Removed duplicate `formatFileSize()` from hexFormatter.js
+    - Centralized file size formatting in fileSizeValidator.js
+    - Updated HexViewer to import from consolidated location
+  - **Code Quality Improvements**:
+    - Optimized `visibleRowIndices` computed in HexViewer using Array.from() pattern
+    - Fixed HexViewer return statement organization with proper section comments
+    - Added comprehensive JSDoc comments to byteConverter.js (already present)
+  - **Standardized Vuetify Defaults**:
+    - Removed all explicit `elevation="2"` from components (now default in main.js)
+    - Affected: 29 instances across 7 view files
+    - Cleaner templates, consistent elevation across app
+  - **HexViewer Improvements**:
+    - Refactored file upload to use validation composable patterns
+    - Replaced inline validation with v-alert components (consistent with app patterns)
+    - Added closable warnings/errors with proper state management
+  - **Impact**:
+    - Improved file organization (9 files moved to views/)
+    - Eliminated ~14 lines of duplicate utility code
+    - Removed 29 redundant elevation attributes
+    - Created 1 new reusable component
+    - Enhanced code readability and maintainability
+
 - **2025-11-02**: Phase 2 - Encryption Abstraction (COMPLETED)
   - **Created crypto provider abstraction layer** to decouple from jsAesCrypt:
     - src/crypto/CryptoProvider.js (157 lines) - Base interface, error codes, factory pattern

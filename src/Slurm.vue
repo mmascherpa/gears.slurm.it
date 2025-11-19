@@ -42,6 +42,17 @@ const setTheme = (themeName) => {
   }
 };
 
+/**
+ * Toggle theme on mobile (cycles through themes)
+ */
+const toggleThemeOnMobile = () => {
+  const currentTheme = theme.global.name.value;
+  const themeOrder = [THEME_MODES.DEFAULT, THEME_MODES.DARK, THEME_MODES.CRAZY];
+  const currentIndex = themeOrder.indexOf(currentTheme);
+  const nextIndex = (currentIndex + 1) % themeOrder.length;
+  setTheme(themeOrder[nextIndex]);
+};
+
 // Initialize theme immediately (before component renders)
 theme.global.name.value = getSavedTheme();
 </script>
@@ -57,11 +68,11 @@ theme.global.name.value = getSavedTheme();
             <v-app-bar-title class="font-weight-bold">Slurm Tools</v-app-bar-title>
 
             <template v-slot:append>
-                <!-- Theme Toggle Buttons -->
+                <!-- Theme Toggle Buttons - Hidden on xs, visible on sm+ -->
                 <v-btn-toggle
                     mandatory
                     density="compact"
-                    class="mr-2 theme-toggle"
+                    class="mr-2 theme-toggle d-none d-sm-flex"
                     :model-value="theme.global.name.value"
                     @update:model-value="setTheme"
                 >
@@ -96,7 +107,21 @@ theme.global.name.value = getSavedTheme();
                     </v-btn>
                 </v-btn-toggle>
 
-                <v-chip size="small" variant="tonal" color="success" class="d-none d-sm-flex">
+                <!-- Single theme toggle icon for mobile -->
+                <v-btn
+                    icon
+                    size="small"
+                    class="d-sm-none theme-toggle-mobile"
+                    @click="toggleThemeOnMobile"
+                >
+                    <v-icon>
+                        {{ theme.global.name.value === THEME_MODES.DEFAULT ? 'mdi-white-balance-sunny' :
+                           theme.global.name.value === THEME_MODES.DARK ? 'mdi-moon-waning-crescent' : 'mdi-auto-fix' }}
+                    </v-icon>
+                    <v-tooltip activator="parent" location="bottom">Change Theme</v-tooltip>
+                </v-btn>
+
+                <v-chip size="small" variant="tonal" color="success" class="d-none d-md-flex">
                     <v-icon start icon="mdi-shield-check"></v-icon>
                     Private & Offline
                 </v-chip>
@@ -158,6 +183,16 @@ theme.global.name.value = getSavedTheme();
                     prepend-icon="mdi-image-filter-hdr"
                     title="Metadata Editor"
                     value="metadata-editor">
+                </v-list-item>
+
+                <v-divider class="my-2"></v-divider>
+
+                <v-list-subheader>ANALYSIS TOOLS</v-list-subheader>
+                <v-list-item
+                    to="/hex-viewer"
+                    prepend-icon="mdi-file-code"
+                    title="Hex Viewer"
+                    value="hex-viewer">
                 </v-list-item>
 
                 <v-divider class="my-2"></v-divider>

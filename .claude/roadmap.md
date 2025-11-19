@@ -1163,6 +1163,34 @@ This file tracks feature planning, completed work, and future development priori
   - **Priority reordering**: Production quality (CI/CD + E2E) now highest priority over new features
   - **Rationale**: With 423 tests and 4,815 lines of code, need CI/CD automation before adding complexity
 
+- **2025-11-18**: Enhanced Responsive Layout (Phase 2 Enhancement)
+  - **App Bar (Slurm.vue)**:
+    - Theme toggle condensed to single cycling button on mobile (xs)
+    - Full 3-button toggle shown on sm+ screens
+    - "Private & Offline" chip hidden on small/medium, visible on md+
+    - Added `toggleThemeOnMobile()` function to cycle through themes
+  - **Home Page**:
+    - Icon size responsive: 48px on xs, 64px on larger screens
+    - Heading responsive: `text-h4` on xs, `text-sm-h3` on sm+
+    - Subtitle responsive: `text-subtitle-1` on xs, `text-sm-h6` on sm+
+    - Added margin-bottom to chips for proper wrapping
+  - **About Page**: Applied same responsive typography patterns as Home
+  - **Hex Viewer**:
+    - Removed fixed `min-width` on control inputs causing overflow
+    - Controls stack vertically on mobile, side-by-side on tablet+
+    - Responsive column layout: `cols="12" sm="6" md="auto"`
+    - Mobile-specific styling: smaller font (11px), reduced height (400px)
+    - Changed scroll from `overflow-x: hidden` to `overflow-x: auto`
+  - **Metadata Editor**:
+    - Table shown only on sm+ screens (`d-none d-sm-table`)
+    - Added mobile card layout for xs screens (`d-sm-none`)
+    - Mobile cards: vertical button layout with proper spacing
+    - Text wrapping enabled: `word-break: break-word`
+    - Value overflow handling: `text-overflow: ellipsis` on desktop
+  - **Benefit**: All pages now properly adapt to smaller screens without component stretching or text overflow
+  - **Total changes**: 6 files modified (Slurm.vue, Home.vue, About.vue, HexViewer.vue, MetadataEditor.vue)
+  - **Key techniques**: Vuetify display classes (`d-none`, `d-sm-flex`), responsive typography, flexible columns, mobile-first CSS
+
 ### Key Insights
 - **Exceptional test coverage**: 423 passing tests with 95.45% coverage - significantly above industry standard
 - **Well-structured foundation**: Modular architecture with composables, shared components, crypto provider abstraction

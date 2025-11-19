@@ -1,14 +1,14 @@
 <template>
     <div>
         <div class="text-center mb-8">
-            <v-icon icon="mdi-shield-key" size="80" color="primary" class="mb-4"></v-icon>
-            <h1 class="text-h3 font-weight-bold mb-2">About Slurm Tools</h1>
-            <p class="text-h6 text-medium-emphasis">Privacy-focused cryptographic utilities for everyone</p>
+            <v-icon icon="mdi-shield-key" :size="$vuetify.display.xs ? 56 : 80" color="primary" class="mb-4"></v-icon>
+            <h1 class="text-h4 text-sm-h3 font-weight-bold mb-2">About Slurm Tools</h1>
+            <p class="text-subtitle-1 text-sm-h6 text-medium-emphasis">Privacy-focused cryptographic utilities for everyone</p>
         </div>
 
         <v-row>
             <v-col cols="12" md="6">
-                <v-card elevation="2" class="h-100">
+                <v-card class="h-100">
                     <v-card-title class="bg-surface-variant">
                         <v-icon icon="mdi-shield-check" class="mr-2" color="success"></v-icon>
                         Privacy First
@@ -31,7 +31,7 @@
             </v-col>
 
             <v-col cols="12" md="6">
-                <v-card elevation="2" class="h-100">
+                <v-card class="h-100">
                     <v-card-title class="bg-surface-variant">
                         <v-icon icon="mdi-wifi-off" class="mr-2" color="info"></v-icon>
                         Works Offline
@@ -56,7 +56,7 @@
 
         <v-row class="mt-4">
             <v-col cols="12">
-                <v-card elevation="2">
+                <v-card>
                     <v-card-title class="bg-surface-variant">
                         <v-icon icon="mdi-toolbox" class="mr-2"></v-icon>
                         Available Tools
@@ -100,7 +100,7 @@
 
         <v-row class="mt-4">
             <v-col cols="12" md="6">
-                <v-card elevation="2" class="h-100">
+                <v-card class="h-100">
                     <v-card-title class="bg-surface-variant">
                         <v-icon icon="mdi-code-braces" class="mr-2"></v-icon>
                         Technology
@@ -137,7 +137,7 @@
             </v-col>
 
             <v-col cols="12" md="6">
-                <v-card elevation="2" class="h-100">
+                <v-card class="h-100">
                     <v-card-title class="bg-surface-variant">
                         <v-icon icon="mdi-security" class="mr-2"></v-icon>
                         Security Features

@@ -6,7 +6,7 @@
       icon="mdi-arrow-up-bold-box"
       avatar-color="secondary-darken-1" />
 
-    <v-card class="mb-4" elevation="2">
+    <v-card class="mb-4">
       <v-card-title class="bg-surface-variant">
         <v-icon icon="mdi-text" class="mr-2"></v-icon>
         Text Decoding
@@ -42,7 +42,7 @@
       </v-card-text>
     </v-card>
 
-    <v-card elevation="2">
+    <v-card>
       <v-card-title class="bg-surface-variant">
         <v-icon icon="mdi-file" class="mr-2"></v-icon>
         File Decoding
@@ -98,7 +98,7 @@ export default {
 
     // Computed Properties
     const canDecodeFile = computed(() => {
-      return encodedFile.value && encodedFile.value.length > 0;
+      return !!encodedFile.value;
     });
 
     // Functions
@@ -151,7 +151,7 @@ export default {
      * Decodes a Base64 file and triggers download of the decoded result
      */
     const decodeFile = () => {
-      if (!encodedFile.value || !encodedFile.value[0]) {
+      if (!encodedFile.value) {
         showSnackbar('❌ Please select a file first', 'error');
         return;
       }
@@ -170,7 +170,7 @@ export default {
           const dataLink = `data:application/octet-stream;base64,${plainString}`;
           const link = document.createElement('a');
           link.href = dataLink;
-          link.download = encodedFile.value[0].name.replace('.b64.txt', '');
+          link.download = encodedFile.value.name.replace('.b64.txt', '');
           link.style.display = 'none';
 
           document.body.appendChild(link);
@@ -184,7 +184,7 @@ export default {
         }
       };
 
-      reader.readAsDataURL(encodedFile.value[0]);
+      reader.readAsDataURL(encodedFile.value);
     };
 
     // Debounced decoding (350ms for non-crypto operation)
