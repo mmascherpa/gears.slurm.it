@@ -281,6 +281,7 @@ export default {
       validationError,
       canSave,
       getFieldHint,
+      validateValue,
       save,
       remove,
       cancel

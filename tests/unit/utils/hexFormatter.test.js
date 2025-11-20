@@ -7,10 +7,10 @@ import {
   byteToAscii,
   categorizeByteType,
   formatHexRow,
-  formatFileSize,
   parseHexOffset,
   parseDecimalOffset
 } from '@/utils/hexFormatter';
+import { formatFileSize } from '@/utils/fileSizeValidator';
 
 describe('hexFormatter', () => {
   describe('byteToHex', () => {
