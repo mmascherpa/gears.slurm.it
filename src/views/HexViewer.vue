@@ -17,16 +17,12 @@
           </v-card-title>
           <v-card-text class="pa-3">
             <FileUpload
-              v-model="uploadedFile"
-              :label="fileName ? `${fileName} • ${formattedFileSize} • ${totalRows} rows` : 'Select File'"
+              v-model="selectedFile"
+              label="Select File"
               accept="*/*"
               prepend-icon="mdi-paperclip"
-              :hint="fileName ? '' : 'Any file type supported (up to 200 MB)'"
-              :persistent-hint="!fileName"
-              :disabled="isLoading"
-              @update:model-value="handleFileChange"
-              @clear="handleClearInput"
-              @validation-change="handleFileValidation" />
+              hint="Any file type supported (up to 200 MB)"
+              :disabled="isLoading" />
           </v-card-text>
         </v-card>
       </v-col>
@@ -34,17 +30,20 @@
 
     <!-- Hex Viewer Controls -->
     <v-card v-if="fileData" class="mb-4">
-      <CardSectionHeader title="Controls" />
-      <v-card-text class="pa-3">
-        <v-row dense align="center">
+        <v-card-title class="bg-surface-variant">
+          <v-icon icon="mdi-cog-outline" class="mr-2"></v-icon>
+          Controls
+        </v-card-title>
+      <v-card-text class="pa-4">
+        <v-row class="mb-2">
           <!-- Offset Format Toggle -->
-          <v-col cols="12" sm="auto">
-            <v-btn-toggle v-model="offsetFormat" mandatory density="compact" class="w-100">
-              <v-btn value="hex" size="small">
+          <v-col cols="6" sm="auto">
+            <v-btn-toggle v-model="offsetFormat" mandatory density="comfortable" class="w-100">
+              <v-btn value="hex">
                 <v-icon start>mdi-hexadecimal</v-icon>
                 Hex
               </v-btn>
-              <v-btn value="decimal" size="small">
+              <v-btn value="decimal">
                 <v-icon start>mdi-numeric</v-icon>
                 Dec
               </v-btn>
@@ -52,10 +51,10 @@
           </v-col>
 
           <!-- Jump to Offset -->
-          <v-col cols="12" sm="6" md="auto">
+          <v-col>
             <v-text-field
               v-model="jumpOffsetInput"
-              density="compact"
+              density="comfortable"
               variant="outlined"
               :placeholder="offsetFormat === 'hex' ? 'Jump to hex offset (e.g., FF)' : 'Jump to decimal offset'"
               hide-details
@@ -63,7 +62,7 @@
               <template #append-inner>
                 <v-btn
                   icon
-                  size="x-small"
+                  size="small"
                   variant="text"
                   :disabled="!jumpOffsetInput"
                   @click="handleJumpToOffset">
@@ -73,21 +72,21 @@
             </v-text-field>
           </v-col>
 
-          <v-col cols="12" sm="6" md="auto">
+          <v-col>
             <v-text-field
               v-model="hexSearchInput"
               placeholder="Search hex (e.g., FF D8)"
               variant="outlined"
-              density="compact"
+              density="comfortable"
               hide-details
               @keyup.enter="handleSearchHex">
               <template #prepend-inner>
-                <v-icon size="small">mdi-hexadecimal</v-icon>
+                <v-icon>mdi-hexadecimal</v-icon>
               </template>
               <template #append-inner>
                 <v-btn
                   icon
-                  size="x-small"
+                  size="small"
                   variant="text"
                   :disabled="!hexSearchInput"
                   @click="handleSearchHex">
@@ -97,21 +96,21 @@
             </v-text-field>
           </v-col>
 
-          <v-col cols="12" sm="6" md="auto">
+          <v-col>
             <v-text-field
               v-model="textSearchInput"
               placeholder="Search ASCII text"
               variant="outlined"
-              density="compact"
+              density="comfortable"
               hide-details
               @keyup.enter="handleSearchText">
               <template #prepend-inner>
-                <v-icon size="small">mdi-text</v-icon>
+                <v-icon>mdi-text</v-icon>
               </template>
               <template #append-inner>
                 <v-btn
                   icon
-                  size="x-small"
+                  size="small"
                   variant="text"
                   :disabled="!textSearchInput"
                   @click="handleSearchText">
@@ -123,26 +122,26 @@
         </v-row>
 
         <!-- Search Navigation (appears when matches found) -->
-        <v-row v-if="hasSearchMatches" dense class="mt-2" align="center">
+        <v-row v-if="hasSearchMatches" class="mt-3" align="center">
           <v-col cols="auto">
-            <v-chip size="small" color="success">
+            <v-chip color="success">
               {{ searchMatchInfo.current }} of {{ searchMatchInfo.total }} matches
             </v-chip>
           </v-col>
           <v-col cols="auto">
-            <v-btn size="small" variant="outlined" @click="handlePreviousMatch">
+            <v-btn variant="outlined" @click="handlePreviousMatch">
               <v-icon start>mdi-chevron-left</v-icon>
               Previous
             </v-btn>
           </v-col>
           <v-col cols="auto">
-            <v-btn size="small" variant="outlined" @click="handleNextMatch">
+            <v-btn variant="outlined" @click="handleNextMatch">
               <v-icon start>mdi-chevron-right</v-icon>
               Next
             </v-btn>
           </v-col>
           <v-col cols="auto">
-            <v-btn size="small" color="error" variant="text" @click="clearSearch">
+            <v-btn color="error" variant="text" @click="clearSearch">
               <v-icon start>mdi-close</v-icon>
               Clear
             </v-btn>
@@ -293,7 +292,6 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { parseDecimalOffset, parseHexOffset } from '@/utils/hexFormatter';
 import { formatFileSize } from '@/utils/fileSizeValidator';
 import { useClipboard } from '@/composables/useClipboard';
-import { useFileSizeValidation } from '@/composables/useFileSizeValidation';
 import { useHexViewer } from '@/composables/useHexViewer';
 import { useSnackbar } from '@/composables/useSnackbar';
 import { useVirtualScroll } from '@/composables/useVirtualScroll';
@@ -319,7 +317,6 @@ export default {
     // Composables
     const { snackbar, snackbarColor, snackbarText, showSnackbar } = useSnackbar();
     const { copyToClipboard } = useClipboard();
-    const { clearFileValidation } = useFileSizeValidation();
 
     const {
       byteInterpretation,
@@ -363,8 +360,7 @@ export default {
     } = useVirtualScroll({ rowHeight: ROW_HEIGHT, overscanCount: 5 });
 
     // Reactive State
-    const uploadedFile = ref(null);
-    const isFileValid = ref(false);
+    const selectedFile = ref(null);
     const offsetFormat = ref('hex');
     const jumpOffsetInput = ref('');
     const hexSearchInput = ref('');
@@ -390,6 +386,29 @@ export default {
     // Watchers
 
     /**
+     * Watch file selection and auto-load file
+     * Similar pattern to MetadataEditor for consistency
+     */
+    watch(selectedFile, async (newFile) => {
+      if (newFile) {
+        try {
+          await loadFile(newFile);
+          updateTotalRows(totalRows.value);
+          showSnackbar(`✅ Loaded ${fileName.value} (${formattedFileSize.value})`, 'success');
+        } catch (error) {
+          showSnackbar(`❌ Failed to load file: ${error.message}`, 'error');
+          console.error('File load error:', error);
+        }
+      } else {
+        // Clear all state when file is removed
+        clearFile();
+        jumpOffsetInput.value = '';
+        hexSearchInput.value = '';
+        textSearchInput.value = '';
+      }
+    });
+
+    /**
      * Watch offset format toggle
      */
     watch(offsetFormat, (newFormat) => {
@@ -408,53 +427,6 @@ export default {
     });
 
     // Functions
-
-    /**
-     * Handles file selection from FileUpload component
-     */
-    const handleFileChange = (file) => {
-      if (file) {
-        // FileUpload component handles validation internally
-        // We just need to load the file if it's valid
-        // The validation-change event will tell us if it's valid
-        uploadedFile.value = file;
-      } else {
-        clearFile();
-        uploadedFile.value = null;
-        isFileValid.value = false;
-      }
-    };
-
-    /**
-     * Handles validation state changes from FileUpload component
-     */
-    const handleFileValidation = async (validation) => {
-      isFileValid.value = validation.isValid;
-
-      // Auto-load file if valid
-      if (validation.isValid && uploadedFile.value) {
-        try {
-          await loadFile(uploadedFile.value);
-          updateTotalRows(totalRows.value);
-          showSnackbar(`✅ Loaded ${fileName.value} (${formattedFileSize.value})`, 'success');
-        } catch (error) {
-          showSnackbar(`❌ Failed to load file: ${error.message}`, 'error');
-          console.error('File load error:', error);
-        }
-      }
-    };
-
-    /**
-     * Handles clearing the file input
-     */
-    const handleClearInput = () => {
-      clearFile();
-      uploadedFile.value = null;
-      isFileValid.value = false;
-      jumpOffsetInput.value = '';
-      hexSearchInput.value = '';
-      textSearchInput.value = '';
-    };
 
     /**
      * Handles jump to offset action
@@ -575,10 +547,7 @@ export default {
       // State - File
       fileData,
       fileName,
-      uploadedFile,
-
-      // State - File Validation
-      isFileValid,
+      selectedFile,
 
       // State - Loading
       isLoading,
@@ -618,14 +587,10 @@ export default {
       visibleRowIndices,
 
       // Methods
-      clearFileValidation,
       clearSearch,
       getRow,
-      handleClearInput,
       handleCopyHex,
       handleExportSelection,
-      handleFileChange,
-      handleFileValidation,
       handleJumpToOffset,
       handleNextMatch,
       handlePreviousMatch,

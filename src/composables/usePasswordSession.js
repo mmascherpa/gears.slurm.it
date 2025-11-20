@@ -121,6 +121,32 @@ export function usePasswordSession(context = 'encrypt') {
     }
   });
 
+  // Security: Auto-clear password when window loses focus or becomes hidden
+  // This prevents password exposure if user walks away from unlocked device
+  const handleVisibilityChange = () => {
+    if (document.hidden) {
+      clearSessionPassword();
+    }
+  };
+
+  const handleWindowBlur = () => {
+    clearSessionPassword();
+  };
+
+  // Setup security listeners on component mount
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleWindowBlur);
+  }
+
+  // Cleanup: Remove listeners on component unmount
+  onBeforeUnmount(() => {
+    if (typeof document !== 'undefined') {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleWindowBlur);
+    }
+  });
+
   // Note: We intentionally DON'T clear on component unmount
   // sessionStorage should persist across navigation within the same tab
   // Browser automatically clears sessionStorage when tab closes

@@ -43,10 +43,11 @@
           <v-checkbox
             v-model="rememberPassword"
             label="Remember password for this session"
-            hint="Password will be cleared when you close this tab"
+            hint="⚠️ Only use on trusted devices. Password stored in browser memory until tab closes."
             persistent-hint
             density="comfortable"
             class="mt-2"
+            color="warning"
           />
 
           <v-chip
@@ -126,47 +127,11 @@
     </v-card>
 
     <!-- CSV Preview (if applicable) -->
-    <v-card v-if="isOutputPopulated" variant="tonal">
-      <v-card-title class="d-flex align-center">
-        <v-icon icon="mdi-table" class="mr-2"></v-icon>
-        CSV Preview
-        <v-spacer></v-spacer>
-        <v-btn icon size="small" variant="text" @click="clearOutputs">
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
-      </v-card-title>
-      <v-card-text class="pa-4">
-        <v-row class="mb-4">
-          <v-col cols="12" md="4">
-            <v-text-field
-              v-model="search"
-              label="Search"
-              prepend-inner-icon="mdi-magnify"
-              variant="outlined"
-              hide-details
-              single-line
-              density="comfortable">
-            </v-text-field>
-          </v-col>
-        </v-row>
-        <v-row>
-          <v-col>
-            <v-data-table
-              :headers="tableHeaders"
-              :items="tableData"
-              :search="search"
-              density="comfortable">
-              <template #no-data>
-                <div class="text-center pa-4">
-                  <v-icon size="48" color="grey">mdi-table-off</v-icon>
-                  <p class="text-body-2 text-medium-emphasis mt-2">No results to display</p>
-                </div>
-              </template>
-            </v-data-table>
-          </v-col>
-        </v-row>
-      </v-card-text>
-    </v-card>
+    <CsvPreviewTable
+      :headers="tableHeaders"
+      :data="tableData"
+      @close="clearOutputs"
+    />
 
     <!-- Snackbar -->
     <SharedSnackbar
@@ -196,6 +161,7 @@ import { useClipboard } from '@/composables/useClipboard';
 import { useDebounce } from '@/composables/useDebounce';
 import { usePasswordSession } from '@/composables/usePasswordSession';
 import { useSnackbar } from '@/composables/useSnackbar';
+import CsvPreviewTable from '@/components/CsvPreviewTable.vue';
 import FileUploadWithValidation from '@/components/FileUploadWithValidation.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import SharedSnackbar from '@/components/SharedSnackbar.vue';
@@ -205,6 +171,7 @@ import ToolPageHeader from '@/components/ToolPageHeader.vue';
 export default {
   name: 'AesEncrypt',
   components: {
+    CsvPreviewTable,
     FileUploadWithValidation,
     PasswordInput,
     SharedSnackbar,
@@ -219,7 +186,6 @@ export default {
     const passwordConfirm = ref('');
     const plainFile = ref(null);
     const plainText = ref('');
-    const search = ref('');
     const tableData = ref([]);
     const tableHeaders = ref([]);
 
@@ -510,7 +476,6 @@ export default {
       passwordConfirm,
       plainFile,
       plainText,
-      search,
       tableData,
       tableHeaders,
 

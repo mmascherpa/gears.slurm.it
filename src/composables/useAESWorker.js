@@ -50,15 +50,14 @@ export function useAESWorker(onSuccess, onError, options = {}) {
   const providerType = options.providerType || 'jsAesCrypt';
 
   /**
-   * Setup Web Worker instance
-   * Terminates existing worker if present
+   * Setup Web Worker instance (initialize once and reuse)
+   * Only creates worker if it doesn't already exist
    */
   const setupWorker = () => {
-    if (worker.value) {
-      worker.value.terminate();
+    if (!worker.value) {
+      worker.value = new Worker('/worker.js');
+      worker.value.onmessage = handleWorkerResponse;
     }
-    worker.value = new Worker('/worker.js');
-    worker.value.onmessage = handleWorkerResponse;
   };
 
   /**

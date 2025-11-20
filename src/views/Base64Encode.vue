@@ -38,7 +38,6 @@
           :show-paste="false"
           :show-clear="false"
           :show-copy="true"
-          textarea-class="monospace-output"
           test-id="output-text"
           @copy="handleCopy" />
       </v-card-text>
@@ -72,6 +71,7 @@
 <script>
 import { computed, ref } from 'vue';
 import { downloadFile } from '@/utils/fileDownload';
+import { validateFileSize } from '@/utils/fileSizeValidator';
 import { useClipboard } from '@/composables/useClipboard';
 import { useDebounce } from '@/composables/useDebounce';
 import { useSnackbar } from '@/composables/useSnackbar';
@@ -89,6 +89,9 @@ export default {
     ToolPageHeader
   },
   setup() {
+    // Constants
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB limit for Base64 encoding
+
     // Reactive State
     const encodedText = ref('');
     const isLoading = ref(false);
@@ -169,11 +172,17 @@ export default {
     };
 
     /**
-     * Handles file validation updates from FileUploadWithValidation
+     * Handles file validation updates from FileUploadWithValidation component
+     *
+     * NOTE: This handler intentionally does nothing. File validation state is fully
+     * managed by FileUploadWithValidation component and useFileSizeValidation composable.
+     * The handler exists to fulfill the component's @validation-change event contract
+     * and may be used in the future if additional validation logic is needed.
+     *
+     * @param {Object} validation - Validation result from FileUploadWithValidation
      */
     const handleFileValidation = () => {
-      // Validation state is managed by FileUploadWithValidation component
-      // This handler is kept for potential future use
+      // Intentionally empty - validation handled by component and composable
     };
 
     /**
@@ -182,6 +191,19 @@ export default {
     const encodeFile = () => {
       if (!plainFile.value) {
         showSnackbar('❌ Please select a file', 'error');
+        return;
+      }
+
+      // Validate file size before processing
+      const validation = validateFileSize(plainFile.value);
+      if (!validation.isValid) {
+        showSnackbar(validation.message, 'error');
+        return;
+      }
+
+      // Check file size limit for Base64 encoding
+      if (plainFile.value.size > MAX_FILE_SIZE) {
+        showSnackbar(`❌ File too large for Base64 encoding. Maximum size is 10 MB.`, 'error');
         return;
       }
 

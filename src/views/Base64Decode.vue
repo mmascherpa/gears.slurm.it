@@ -59,6 +59,72 @@
       </v-card-text>
     </v-card>
 
+    <!-- Decoded Text Output (for text file preview) -->
+    <v-card v-if="decodedFileText" variant="tonal" class="mb-4">
+      <v-card-title class="d-flex align-center">
+        <v-icon icon="mdi-file-document" class="mr-2"></v-icon>
+        Decoded File Preview
+        <v-spacer></v-spacer>
+        <v-btn
+          v-if="decodedFileName"
+          variant="text"
+          color="primary"
+          @click="downloadDecodedFile"
+          class="mr-2">
+          <v-icon start>mdi-download</v-icon>
+          Download
+        </v-btn>
+        <v-btn icon size="small" variant="text" @click="clearDecodedOutput">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </v-card-title>
+      <v-card-text class="pa-4">
+        <v-textarea
+          v-model="decodedFileText"
+          label="Decoded Content"
+          variant="outlined"
+          rows="10"
+          readonly
+          class="monospace-output"
+          data-testid="file-preview"
+          hide-details>
+        </v-textarea>
+      </v-card-text>
+    </v-card>
+
+    <!-- CSV Preview -->
+    <CsvPreviewTable
+      :headers="tableHeaders"
+      :data="tableData"
+      :show-download="!!decodedFileName"
+      card-class="mb-4"
+      test-id="file-preview"
+      @close="clearDecodedOutput"
+      @download="downloadDecodedFile"
+    />
+
+    <!-- Success Card (file decoded but no preview) -->
+    <v-card v-if="decodedFileName && !decodedFileText && !tableData.length" variant="tonal" color="success">
+      <v-card-text class="d-flex align-center pa-4">
+        <v-icon icon="mdi-check-circle" size="32" class="mr-4"></v-icon>
+        <div class="flex-grow-1">
+          <div class="text-subtitle-1 font-weight-medium">File Decoded Successfully</div>
+          <div class="text-body-2">{{ decodedFileName }}</div>
+        </div>
+        <v-btn
+          variant="elevated"
+          color="white"
+          @click="downloadDecodedFile"
+          class="mr-2">
+          <v-icon start>mdi-download</v-icon>
+          Download Again
+        </v-btn>
+        <v-btn icon size="small" variant="text" @click="clearDecodedOutput">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </v-card-text>
+    </v-card>
+
     <SharedSnackbar
       v-model="snackbar"
       :text="snackbarText"
@@ -69,9 +135,13 @@
 
 <script>
 import { computed, ref, watch } from 'vue';
+import { downloadFile } from '@/utils/fileDownload';
+import { parseCSV } from '@/utils/csvParser';
+import { validateFileSize } from '@/utils/fileSizeValidator';
 import { useClipboard } from '@/composables/useClipboard';
 import { useDebounce } from '@/composables/useDebounce';
 import { useSnackbar } from '@/composables/useSnackbar';
+import CsvPreviewTable from '@/components/CsvPreviewTable.vue';
 import FileUploadWithValidation from '@/components/FileUploadWithValidation.vue';
 import SharedSnackbar from '@/components/SharedSnackbar.vue';
 import TextInputWithActions from '@/components/TextInputWithActions.vue';
@@ -80,17 +150,29 @@ import ToolPageHeader from '@/components/ToolPageHeader.vue';
 export default {
   name: 'Base64Decode',
   components: {
+    CsvPreviewTable,
     FileUploadWithValidation,
     SharedSnackbar,
     TextInputWithActions,
     ToolPageHeader
   },
   setup() {
+    // Constants
+    const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB limit for Base64 decoding (larger than encode due to expansion)
+    const MAX_PREVIEW_SIZE = 8 * 1024 * 1024; // 8MB max for preview
+
     // Reactive State
     const encodedFile = ref(null);
     const encodedText = ref('');
     const isLoading = ref(false);
     const plainText = ref('');
+
+    // File decoding state
+    const decodedData = ref(null);
+    const decodedFileName = ref('');
+    const decodedFileText = ref('');
+    const tableData = ref([]);
+    const tableHeaders = ref([]);
 
     // Composables
     const { snackbar, snackbarText, snackbarColor, showSnackbar } = useSnackbar();
@@ -122,11 +204,11 @@ export default {
      */
     const handlePaste = async () => {
       await pasteFromClipboard(
-        (text) => {
+        (text, message) => {
           encodedText.value = text;
+          showSnackbar(message, 'success');
           debouncedDecode();
         },
-        (message) => showSnackbar(message, 'success'),
         (message) => showSnackbar(message, 'error')
       );
     };
@@ -140,19 +222,48 @@ export default {
     };
 
     /**
-     * Handles file validation updates from FileUploadWithValidation
+     * Handles file validation updates from FileUploadWithValidation component
+     *
+     * NOTE: This handler intentionally does nothing. File validation state is fully
+     * managed by FileUploadWithValidation component and useFileSizeValidation composable.
+     * The handler exists to fulfill the component's @validation-change event contract
+     * and may be used in the future if additional validation logic is needed.
+     *
+     * @param {Object} validation - Validation result from FileUploadWithValidation
      */
     const handleFileValidation = (validation) => {
-      // Validation state is managed by FileUploadWithValidation component
-      // This handler is kept for potential future use
+      // Intentionally empty - validation handled by component and composable
     };
 
     /**
-     * Decodes a Base64 file and triggers download of the decoded result
+     * Determines if a file should be previewed as text based on extension and size
+     */
+    const shouldPreviewAsText = (fileName, data) => {
+      const textExtensions = ['.txt', '.md', '.json', '.xml', '.html', '.css', '.js', '.log', '.yaml', '.yml'];
+      const hasTextExtension = textExtensions.some(ext => fileName.toLowerCase().endsWith(ext));
+      const withinSizeLimit = data.byteLength <= MAX_PREVIEW_SIZE;
+      return hasTextExtension && withinSizeLimit;
+    };
+
+    /**
+     * Decodes a Base64 file with preview support
      */
     const decodeFile = () => {
       if (!encodedFile.value) {
         showSnackbar('❌ Please select a file first', 'error');
+        return;
+      }
+
+      // Validate file size before processing
+      const validation = validateFileSize(encodedFile.value);
+      if (!validation.isValid) {
+        showSnackbar(validation.message, 'error');
+        return;
+      }
+
+      // Check file size limit for Base64 decoding
+      if (encodedFile.value.size > MAX_FILE_SIZE) {
+        showSnackbar(`❌ File too large for Base64 decoding. Maximum size is 15 MB.`, 'error');
         return;
       }
 
@@ -165,26 +276,95 @@ export default {
 
       reader.onload = () => {
         try {
-          const dataUrl = reader.result;
-          const plainString = atob(dataUrl.split(',')[1]);
-          const dataLink = `data:application/octet-stream;base64,${plainString}`;
-          const link = document.createElement('a');
-          link.href = dataLink;
-          link.download = encodedFile.value.name.replace('.b64.txt', '');
-          link.style.display = 'none';
+          // Read as text since Base64 files are plain text
+          const base64String = reader.result.trim();
+          const binaryString = atob(base64String);
 
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
+          // Convert binary string to Uint8Array
+          const bytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
 
-          showSnackbar('✓ File decoded successfully!', 'success');
+          // Create blob
+          const blob = new Blob([bytes], { type: 'application/octet-stream' });
+          const fileName = encodedFile.value.name.replace(/\.base64$|\.b64\.txt$/, '');
+
+          // Store decoded data
+          decodedData.value = blob;
+          decodedFileName.value = fileName;
+
+          // Handle CSV files
+          if (fileName.endsWith('.csv')) {
+            const withinSizeLimit = blob.size <= MAX_PREVIEW_SIZE;
+
+            if (withinSizeLimit) {
+              const parsedCSV = parseCSV(blob);
+              tableHeaders.value = parsedCSV.headers;
+              tableData.value = parsedCSV.data;
+
+              const sizeKB = (blob.size / 1024).toFixed(2);
+              showSnackbar(`✓ CSV file decoded (${sizeKB} KB) - Preview shown`, 'success');
+            } else {
+              downloadFile(blob, fileName);
+              const sizeMB = (blob.size / (1024 * 1024)).toFixed(2);
+              showSnackbar(`✓ CSV file decoded (${sizeMB} MB) - Too large to preview, downloaded`, 'info');
+            }
+
+            encodedFile.value = null;
+            return;
+          }
+
+          // Handle text files
+          if (shouldPreviewAsText(fileName, blob)) {
+            const textDecoder = new TextDecoder();
+            decodedFileText.value = textDecoder.decode(bytes);
+
+            const sizeKB = (blob.size / 1024).toFixed(2);
+            showSnackbar(`✓ Text file decoded (${sizeKB} KB) - Preview shown`, 'success');
+            encodedFile.value = null;
+            return;
+          }
+
+          // For all other files, auto-download
+          downloadFile(blob, fileName);
+
+          if (blob.size > MAX_PREVIEW_SIZE) {
+            const sizeMB = (blob.size / (1024 * 1024)).toFixed(2);
+            showSnackbar(`✓ File decoded (${sizeMB} MB) - Too large to preview, downloaded`, 'info');
+          } else {
+            showSnackbar('✓ File decoded and downloaded!', 'success');
+          }
+
+          encodedFile.value = null;
         } catch (error) {
           console.error('File decoding error:', error);
           showSnackbar('❌ Failed to decode file. Please ensure it contains valid Base64 data.', 'error');
         }
       };
 
-      reader.readAsDataURL(encodedFile.value);
+      reader.readAsText(encodedFile.value);
+    };
+
+    /**
+     * Downloads the decoded file
+     */
+    const downloadDecodedFile = () => {
+      if (decodedData.value && decodedFileName.value) {
+        downloadFile(decodedData.value, decodedFileName.value);
+        showSnackbar('✓ File downloaded successfully!', 'success');
+      }
+    };
+
+    /**
+     * Clears decoded output
+     */
+    const clearDecodedOutput = () => {
+      decodedFileText.value = '';
+      tableData.value = [];
+      tableHeaders.value = [];
+      decodedData.value = null;
+      decodedFileName.value = '';
     };
 
     // Debounced decoding (350ms for non-crypto operation)
@@ -205,6 +385,10 @@ export default {
       encodedText,
       isLoading,
       plainText,
+      decodedFileName,
+      decodedFileText,
+      tableData,
+      tableHeaders,
 
       // Snackbar
       snackbar,
@@ -216,6 +400,8 @@ export default {
 
       // Methods
       decodeFile,
+      downloadDecodedFile,
+      clearDecodedOutput,
       handleClear,
       handleFileValidation,
       handlePaste

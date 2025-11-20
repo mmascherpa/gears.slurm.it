@@ -502,8 +502,9 @@
 </template>
 
 <script>
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, onBeforeUnmount } from 'vue';
 import { downloadFile } from '@/utils/fileDownload';
+import { formatFileSize } from '@/utils/fileSizeValidator';
 
 // Metadata manager for multi-format support
 import {
@@ -1017,26 +1018,39 @@ export default {
       }
     };
 
+    // formatFileSize is now imported from @/utils/fileSizeValidator
+
     /**
-     * Format file size for display
+     * Revoke blob URLs to prevent memory leaks
+     * Should be called when URLs are no longer needed
      */
-    const formatFileSize = (bytes) => {
-      if (bytes === 0) return '0 Bytes';
-      const k = 1024;
-      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-      const i = Math.floor(Math.log(bytes) / Math.log(k));
-      return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+    const revokeImageUrls = () => {
+      if (imagePreviewUrl.value?.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreviewUrl.value);
+      }
+      if (modifiedImageUrl.value?.startsWith('blob:')) {
+        URL.revokeObjectURL(modifiedImageUrl.value);
+      }
+      if (cleanedImageUrl.value?.startsWith('blob:')) {
+        URL.revokeObjectURL(cleanedImageUrl.value);
+      }
     };
 
     // Watchers
 
-    watch(selectedFile, (newVal) => {
+    watch(selectedFile, (newVal, oldVal) => {
+      // Revoke old blob URLs before creating new ones
+      if (oldVal) {
+        revokeImageUrls();
+      }
+
       if (newVal) {
         // Auto-analyze when file is selected
         // FileUpload component returns a File object (not an array)
         analyzeImage(newVal);
       } else {
         // Clear all state when file is removed
+        revokeImageUrls();
         metadata.value = null;
         imageBase64.value = null;
         imageFormat.value = IMAGE_FORMATS.UNKNOWN;
@@ -1060,6 +1074,11 @@ export default {
       } else {
         selectedSection.value = null;
       }
+    });
+
+    // Cleanup: Revoke blob URLs on component unmount to prevent memory leaks
+    onBeforeUnmount(() => {
+      revokeImageUrls();
     });
 
     return {

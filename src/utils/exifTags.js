@@ -357,24 +357,53 @@ export function formatTagValue(value, ifd, tagId) {
   if (Array.isArray(value)) {
     // GPS coordinates (arrays of [degrees, minutes, seconds])
     if (ifd === 'GPS' && (tagId === 2 || tagId === 4)) {
-      const [deg, min, sec] = value;
-      const decimal = deg + min / 60 + sec / 3600;
-      return `${decimal.toFixed(6)}°`;
+      try {
+        const [deg, min, sec] = value;
+
+        // GPS coordinates are often stored as rational numbers: [[degrees, 1], [minutes, 1], [seconds, 1]]
+        // Extract the actual numeric values
+        const degValue = Array.isArray(deg) ? deg[0] / (deg[1] || 1) : deg;
+        const minValue = Array.isArray(min) ? min[0] / (min[1] || 1) : min;
+        const secValue = Array.isArray(sec) ? sec[0] / (sec[1] || 1) : sec;
+
+        // Validate numeric values
+        if (typeof degValue !== 'number' || typeof minValue !== 'number' || typeof secValue !== 'number') {
+          return value.join(', '); // Fallback to array display
+        }
+
+        // Calculate decimal degrees
+        const decimal = degValue + minValue / 60 + secValue / 3600;
+        return `${decimal.toFixed(6)}°`;
+      } catch (error) {
+        // Fallback if coordinate parsing fails
+        return value.join(', ');
+      }
     }
 
     // GPS altitude (array with [altitude, 1])
     if (ifd === 'GPS' && tagId === 6) {
-      return `${value[0]} m`;
+      if (Array.isArray(value) && value.length >= 1) {
+        const altitude = Array.isArray(value[0]) ? value[0][0] / (value[0][1] || 1) : value[0];
+        return `${altitude} m`;
+      }
+      return value.join(', ');
     }
 
     // Exposure time (array like [1, 125] for 1/125s)
     if (ifd === 'Exif' && tagId === 33434) {
-      return value[1] ? `1/${value[1]} s` : `${value[0]} s`;
+      if (Array.isArray(value) && value.length >= 2 && typeof value[0] === 'number' && typeof value[1] === 'number') {
+        return value[1] ? `1/${value[1]} s` : `${value[0]} s`;
+      }
+      return value.join(', ');
     }
 
     // F-Number (array like [28, 10] for f/2.8)
     if (ifd === 'Exif' && tagId === 33437) {
-      return `f/${(value[0] / value[1]).toFixed(1)}`;
+      if (Array.isArray(value) && value.length >= 2 && typeof value[0] === 'number' && typeof value[1] === 'number' && value[1] !== 0) {
+        const fNumber = value[0] / value[1];
+        return `f/${fNumber.toFixed(1)}`;
+      }
+      return value.join(', ');
     }
 
     // Default array formatting

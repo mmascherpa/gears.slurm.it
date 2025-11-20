@@ -35,10 +35,11 @@
           <v-checkbox
             v-model="rememberPassword"
             label="Remember password for this session"
-            hint="Password will be cleared when you close this tab"
+            hint="⚠️ Only use on trusted devices. Password stored in browser memory until tab closes."
             persistent-hint
             density="comfortable"
             class="mt-2"
+            color="warning"
           />
 
           <v-chip
@@ -168,56 +169,15 @@
     </v-card>
 
     <!-- CSV Preview -->
-    <v-card v-if="tableData.length" variant="tonal" class="mb-4" data-testid="file-preview">
-      <v-card-title class="d-flex align-center">
-        <v-icon icon="mdi-table" class="mr-2"></v-icon>
-        CSV Preview
-        <v-spacer></v-spacer>
-        <v-btn
-          v-if="decryptedFileName"
-          variant="text"
-          color="primary"
-          @click="downloadDecryptedText"
-          class="mr-2">
-          <v-icon start>mdi-download</v-icon>
-          Download
-        </v-btn>
-        <v-btn icon size="small" variant="text" @click="clearOutputs">
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
-      </v-card-title>
-      <v-card-text class="pa-4">
-        <v-row class="mb-4">
-          <v-col cols="12" md="4">
-            <v-text-field
-              v-model="search"
-              label="Search"
-              prepend-inner-icon="mdi-magnify"
-              variant="outlined"
-              hide-details
-              single-line
-              density="comfortable">
-            </v-text-field>
-          </v-col>
-        </v-row>
-        <v-row>
-          <v-col>
-            <v-data-table
-              :headers="tableHeaders"
-              :items="tableData"
-              :search="search"
-              density="comfortable">
-              <template #no-data>
-                <div class="text-center pa-4">
-                  <v-icon size="48" color="grey">mdi-table-off</v-icon>
-                  <p class="text-body-2 text-medium-emphasis mt-2">No results to display</p>
-                </div>
-              </template>
-            </v-data-table>
-          </v-col>
-        </v-row>
-      </v-card-text>
-    </v-card>
+    <CsvPreviewTable
+      :headers="tableHeaders"
+      :data="tableData"
+      :show-download="!!decryptedFileName"
+      card-class="mb-4"
+      test-id="file-preview"
+      @close="clearOutputs"
+      @download="downloadDecryptedText"
+    />
 
     <!-- Success Card (file decrypted but no preview) -->
     <v-card v-if="decryptedFileName && !plainText && !tableData.length" variant="tonal" color="success">
@@ -269,6 +229,7 @@ import { useClipboard } from '@/composables/useClipboard';
 import { useDebounce } from '@/composables/useDebounce';
 import { usePasswordSession } from '@/composables/usePasswordSession';
 import { useSnackbar } from '@/composables/useSnackbar';
+import CsvPreviewTable from '@/components/CsvPreviewTable.vue';
 import FileUploadWithValidation from '@/components/FileUploadWithValidation.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import SharedSnackbar from '@/components/SharedSnackbar.vue';
@@ -278,6 +239,7 @@ import ToolPageHeader from '@/components/ToolPageHeader.vue';
 export default {
   name: 'AesDecrypt',
   components: {
+    CsvPreviewTable,
     FileUploadWithValidation,
     PasswordInput,
     SharedSnackbar,
@@ -297,7 +259,6 @@ export default {
     const error = ref('');
     const password = ref('');
     const plainText = ref('');
-    const search = ref('');
     const tableData = ref([]);
     const tableHeaders = ref([]);
 
@@ -398,7 +359,6 @@ export default {
       decryptedText.value = '';
       tableData.value = [];
       tableHeaders.value = [];
-      search.value = '';
       decryptedData.value = null;
       decryptedFileName.value = '';
     };
@@ -541,10 +501,17 @@ export default {
     };
 
     /**
-     * Handles file validation (validation handled by FileUploadWithValidation component).
+     * Handles file validation updates from FileUploadWithValidation component
+     *
+     * NOTE: This handler intentionally does nothing. File validation state is fully
+     * managed by FileUploadWithValidation component. The handler exists to fulfill
+     * the component's @validation-change event contract and may be used in the
+     * future if additional validation logic is needed.
+     *
+     * @param {Object} validation - Validation result from FileUploadWithValidation
      */
     const handleFileValidation = () => {
-      // Validation handled by FileUploadWithValidation component
+      // Intentionally empty - validation handled by component
     };
 
     /**
@@ -644,7 +611,6 @@ export default {
       isLoading,
       password,
       plainText,
-      search,
       tableData,
       tableHeaders,
 
