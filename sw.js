@@ -1,7 +1,7 @@
 // Debug flag - disabled for production (enable only during development)
 const DEBUG = false;
 
-const CACHE_NAME = 'slurm-cache-2025-11-04T14-02-24';
+const CACHE_NAME = 'slurm-cache-2025-11-20T03-50-12';
 const urlsToCache = [
     '/',
     '/index.html',
@@ -16,8 +16,18 @@ const urlsToCache = [
     '/icons/icon.svg',
     '/libs/enc-uint8array.min.js',
     '/libs/aes_crypt.min.js',
-    '/assets/index-BhFAtkS_.js',
-    '/assets/index-Bn-90w2A.css',
+    '/assets/index-CKa2cD32.js',
+    '/assets/index-NX09oNgf.css',
+    '/assets/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa0ZL7SUc-DqGufNeO.woff2',
+    '/assets/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7-Dx4kXJAl.woff2',
+    '/assets/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1pL7SUc-CkhJZR-_.woff2',
+    '/assets/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa25L7SUc-DO1Apj_S.woff2',
+    '/assets/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2JL7SUc-BOeWTOD4.woff2',
+    '/assets/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2ZL7SUc-DlzME5K_.woff2',
+    '/assets/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2pL7SUc-CBcvBZtf.woff2',
+    '/assets/V8mDoQDjQSkFtoMM3T6r8E7mPb54C-s0-D0rl6rjA.woff2',
+    '/assets/V8mDoQDjQSkFtoMM3T6r8E7mPb94C-s0-D9tNdqV9.woff2',
+    '/assets/V8mDoQDjQSkFtoMM3T6r8E7mPbF4Cw-BhU9QXUp.woff2',
     '/assets/materialdesignicons-webfont-B7mPwVP_.ttf',
     '/assets/materialdesignicons-webfont-CSr8KVlo.eot',
     '/assets/materialdesignicons-webfont-Dp5v-WZN.woff2',

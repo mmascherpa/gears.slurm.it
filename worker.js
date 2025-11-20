@@ -60,12 +60,32 @@ function setProvider(providerType) {
  * @param {MessageEvent} e - Message event containing encryption/decryption request
  */
 onmessage = function(e) {
-	let data = e.data;
-	let action = data[0];
+	const data = e.data;
+
+	// SECURITY: Validate message structure
+	if (!Array.isArray(data) || data.length < 1) {
+		postMessage(["ERROR", "Invalid message format", null]);
+		return;
+	}
+
+	const action = data[0];
+
+	// SECURITY: Validate action type
+	if (typeof action !== 'string') {
+		postMessage(["ERROR", "Invalid action type", null]);
+		return;
+	}
 
 	// Handle provider initialization
 	if (action === "INIT") {
 		const providerType = data[1] || 'jsAesCrypt';
+
+		// SECURITY: Validate provider type
+		if (typeof providerType !== 'string' || !['jsAesCrypt', 'webCrypto'].includes(providerType)) {
+			postMessage(["INIT_ERROR", "Invalid provider type"]);
+			return;
+		}
+
 		try {
 			setProvider(providerType);
 			postMessage(["INIT_SUCCESS", providerType]);
@@ -77,10 +97,34 @@ onmessage = function(e) {
 
 	// Handle encryption/decryption
 	if( action === "ENCRYPT" || action === "DECRYPT" ) {
-		let file = data[1];
-		let password = data[2];
-		let fileName = data[3];
-		let providerType = data[4]; // Optional provider type
+		const file = data[1];
+		const password = data[2];
+		const fileName = data[3];
+		const providerType = data[4]; // Optional provider type
+
+		// SECURITY: Validate file parameter
+		if (!file || !(file instanceof Blob)) {
+			postMessage(["ERROR", "Invalid file data", action]);
+			return;
+		}
+
+		// SECURITY: Validate password
+		if (typeof password !== 'string' || password.length === 0) {
+			postMessage(["ERROR", "Invalid password", action]);
+			return;
+		}
+
+		// SECURITY: Validate fileName (prevent path traversal)
+		if (typeof fileName !== 'string' || fileName.includes('..') || fileName.includes('/') || fileName.includes('\\')) {
+			postMessage(["ERROR", "Invalid filename", action]);
+			return;
+		}
+
+		// SECURITY: Validate optional provider type
+		if (providerType !== undefined && (typeof providerType !== 'string' || !['jsAesCrypt', 'webCrypto'].includes(providerType))) {
+			postMessage(["ERROR", "Invalid provider type", action]);
+			return;
+		}
 
 		// Switch provider if specified and different from current
 		if (providerType && providerType !== currentProviderType) {
