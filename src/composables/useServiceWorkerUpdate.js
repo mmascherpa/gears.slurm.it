@@ -209,10 +209,8 @@ export function useServiceWorkerUpdate() {
       console.log('[SW Update] Confirmed back online');
       wasOffline = false;
 
-      // Show the "back online" notification briefly
-      showOnlineNotification.value = true;
-
-      // Wait a moment for network to stabilize, then check for updates
+      // Silently check for updates in the background
+      // Don't show "back online" notification - only show if update is found
       setTimeout(() => {
         checkForUpdates();
       }, 1000);

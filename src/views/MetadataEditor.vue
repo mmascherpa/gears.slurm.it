@@ -32,7 +32,10 @@
 
           <!-- Image Preview Card (when metadata loaded) -->
           <v-card v-if="metadata && imagePreviewUrl">
-            <CardSectionHeader title="Preview" icon="mdi-image">
+            <v-card-title class="bg-surface-variant">
+              <v-icon icon="mdi-image" class="mr-2"></v-icon>
+              Preview
+            </v-card-title>
               <template #actions>
                 <v-chip
                   v-if="isModified"
@@ -45,7 +48,6 @@
                   Modified
                 </v-chip>
               </template>
-            </CardSectionHeader>
             <v-card-text class="pa-3">
               <v-img
                 :src="isModified ? modifiedImageUrl : imagePreviewUrl"
@@ -88,7 +90,10 @@
           <!-- Categories Column (Left) -->
           <v-col cols="12" md="4">
             <v-card>
-              <CardSectionHeader title="Categories" icon="mdi-format-list-bulleted" />
+              <v-card-title class="bg-surface-variant">
+                <v-icon icon="mdi-format-list-bulleted" class="mr-2"></v-icon>
+                Categories
+              </v-card-title>
               <v-list density="compact" class="pa-0">
                 <v-list-item
                   v-for="(section, sectionKey) in metadata"
@@ -128,7 +133,10 @@
 
             <!-- Actions Card -->
             <v-card class="mt-3">
-              <CardSectionHeader title="Actions" icon="mdi-cog" />
+              <v-card-title class="bg-surface-variant">
+                <v-icon icon="mdi-cog" class="mr-2"></v-icon>
+                Actions
+              </v-card-title>
               <v-card-text class="pa-3">
                 <!-- Attribute Actions Section -->
                 <div class="text-caption text-medium-emphasis mb-2 font-weight-medium">
@@ -208,14 +216,26 @@
           <v-col cols="12" md="8">
             <v-card v-if="currentSection">
               <!-- Section Header -->
-              <v-card-title class="bg-surface-variant pa-2">
+              <v-card-title class="bg-surface-variant">
                 <v-icon
                   :icon="currentSection.icon"
                   :color="currentSection.color"
-                  size="small"
-                  class="mr-2"
                 ></v-icon>
-                <span class="text-body-1">{{ currentSection.name }}</span>
+                {{ currentSection.name }}
+                <!-- Google Maps link for GPS coordinates -->
+                <v-btn
+                  v-if="selectedSection === 'Location' && hasValidGpsCoordinates"
+                  :href="googleMapsUrl"
+                  target="_blank"
+                  size="small"
+                  variant="text"
+                  color="primary"
+                  prepend-icon="mdi-map-marker"
+                  class="ml-3"
+                >
+                  View on Maps
+                  <v-tooltip activator="parent" location="bottom">Open coordinates in Google Maps</v-tooltip>
+                </v-btn>
               </v-card-title>
 
               <!-- Section Description -->
@@ -272,7 +292,7 @@
                           <span class="tooltip-content">{{ field.editWarning }}</span>
                         </v-tooltip>
                       </td>
-                      <td class="text-body-2" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                      <td class="table-col-value text-body-2">
                         <span v-if="field.isPopulated || isFieldModified(field)">
                           {{ field.value }}
                         </span>
@@ -696,6 +716,69 @@ export default {
       return editHistory.value.length;
     });
 
+    /**
+     * Check if valid GPS coordinates are available
+     */
+    const hasValidGpsCoordinates = computed(() => {
+      if (!metadata.value || !metadata.value.Location) {
+        console.log('[GPS] No metadata or Location section');
+        return false;
+      }
+
+      const locationFields = metadata.value.Location.fields;
+      const latField = locationFields.find(f => f.key === 'GPS.2');
+      const lonField = locationFields.find(f => f.key === 'GPS.4');
+
+      console.log('[GPS] latField:', latField);
+      console.log('[GPS] lonField:', lonField);
+
+      if (!latField || !lonField) {
+        console.log('[GPS] Missing lat or lon field');
+        return false;
+      }
+
+      // Check if both have populated values and are not 0
+      const lat = parseFloat(latField.value);
+      const lon = parseFloat(lonField.value);
+
+      console.log('[GPS] lat:', lat, 'lon:', lon);
+      console.log('[GPS] isPopulated:', latField.isPopulated, lonField.isPopulated);
+
+      const isValid = latField.isPopulated && lonField.isPopulated &&
+             !isNaN(lat) && !isNaN(lon) &&
+             (lat !== 0 || lon !== 0);
+
+      console.log('[GPS] hasValidGpsCoordinates:', isValid);
+      return isValid;
+    });
+
+    /**
+     * Generate Google Maps URL from GPS coordinates
+     */
+    const googleMapsUrl = computed(() => {
+      if (!hasValidGpsCoordinates.value || !metadata.value) return '';
+
+      const locationFields = metadata.value.Location.fields;
+      const latField = locationFields.find(f => f.key === 'GPS.2');
+      const lonField = locationFields.find(f => f.key === 'GPS.4');
+      const latRefField = locationFields.find(f => f.key === 'GPS.1');
+      const lonRefField = locationFields.find(f => f.key === 'GPS.3');
+
+      // Extract numeric values from the formatted display values (remove degree symbol)
+      let lat = parseFloat(latField.value.replace('°', ''));
+      let lon = parseFloat(lonField.value.replace('°', ''));
+
+      // Apply direction - S is negative latitude, W is negative longitude
+      if (latRefField && latRefField.value === 'S') {
+        lat = -lat;
+      }
+      if (lonRefField && lonRefField.value === 'W') {
+        lon = -lon;
+      }
+
+      return `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
+    });
+
     // Functions
 
     /**
@@ -1089,6 +1172,8 @@ export default {
       editCount,
       fileName,
       fileSize,
+      googleMapsUrl,
+      hasValidGpsCoordinates,
       imageFormat,
       imagePreviewUrl,
       isModified,

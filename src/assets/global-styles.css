@@ -240,18 +240,69 @@
    TABLE UTILITIES
    ============================================================================ */
 
+/* Metadata table layout - fixed table layout for consistent column widths */
+.metadata-fields-table .v-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
 .table-col-label {
   width: 40%;
+  padding-right: 16px !important;
+  white-space: nowrap;
+  text-align: left;
+}
+
+/* Center align all table cells vertically */
+.metadata-fields-table td {
+  vertical-align: middle !important;
+}
+
+/* Ensure label text is left-aligned while cell is middle-aligned */
+.metadata-fields-table .table-col-label {
+  text-align: left;
+}
+
+/* Ensure all icons in the label column have consistent size and alignment */
+.metadata-fields-table .table-col-label .v-icon {
+  vertical-align: middle;
+  font-size: 18px !important;
+  width: 18px !important;
+  height: 18px !important;
+}
+
+.table-col-value {
+  width: auto;
+  padding-right: 16px !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
 }
 
 .table-col-actions-sm {
-  width: 120px;
+  width: 110px;
   text-align: right;
+  white-space: nowrap;
+  padding-left: 4px !important;
 }
 
 .table-col-actions-md {
-  width: 160px;
+  width: 135px;
   text-align: right;
+  white-space: nowrap;
+  padding-left: 4px !important;
+}
+
+/* Smaller action buttons in metadata tables to prevent touching row borders */
+.metadata-fields-table .v-btn--icon.v-btn--size-x-small {
+  width: 28px;
+  height: 28px;
+  margin-left: 4px;
+}
+
+.metadata-fields-table .v-btn--icon.v-btn--size-x-small .v-icon {
+  font-size: 16px;
 }
 
 /* ============================================================================

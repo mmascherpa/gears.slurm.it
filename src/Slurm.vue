@@ -8,7 +8,7 @@ const drawer = ref(false);
 const theme = useTheme();
 
 // Service worker update detection
-const { updateAvailable, showOnlineNotification, applyUpdate, dismissUpdate } = useServiceWorkerUpdate();
+const { updateAvailable, applyUpdate, dismissUpdate } = useServiceWorkerUpdate();
 
 // Theme management
 const STORAGE_KEY = 'slurm-theme-preference';
@@ -62,9 +62,9 @@ theme.global.name.value = getSavedTheme();
         <v-app-bar app elevation="0" class="app-bar">
             <template v-slot:prepend>
                 <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
+                <v-icon icon="mdi-shield-key" size="32" class="ml-2"></v-icon>
             </template>
 
-            <v-icon icon="mdi-shield-key" size="32" class="mr-2"></v-icon>
             <v-app-bar-title class="font-weight-bold">Slurm Tools</v-app-bar-title>
 
             <template v-slot:append>
@@ -258,20 +258,6 @@ theme.global.name.value = getSavedTheme();
                     Update Now
                 </v-btn>
             </template>
-        </v-snackbar>
-
-        <!-- Online Notification -->
-        <v-snackbar
-            v-model="showOnlineNotification"
-            :timeout="3000"
-            location="top"
-            color="success"
-            elevation="4"
-        >
-            <div class="d-flex align-center">
-                <v-icon icon="mdi-wifi" class="mr-2"></v-icon>
-                <span>Back online - Checking for updates...</span>
-            </div>
         </v-snackbar>
     </v-app>
 </template>

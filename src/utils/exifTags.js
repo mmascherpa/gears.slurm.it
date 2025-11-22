@@ -366,8 +366,9 @@ export function formatTagValue(value, ifd, tagId) {
         const minValue = Array.isArray(min) ? min[0] / (min[1] || 1) : min;
         const secValue = Array.isArray(sec) ? sec[0] / (sec[1] || 1) : sec;
 
-        // Validate numeric values
-        if (typeof degValue !== 'number' || typeof minValue !== 'number' || typeof secValue !== 'number') {
+        // Validate numeric values (check for NaN as well)
+        if (typeof degValue !== 'number' || typeof minValue !== 'number' || typeof secValue !== 'number' ||
+            isNaN(degValue) || isNaN(minValue) || isNaN(secValue)) {
           return value.join(', '); // Fallback to array display
         }
 

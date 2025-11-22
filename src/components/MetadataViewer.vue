@@ -63,87 +63,89 @@
           </v-alert>
 
           <!-- Fields Table -->
-          <v-table density="compact">
-            <tbody>
-              <tr
-                v-for="field in currentSection.fields"
-                :key="field.key"
-              >
-                <td class="table-col-label text-body-2 font-weight-medium">
-                  <v-icon
-                    :icon="field.icon"
-                    size="x-small"
-                    color="grey"
-                    class="mr-2"
-                  ></v-icon>
-                  {{ field.label }}
-                  <v-tooltip v-if="field.editWarning" location="top">
-                    <template v-slot:activator="{ props }">
-                      <v-icon
-                        v-bind="props"
-                        icon="mdi-information-outline"
-                        size="x-small"
-                        color="info"
-                        class="ml-1"
-                      ></v-icon>
-                    </template>
-                    <span class="tooltip-content">{{ field.editWarning }}</span>
-                  </v-tooltip>
-                </td>
-                <td class="text-body-2">
-                  <span :class="{
-                    'text-medium-emphasis': !field.isPopulated
-                  }">
-                    {{ field.value }}
-                  </span>
-                  <v-chip
-                    v-if="!field.isPopulated"
-                    size="x-small"
-                    variant="text"
-                    color="grey"
-                    class="ml-2"
-                  >
-                    empty
-                  </v-chip>
-                </td>
-                <td class="table-col-actions-sm">
-                  <v-btn
-                    v-if="editable && field.editable"
-                    icon="mdi-pencil"
-                    size="x-small"
-                    variant="text"
-                    color="primary"
-                    @click="$emit('edit-field', field)"
-                  >
-                    <v-icon size="small">mdi-pencil</v-icon>
-                    <v-tooltip activator="parent" location="top">Edit field</v-tooltip>
-                  </v-btn>
-                  <v-btn
-                    v-if="editable && field.editable"
-                    icon="mdi-delete"
-                    size="x-small"
-                    variant="text"
-                    color="error"
-                    @click="$emit('remove-field', field)"
-                  >
-                    <v-icon size="small">mdi-delete</v-icon>
-                    <v-tooltip activator="parent" location="top">Remove this field</v-tooltip>
-                  </v-btn>
-                  <v-btn
-                    v-else-if="field.warning && showQuickActions"
-                    icon="mdi-delete"
-                    size="x-small"
-                    variant="text"
-                    color="error"
-                    @click="$emit('remove-field', field)"
-                  >
-                    <v-icon size="small">mdi-delete</v-icon>
-                    <v-tooltip activator="parent" location="top">Remove this field</v-tooltip>
-                  </v-btn>
-                </td>
-              </tr>
-            </tbody>
-          </v-table>
+          <div class="metadata-fields-table">
+            <v-table density="compact">
+              <tbody>
+                <tr
+                  v-for="field in currentSection.fields"
+                  :key="field.key"
+                >
+                  <td class="table-col-label text-body-2 font-weight-medium">
+                    <v-icon
+                      :icon="field.icon"
+                      size="x-small"
+                      color="grey"
+                      class="mr-2"
+                    ></v-icon>
+                    {{ field.label }}
+                    <v-tooltip v-if="field.editWarning" location="top">
+                      <template v-slot:activator="{ props }">
+                        <v-icon
+                          v-bind="props"
+                          icon="mdi-information-outline"
+                          size="x-small"
+                          color="info"
+                          class="ml-1"
+                        ></v-icon>
+                      </template>
+                      <span class="tooltip-content">{{ field.editWarning }}</span>
+                    </v-tooltip>
+                  </td>
+                  <td class="table-col-value text-body-2">
+                    <span :class="{
+                      'text-medium-emphasis': !field.isPopulated
+                    }">
+                      {{ field.value }}
+                    </span>
+                    <v-chip
+                      v-if="!field.isPopulated"
+                      size="x-small"
+                      variant="text"
+                      color="grey"
+                      class="ml-2"
+                    >
+                      empty
+                    </v-chip>
+                  </td>
+                  <td class="table-col-actions-sm">
+                    <v-btn
+                      v-if="editable && field.editable"
+                      icon="mdi-pencil"
+                      size="x-small"
+                      variant="text"
+                      color="primary"
+                      @click="$emit('edit-field', field)"
+                    >
+                      <v-icon size="small">mdi-pencil</v-icon>
+                      <v-tooltip activator="parent" location="top">Edit field</v-tooltip>
+                    </v-btn>
+                    <v-btn
+                      v-if="editable && field.editable"
+                      icon="mdi-delete"
+                      size="x-small"
+                      variant="text"
+                      color="error"
+                      @click="$emit('remove-field', field)"
+                    >
+                      <v-icon size="small">mdi-delete</v-icon>
+                      <v-tooltip activator="parent" location="top">Remove this field</v-tooltip>
+                    </v-btn>
+                    <v-btn
+                      v-else-if="field.warning && showQuickActions"
+                      icon="mdi-delete"
+                      size="x-small"
+                      variant="text"
+                      color="error"
+                      @click="$emit('remove-field', field)"
+                    >
+                      <v-icon size="small">mdi-delete</v-icon>
+                      <v-tooltip activator="parent" location="top">Remove this field</v-tooltip>
+                    </v-btn>
+                  </td>
+                </tr>
+              </tbody>
+            </v-table>
+          </div>
         </v-card>
 
         <!-- Empty state when no section selected -->
