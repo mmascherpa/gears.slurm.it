@@ -1170,6 +1170,36 @@ This file tracks feature planning, completed work, and future development priori
   - **Priority reordering**: Production quality (CI/CD + E2E) now highest priority over new features
   - **Rationale**: With 423 tests and 4,815 lines of code, need CI/CD automation before adding complexity
 
+- **2025-11-22**: Home Page Redesign - Compact Icon Grid Layout (Phase 2 Enhancement)
+  - **Redesigned Home.vue** (315 lines → more compact):
+    - Replaced large card grid (9 cards, 800px+ height) with compact icon grid (200-250px height)
+    - 70%+ reduction in vertical space - all 8 tools visible without scrolling
+    - Icon-based design: 3 category sections (Security, Encoding, Privacy & Analysis)
+    - Uniform icon sizing: All tools use `size="x-large"` (64px) and icon `size="36"` for consistency
+    - Rich tooltips (desktop only): Hover shows tool details without blocking navigation
+    - One-click access: Click icon navigates directly (desktop and mobile)
+    - Mobile-optimized: Tooltips disabled, direct tap-to-navigate
+    - Removed "Featured" labels and hint text for cleaner design
+    - Used Vuetify centralized theming (removed redundant `variant` and `size` props)
+  - **Enhanced About.vue**:
+    - Removed "Available Tools" section (redundant with improved home page)
+    - Added "How It Works" section: Explains client-side processing, Web Workers, Service Workers, no-backend architecture
+    - Added "Common Use Cases" section: 5 expandable panels with real-world examples
+    - Added "FAQ" section: 6 common questions with detailed answers
+    - Fixed file size limits to match actual implementation (200 MB general, 10 MB Base64 encode, 15 MB Base64 decode, 50 MB warning threshold)
+    - Used centralized Vuetify theming for all chips
+  - **UX Improvements**:
+    - Progressive disclosure: Basics visible, details on demand (hover)
+    - Category organization: Tools grouped logically by function
+    - Consistent visual language: All icons same size, proper spacing
+    - Desktop/mobile optimization: Different interactions per platform
+  - **Code Quality**:
+    - Followed coding standards: Centralized Vuetify styling, no redundant props
+    - Theme variables for colors: `rgb(var(--v-theme-on-surface))`
+    - Custom CSS only for layout (grid, flexbox, transitions)
+  - **Total Impact**: Significantly improved first-impression UX, reduced home page complexity
+  - **Benefit**: Faster tool discovery, cleaner modern design, better mobile experience
+
 - **2025-11-18**: Hex Viewer & Code Restructuring (Phase 10 - First Major Feature)
   - **New Tool: Hex Viewer** (HexViewer.vue, 742 lines):
     - Three-column hex dump layout (Offset | Hex | ASCII)
