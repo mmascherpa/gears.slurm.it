@@ -14,6 +14,7 @@ import AesDecrypt from './views/AesDecrypt.vue'
 import PasswordGenerator from './views/PasswordGenerator.vue'
 import MetadataEditor from './views/MetadataEditor.vue'
 import HexViewer from './views/HexViewer.vue'
+import QrCodeGenerator from './views/QrCodeGenerator.vue'
 
 // 2. Define some routes
 // Each route should map to a component.
@@ -22,6 +23,7 @@ const routes = [
   { path: '/', component: Home },
   { path: '/base64-encode', component: Base64Encode },
   { path: '/base64-decode', component: Base64Decode },
+  { path: '/qr-code-generator', component: QrCodeGenerator },
   { path: '/aes-encrypt', component: AesEncrypt },
   { path: '/aes-decrypt', component: AesDecrypt },
   { path: '/password-generator', component: PasswordGenerator },
@@ -133,6 +135,8 @@ const iconMap = {
   'mdi-eye': 'Eye',
   'mdi-eye-off': 'EyeOff',
   'mdi-close-octagon-outline': 'XOctagon',
+  'mdi-qrcode': 'QrCode',
+  'mdi-qrcode-scan': 'ScanLine',
 
   // Lists & Organization
   'mdi-table': 'Table',
@@ -226,6 +230,10 @@ const vuetify = createVuetify({
       density: 'comfortable',
     },
     VTextarea: {
+      variant: 'outlined',
+      density: 'comfortable',
+    },
+    VSelect: {
       variant: 'outlined',
       density: 'comfortable',
     },

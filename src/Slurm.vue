@@ -152,6 +152,12 @@ theme.global.name.value = getSavedTheme();
                     title="Base64 Decoder"
                     value="base64-decode">
                 </v-list-item>
+                <v-list-item
+                    to="/qr-code-generator"
+                    prepend-icon="mdi-qrcode"
+                    title="QR Code Generator"
+                    value="qr-code-generator">
+                </v-list-item>
 
                 <v-divider class="my-2"></v-divider>
 

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Slurm Tools** - Privacy-focused Progressive Web Application for browser-based cryptography (Base64 encoding/decoding, AES file encryption/decryption). 100% client-side with full offline functionality.
+**Slurm Tools** - Privacy-focused Progressive Web Application for browser-based cryptography and utilities (Base64 encoding/decoding, QR code generation, AES file encryption/decryption, metadata editing). 100% client-side with full offline functionality.
 
 **Stack**: Vue 3, Vuetify, Vite
 
@@ -77,6 +77,8 @@ self.postMessage(["ERROR", errorMessage, operationType])
 import { downloadFile } from '@/utils/fileDownload';
 import { parseCSV } from '@/utils/csvParser';
 import { calculatePasswordStrength } from '@/utils/passwordStrength';
+import { generateQrCode } from '@/utils/qrCodeGenerator';
+import { formatWiFi, formatVCard } from '@/utils/qrDataFormatters';
 ```
 
 ### Error Handling
@@ -106,4 +108,4 @@ See [roadmap.md](.claude/roadmap.md) for detailed progress and next steps.
 
 ---
 
-**Last Updated**: 2025-10-20
+**Last Updated**: 2025-11-22

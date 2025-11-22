@@ -10,6 +10,7 @@ This file tracks feature planning, completed work, and future development priori
 ### Existing Features (Production)
 - ✅ **Base64 Encoder** - Text and file encoding with clipboard operations
 - ✅ **Base64 Decoder** - Text and file decoding with clipboard operations
+- ✅ **QR Code Generator** - Generate QR codes for text/URLs, WiFi, contacts (vCard), email, and SMS with customizable size and error correction
 - ✅ **AES File Encryption** - Password-protected encryption with CSV preview
 - ✅ **AES File Decryption** - Password-protected decryption with text/CSV preview (up to 8MB inline)
 - ✅ **AES Text Encryption** - Quick text encryption with password protection and auto-encrypt
@@ -369,13 +370,19 @@ This file tracks feature planning, completed work, and future development priori
   - **Privacy**: Optional feature with clear opt-out, localStorage only
   - **Dependency**: Requires careful privacy consideration
 
-- [ ] **QR Code Generator** (2 hours) - Priority 3
-  - Generate QR codes from text/URLs
-  - Useful for sharing encrypted text or Base64 output
-  - Download as PNG with configurable size
-  - **Benefit**: Mobile-friendly way to transfer encrypted data
-  - **Tech**: Use qrcode.js library
-  - **Use Case**: Transfer encrypted text to mobile device
+- [x] **QR Code Generator** (2 hours) - Priority 3
+  - ✅ Generate QR codes from text/URLs
+  - ✅ Support for WiFi network credentials
+  - ✅ Support for vCard contact information
+  - ✅ Support for Email and SMS pre-fill
+  - ✅ Download as PNG with configurable size (128px to 1024px)
+  - ✅ Copy QR code to clipboard
+  - ✅ Error correction levels (L/M/Q/H)
+  - ✅ Real-time generation with debouncing
+  - **Benefit**: Mobile-friendly way to transfer encrypted data, share WiFi, contacts
+  - **Tech**: qrcode npm package
+  - **Use Case**: Transfer encrypted text to mobile device, share WiFi credentials, share contact info
+  - **Completed**: 2025-11-21
 
 - [ ] **File Comparison Tool** (3 hours) - Priority 3
   - Compare two files byte-by-byte

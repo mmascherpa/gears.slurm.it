@@ -73,6 +73,11 @@
                                 <v-list-item-subtitle>Decode Base64 encoded text or files back to original format</v-list-item-subtitle>
                             </v-list-item>
                             <v-divider class="my-2"></v-divider>
+                            <v-list-item prepend-icon="mdi-qrcode">
+                                <v-list-item-title class="font-weight-bold">QR Code Generator</v-list-item-title>
+                                <v-list-item-subtitle>Generate QR codes for text, URLs, WiFi credentials, contacts (vCard), email, and SMS</v-list-item-subtitle>
+                            </v-list-item>
+                            <v-divider class="my-2"></v-divider>
                             <v-list-item prepend-icon="mdi-lock">
                                 <v-list-item-title class="font-weight-bold">AES Encryption</v-list-item-title>
                                 <v-list-item-subtitle>Encrypt files and text with password protection using AES algorithm for maximum security</v-list-item-subtitle>
@@ -91,6 +96,11 @@
                             <v-list-item prepend-icon="mdi-image-filter-hdr">
                                 <v-list-item-title class="font-weight-bold">Metadata Editor</v-list-item-title>
                                 <v-list-item-subtitle>View, edit, and remove EXIF metadata from images for complete privacy control</v-list-item-subtitle>
+                            </v-list-item>
+                            <v-divider class="my-2"></v-divider>
+                            <v-list-item prepend-icon="mdi-file-code">
+                                <v-list-item-title class="font-weight-bold">Hex Viewer</v-list-item-title>
+                                <v-list-item-subtitle>View and analyze binary files with hex dump display and data interpretation</v-list-item-subtitle>
                             </v-list-item>
                         </v-list>
                     </v-card-text>

@@ -64,6 +64,14 @@ export default {
                     description: 'Decode Base64 encoded text or files back to their original format.'
                 },
                 {
+                    title: 'QR Code Generator',
+                    icon: 'mdi-qrcode',
+                    route: '/qr-code-generator',
+                    category: 'Encoding Tool',
+                    color: 'secondary',
+                    description: 'Generate QR codes for text, URLs, WiFi credentials, contacts, and more.'
+                },
+                {
                     title: 'AES Encryption',
                     icon: 'mdi-lock',
                     route: '/aes-encrypt',

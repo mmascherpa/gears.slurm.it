@@ -25,6 +25,7 @@
     "lucide-vue-next": "^0.553.0",
     "piexifjs": "^1.0.6",
     "png-metadata": "^1.0.2",
+    "qrcode": "^1.5.4",
     "stream": "^0.0.2",
     "util": "^0.12.5",
     "vue": "^3.3.11",
