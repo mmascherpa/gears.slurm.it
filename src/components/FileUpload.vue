@@ -14,7 +14,8 @@
       :persistent-hint="persistentHint"
       :disabled="disabled"
       clearable
-      :show-size="showSize">
+      :show-size="false"
+      class="file-upload">
     </v-file-input>
 
     <!-- File Size Error Alert -->
@@ -128,13 +129,6 @@ export default {
      * Whether to always show hint
      */
     persistentHint: {
-      type: Boolean,
-      default: true
-    },
-    /**
-     * Whether to show file size in input
-     */
-    showSize: {
       type: Boolean,
       default: true
     },
@@ -255,3 +249,25 @@ export default {
   }
 };
 </script>
+
+<style scoped>
+/**
+ * File name truncation with ellipsis for long filenames
+ * Prevents ugly word wrapping by using text-overflow ellipsis
+ */
+.file-upload :deep(.v-field__input) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/**
+ * Ensure the file chip (when file is selected) also truncates properly
+ */
+.file-upload :deep(.v-chip__content) {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+</style>

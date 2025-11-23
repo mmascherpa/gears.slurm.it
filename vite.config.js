@@ -14,6 +14,7 @@ export default defineConfig({
   ],
   build: {
     outDir: 'deploy/', // directory to output build files
+    chunkSizeWarningLimit: 1500,
   },
   resolve: {
     alias: {

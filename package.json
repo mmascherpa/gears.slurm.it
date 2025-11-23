@@ -34,7 +34,6 @@
     "vuetify": "^3.4.8"
   },
   "devDependencies": {
-    "@mdi/font": "^7.4.47",
     "@playwright/test": "^1.56.1",
     "@vitejs/plugin-vue": "^4.5.2",
     "@vitest/coverage-v8": "^4.0.6",

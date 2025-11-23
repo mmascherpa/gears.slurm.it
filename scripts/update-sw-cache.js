@@ -29,28 +29,35 @@ const assetsPath = path.join(distPath, 'assets');
 
 console.log('🔧 Updating service worker cache list...\n');
 
-// Read the built index.html to extract asset references
-const indexHtml = fs.readFileSync(indexPath, 'utf-8');
-
-// Extract JS and CSS files from index.html
-const jsMatches = indexHtml.match(/src="(\/assets\/[^"]+\.js)"/g) || [];
-const cssMatches = indexHtml.match(/href="(\/assets\/[^"]+\.css)"/g) || [];
-
-const jsFiles = jsMatches.map(match => match.match(/src="([^"]+)"/)[1]);
-const cssFiles = cssMatches.map(match => match.match(/href="([^"]+)"/)[1]);
-
-console.log('📦 Found JavaScript bundles:', jsFiles);
-console.log('🎨 Found CSS bundles:', cssFiles);
-
-// Get all font files (Material Design Icons)
+// Scan all assets in the /assets folder
+// This ensures lazy-loaded chunks are also cached for offline use
+let jsFiles = [];
+let cssFiles = [];
 let fontFiles = [];
+
 if (fs.existsSync(assetsPath)) {
     const assetFiles = fs.readdirSync(assetsPath);
+
+    // Get all JavaScript files (including lazy-loaded chunks)
+    jsFiles = assetFiles
+        .filter(file => file.endsWith('.js'))
+        .map(file => `/assets/${file}`);
+
+    // Get all CSS files
+    cssFiles = assetFiles
+        .filter(file => file.endsWith('.css'))
+        .map(file => `/assets/${file}`);
+
+    // Get all font files
     fontFiles = assetFiles
         .filter(file => /\.(woff2?|ttf|eot)$/.test(file))
         .map(file => `/assets/${file}`);
 
-    console.log('🔤 Found font files:', fontFiles.length);
+    console.log('📦 Found JavaScript bundles:', jsFiles.length, 'files');
+    console.log('🎨 Found CSS bundles:', cssFiles.length, 'files');
+    console.log('🔤 Found font files:', fontFiles.length, 'files');
+} else {
+    console.warn('⚠️  Assets directory not found at:', assetsPath);
 }
 
 // Build the complete cache list

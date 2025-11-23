@@ -5,31 +5,22 @@ import { createApp } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
 
 import Slurm from './Slurm.vue'
-import About from './views/About.vue'
-import Home from './views/Home.vue'
-import Base64Encode from './views/Base64Encode.vue'
-import Base64Decode from './views/Base64Decode.vue'
-import AesEncrypt from './views/AesEncrypt.vue'
-import AesDecrypt from './views/AesDecrypt.vue'
-import PasswordGenerator from './views/PasswordGenerator.vue'
-import MetadataEditor from './views/MetadataEditor.vue'
-import HexViewer from './views/HexViewer.vue'
-import QrCodeGenerator from './views/QrCodeGenerator.vue'
+import HomePage from './views/Home.vue'
 
-// 2. Define some routes
-// Each route should map to a component.
-// We'll talk about nested routes later.
+// 2. Define routes with lazy loading for better performance
+// Home is eagerly loaded since it's the landing page
+// All tool pages are lazy-loaded to reduce initial bundle size
 const routes = [
-  { path: '/', component: Home },
-  { path: '/base64-encode', component: Base64Encode },
-  { path: '/base64-decode', component: Base64Decode },
-  { path: '/qr-code-generator', component: QrCodeGenerator },
-  { path: '/aes-encrypt', component: AesEncrypt },
-  { path: '/aes-decrypt', component: AesDecrypt },
-  { path: '/password-generator', component: PasswordGenerator },
-  { path: '/metadata-editor', component: MetadataEditor },
-  { path: '/hex-viewer', component: HexViewer },
-  { path: '/about', component: About },
+  { path: '/', component: HomePage },
+  { path: '/base64-encode', component: () => import('./views/Base64Encode.vue') },
+  { path: '/base64-decode', component: () => import('./views/Base64Decode.vue') },
+  { path: '/qr-code-generator', component: () => import('./views/QrCodeGenerator.vue') },
+  { path: '/aes-encrypt', component: () => import('./views/AesEncrypt.vue') },
+  { path: '/aes-decrypt', component: () => import('./views/AesDecrypt.vue') },
+  { path: '/password-generator', component: () => import('./views/PasswordGenerator.vue') },
+  { path: '/metadata-editor', component: () => import('./views/MetadataEditor.vue') },
+  { path: '/hex-viewer', component: () => import('./views/HexViewer.vue') },
+  { path: '/about', component: () => import('./views/About.vue') },
 ]
 
 // 3. Create the router instance and pass the `routes` option
@@ -47,13 +38,38 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { md2 } from 'vuetify/blueprints'
-import '@mdi/font/css/materialdesignicons.css'
-import { aliases, mdi } from 'vuetify/iconsets/mdi'
 import { themes } from './theme.js'
 
-// Lucide Icons
+// Lucide Icons - specific imports for tree-shaking
 import { h } from 'vue'
-import * as LucideIcons from 'lucide-vue-next'
+import {
+  AlertCircle, Archive, ArrowDownToLine, ArrowLeft, ArrowLeftRight, ArrowUpDown, ArrowUpFromLine,
+  Barcode, Box, Calendar, CalendarClock, Camera, Check, CheckCircle, ChevronDown, ChevronUp,
+  Circle, ClipboardPaste, Clock, Code, Code2, Cog, Compass, Contrast, Copy, Copyright, Cpu,
+  Crop, DatabaseZap, Download, Droplet, Eraser, Eye, EyeOff, File, FileCode, FileLock,
+  FileText, Fingerprint, Folder, Gauge, Grid2x2, HelpCircle, Home, Image, ImageIcon, ImageOff, ImagePlus,
+  Info, Key, KeyRound, Lightbulb, List, ListOrdered, Lock, LockKeyhole, LockOpen,
+  Map, MapPin, MapPinCheck, Menu, MessageSquareText, Moon, MoreVertical, Mountain, Palette,
+  Paperclip, Pencil, PencilLine, Plus, PlusCircle, QrCode, RefreshCw, RotateCcw, Ruler, Satellite,
+  Save, ScanLine, Search, ServerOff, Settings, Shield, ShieldCheck, Smartphone, Sparkles, Sun,
+  SunDim, SunMedium, SunMoon, Table, Tag, Timer, Trash2, Undo, Upload, User, Wifi, WifiOff, Wrench,
+  X, XOctagon, Zap, ZoomIn
+} from 'lucide-vue-next'
+
+// Create a lookup object for imported icons
+const LucideIcons = {
+  AlertCircle, Archive, ArrowDownToLine, ArrowLeft, ArrowLeftRight, ArrowUpDown, ArrowUpFromLine,
+  Barcode, Box, Calendar, CalendarClock, Camera, Check, CheckCircle, ChevronDown, ChevronUp,
+  Circle, ClipboardPaste, Clock, Code, Code2, Cog, Compass, Contrast, Copy, Copyright, Cpu,
+  Crop, DatabaseZap, Download, Droplet, Eraser, Eye, EyeOff, File, FileCode, FileLock,
+  FileText, Fingerprint, Folder, Gauge, Grid2x2, HelpCircle, Home, Image, ImageIcon, ImageOff, ImagePlus,
+  Info, Key, KeyRound, Lightbulb, List, ListOrdered, Lock, LockKeyhole, LockOpen,
+  Map, MapPin, MapPinCheck, Menu, MessageSquareText, Moon, MoreVertical, Mountain, Palette,
+  Paperclip, Pencil, PencilLine, Plus, PlusCircle, QrCode, RefreshCw, RotateCcw, Ruler, Satellite,
+  Save, ScanLine, Search, ServerOff, Settings, Shield, ShieldCheck, Smartphone, Sparkles, Sun,
+  SunDim, SunMedium, SunMoon, Table, Tag, Timer, Trash2, Undo, Upload, User, Wifi, WifiOff, Wrench,
+  X, XOctagon, Zap, ZoomIn
+}
 
 // MDI to Lucide icon mapping
 const iconMap = {
@@ -75,6 +91,7 @@ const iconMap = {
   'mdi-shield-key': 'ShieldCheck',
   'mdi-shield-check': 'ShieldCheck',
   'mdi-shield-lock': 'ShieldCheck',
+  'mdi-shield-account': 'ShieldCheck',
   'mdi-security': 'Shield',
   'mdi-key': 'Key',
   'mdi-file-lock': 'FileLock',
@@ -84,6 +101,7 @@ const iconMap = {
   'mdi-upload': 'Upload',
   'mdi-file': 'File',
   'mdi-file-code': 'FileCode',
+  'mdi-file-document': 'FileText',
   'mdi-text': 'FileText',
   'mdi-paperclip': 'Paperclip',
 
@@ -128,7 +146,9 @@ const iconMap = {
   // UI Elements
   'mdi-toolbox': 'Wrench',
   'mdi-cog': 'Settings',
+  'mdi-cog-outline': 'Settings',
   'mdi-code-braces': 'Code',
+  'mdi-code-tags': 'Code2',
   'mdi-form-textbox-password': 'KeyRound',
   'mdi-magnify': 'Search',
   'mdi-magnify-plus-outline': 'ZoomIn',
@@ -137,6 +157,7 @@ const iconMap = {
   'mdi-close-octagon-outline': 'XOctagon',
   'mdi-qrcode': 'QrCode',
   'mdi-qrcode-scan': 'ScanLine',
+  'mdi-help-circle-outline': 'HelpCircle',
 
   // Lists & Organization
   'mdi-table': 'Table',
@@ -145,11 +166,61 @@ const iconMap = {
   'mdi-folder': 'Folder',
   'mdi-tag': 'Tag',
   'mdi-lightbulb': 'Lightbulb',
+  'mdi-lightbulb-on-outline': 'Lightbulb',
 
   // Misc
   'mdi-calendar': 'Calendar',
   'mdi-map-marker': 'MapPin',
   'mdi-memory': 'Cpu',
+
+  // Theme toggle icons
+  'mdi-white-balance-sunny': 'Sun',
+  'mdi-moon-waning-crescent': 'Moon',
+  'mdi-auto-fix': 'Sparkles',
+
+  // Technology/Framework icons (brand icons → generic equivalents)
+  'mdi-vuejs': 'Box',             // Vue.js → Box/Component icon
+  'mdi-material-design': 'Palette', // Material Design → Palette
+  'mdi-cog-sync': 'Cog',          // Settings/Sync → Cog
+
+  // Metadata Editor icons (EXIF/Image metadata)
+  'mdi-account': 'User',
+  'mdi-application': 'FileCode',
+  'mdi-arrow-left-right': 'ArrowLeftRight',
+  'mdi-arrow-up-down': 'ArrowUpDown',
+  'mdi-barcode': 'Barcode',
+  'mdi-blur': 'Circle',
+  'mdi-brightness-4': 'SunDim',
+  'mdi-brightness-5': 'SunMedium',
+  'mdi-brightness-6': 'Sun',
+  'mdi-calendar-clock': 'CalendarClock',
+  'mdi-calendar-edit': 'Calendar',
+  'mdi-calendar-import': 'Calendar',
+  'mdi-camera-iris': 'Camera',
+  'mdi-clock': 'Clock',
+  'mdi-clock-fast': 'Clock',
+  'mdi-compass': 'Compass',
+  'mdi-contrast-box': 'Contrast',
+  'mdi-copyright': 'Copyright',
+  'mdi-crop': 'Crop',
+  'mdi-elevation-rise': 'Mountain',
+  'mdi-fingerprint': 'Fingerprint',
+  'mdi-flash': 'Zap',
+  'mdi-gamma': 'SunMoon',
+  'mdi-grain': 'Grid2x2',
+  'mdi-incognito': 'EyeOff',
+  'mdi-invert-colors': 'Droplet',
+  'mdi-map': 'Map',
+  'mdi-map-marker-check': 'MapPinCheck',
+  'mdi-map-marker-distance': 'MapPin',
+  'mdi-message-text': 'MessageSquareText',
+  'mdi-phone-rotate-landscape': 'Smartphone',
+  'mdi-ruler': 'Ruler',
+  'mdi-satellite-variant': 'Satellite',
+  'mdi-speedometer': 'Gauge',
+  'mdi-timer': 'Timer',
+  'mdi-white-balance-auto': 'SunMoon',
+  'mdi-zip-box': 'Archive',
 }
 
 // Create Lucide icon set for Vuetify
@@ -179,14 +250,11 @@ const lucideIconSet = {
       })
     }
 
-    // Fallback to MDI if Lucide icon not found
-    return h('i', {
-      class: `mdi ${props.icon}`,
-      style: {
-        fontSize: props.size ? `${props.size}px` : '24px',
-        color: props.color
-      }
-    })
+    // No icon found - log warning in development
+    if (import.meta.env.DEV) {
+      console.warn(`Icon not found: ${props.icon}`)
+    }
+    return null
   }
 }
 
@@ -196,10 +264,8 @@ const vuetify = createVuetify({
   blueprint: md2,
   icons: {
     defaultSet: 'lucide',
-    aliases,
     sets: {
       lucide: lucideIconSet,
-      mdi, // Keep MDI as fallback for missing icons
     },
   },
   theme: {
