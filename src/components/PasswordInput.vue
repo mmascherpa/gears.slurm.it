@@ -1,27 +1,29 @@
 <template>
   <v-row>
     <v-col cols="12" :sm="requireConfirmation ? 6 : 12">
-      <v-text-field
-        :model-value="password"
-        :label="passwordLabel"
-        :type="showPassword ? 'text' : 'password'"
-        variant="outlined"
-        density="comfortable"
-        :autocomplete="autocomplete"
-        maxlength="1024"
-        :placeholder="passwordPlaceholder"
-        :prepend-inner-icon="passwordIcon"
-        :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
-        hide-details
-        @update:model-value="handlePasswordInput"
-        @click:append-inner="showPassword = !showPassword"
-      ></v-text-field>
-      <div v-if="showStrength" tabindex="-1">
-        <PasswordStrengthIndicator
-          :password="password"
-          :show-requirements="showRequirements"
-          :show-feedback="showFeedback"
-        />
+      <div @focusin="handlePasswordFocus" @focusout="handlePasswordBlur">
+        <v-text-field
+          :model-value="password"
+          :label="passwordLabel"
+          :type="showPassword ? 'text' : 'password'"
+          variant="outlined"
+          density="comfortable"
+          :autocomplete="autocomplete"
+          maxlength="1024"
+          :placeholder="passwordPlaceholder"
+          :prepend-inner-icon="passwordIcon"
+          :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
+          hide-details
+          @update:model-value="handlePasswordInput"
+          @click:append-inner="showPassword = !showPassword"
+        ></v-text-field>
+        <div v-if="showStrength" tabindex="-1">
+          <PasswordStrengthIndicator
+            :password="password"
+            :show-requirements="showRequirementsComputed"
+            :show-feedback="showFeedback"
+          />
+        </div>
       </div>
     </v-col>
     <v-col v-if="requireConfirmation" cols="12" sm="6">
@@ -135,6 +137,7 @@ export default {
     // Reactive State
     const showPassword = ref(false);
     const showPasswordConfirm = ref(false);
+    const isPasswordFocused = ref(false);
 
     // Computed Properties
 
@@ -154,6 +157,14 @@ export default {
       return props.password !== '' && props.passwordConfirm !== '' && props.password !== props.passwordConfirm;
     });
 
+    /**
+     * Determines if requirements should be shown based on focus state
+     * Only show details when password field is focused
+     */
+    const showRequirementsComputed = computed(() => {
+      return props.showRequirements && isPasswordFocused.value;
+    });
+
     // Functions
 
     /**
@@ -170,6 +181,20 @@ export default {
     const handlePasswordConfirmInput = (value) => {
       emit('update:password-confirm', value);
       emitValidationState(props.password, value);
+    };
+
+    /**
+     * Handles password field focus
+     */
+    const handlePasswordFocus = () => {
+      isPasswordFocused.value = true;
+    };
+
+    /**
+     * Handles password field blur
+     */
+    const handlePasswordBlur = () => {
+      isPasswordFocused.value = false;
     };
 
     /**
@@ -192,10 +217,13 @@ export default {
       // Computed
       isPasswordConfirmed,
       showConfirmError,
+      showRequirementsComputed,
 
       // Methods
       handlePasswordInput,
-      handlePasswordConfirmInput
+      handlePasswordConfirmInput,
+      handlePasswordFocus,
+      handlePasswordBlur
     };
   }
 };

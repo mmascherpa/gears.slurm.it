@@ -44,14 +44,14 @@ import { themes } from './theme.js'
 import { h } from 'vue'
 import {
   AlertCircle, Archive, ArrowDownToLine, ArrowLeft, ArrowLeftRight, ArrowUpDown, ArrowUpFromLine,
-  Barcode, Box, Calendar, CalendarClock, Camera, Check, CheckCircle, ChevronDown, ChevronUp,
+  Barcode, Box, Calendar, CalendarClock, Camera, Check, CheckCircle, CheckSquare, ChevronDown, ChevronUp,
   Circle, ClipboardPaste, Clock, Code, Code2, Cog, Compass, Contrast, Copy, Copyright, Cpu,
   Crop, DatabaseZap, Download, Droplet, Eraser, Eye, EyeOff, File, FileCode, FileLock,
   FileText, Fingerprint, Folder, Gauge, Grid2x2, HelpCircle, Home, Image, ImageIcon, ImageOff, ImagePlus,
   Info, Key, KeyRound, Lightbulb, List, ListOrdered, Lock, LockKeyhole, LockOpen,
-  Map, MapPin, MapPinCheck, Menu, MessageSquareText, Moon, MoreVertical, Mountain, Palette,
+  Map, MapPin, MapPinCheck, Menu, MessageSquareText, MinusSquare, Moon, MoreVertical, Mountain, Palette,
   Paperclip, Pencil, PencilLine, Plus, PlusCircle, QrCode, RefreshCw, RotateCcw, Ruler, Satellite,
-  Save, ScanLine, Search, ServerOff, Settings, Shield, ShieldCheck, Smartphone, Sparkles, Sun,
+  Save, ScanLine, Search, ServerOff, Settings, Shield, ShieldCheck, Smartphone, Sparkles, Square, Sun,
   SunDim, SunMedium, SunMoon, Table, Tag, Timer, Trash2, Undo, Upload, User, Wifi, WifiOff, Wrench,
   X, XOctagon, Zap, ZoomIn
 } from 'lucide-vue-next'
@@ -59,14 +59,14 @@ import {
 // Create a lookup object for imported icons
 const LucideIcons = {
   AlertCircle, Archive, ArrowDownToLine, ArrowLeft, ArrowLeftRight, ArrowUpDown, ArrowUpFromLine,
-  Barcode, Box, Calendar, CalendarClock, Camera, Check, CheckCircle, ChevronDown, ChevronUp,
+  Barcode, Box, Calendar, CalendarClock, Camera, Check, CheckCircle, CheckSquare, ChevronDown, ChevronUp,
   Circle, ClipboardPaste, Clock, Code, Code2, Cog, Compass, Contrast, Copy, Copyright, Cpu,
   Crop, DatabaseZap, Download, Droplet, Eraser, Eye, EyeOff, File, FileCode, FileLock,
   FileText, Fingerprint, Folder, Gauge, Grid2x2, HelpCircle, Home, Image, ImageIcon, ImageOff, ImagePlus,
   Info, Key, KeyRound, Lightbulb, List, ListOrdered, Lock, LockKeyhole, LockOpen,
-  Map, MapPin, MapPinCheck, Menu, MessageSquareText, Moon, MoreVertical, Mountain, Palette,
+  Map, MapPin, MapPinCheck, Menu, MessageSquareText, MinusSquare, Moon, MoreVertical, Mountain, Palette,
   Paperclip, Pencil, PencilLine, Plus, PlusCircle, QrCode, RefreshCw, RotateCcw, Ruler, Satellite,
-  Save, ScanLine, Search, ServerOff, Settings, Shield, ShieldCheck, Smartphone, Sparkles, Sun,
+  Save, ScanLine, Search, ServerOff, Settings, Shield, ShieldCheck, Smartphone, Sparkles, Square, Sun,
   SunDim, SunMedium, SunMoon, Table, Tag, Timer, Trash2, Undo, Upload, User, Wifi, WifiOff, Wrench,
   X, XOctagon, Zap, ZoomIn
 }
@@ -264,6 +264,11 @@ const vuetify = createVuetify({
   blueprint: md2,
   icons: {
     defaultSet: 'lucide',
+    aliases: {
+      checkboxOn: 'CheckSquare',
+      checkboxOff: 'Square',
+      checkboxIndeterminate: 'MinusSquare',
+    },
     sets: {
       lucide: lucideIconSet,
     },

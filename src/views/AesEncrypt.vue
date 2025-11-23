@@ -36,7 +36,7 @@
             :require-confirmation="true"
             :show-strength="true"
             :show-requirements="true"
-            :show-feedback="true"
+            :show-feedback="false"
             autocomplete="new-password"
           />
 

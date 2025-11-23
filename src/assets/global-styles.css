@@ -340,6 +340,25 @@
 }
 
 /* ============================================================================
+   CHECKBOX AND SELECTION CONTROLS FIX
+   ============================================================================ */
+
+/* Ensure checkbox labels are visible and properly styled */
+.v-checkbox .v-label,
+.v-selection-control .v-label {
+  opacity: 1 !important;
+  color: inherit !important;
+  padding-left: 8px !important; /* Add spacing between checkbox and label */
+}
+
+/* Ensure proper layout for checkbox with label */
+.v-checkbox,
+.v-selection-control {
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+/* ============================================================================
    ACCESSIBILITY ENHANCEMENTS
    ============================================================================ */
 

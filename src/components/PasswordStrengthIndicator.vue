@@ -29,33 +29,25 @@
 
         <!-- Requirements Checklist (expanded view) -->
         <v-expand-transition>
-            <div v-if="showRequirements && strength.level !== 'empty'" class="mt-3" data-testid="requirements" tabindex="-1">
-                <div class="text-caption text-medium-emphasis mb-2 font-weight-medium">
+            <div v-if="showRequirements && strength.level !== 'empty'" class="mt-2" data-testid="requirements" tabindex="-1">
+                <div class="text-caption text-medium-emphasis mb-1 font-weight-medium">
                     Password Requirements:
                 </div>
-                <v-list density="compact" class="pa-0" tabindex="-1">
-                    <v-list-item
-                        v-for="(req, index) in strength.requirements"
+                <div class="requirements-list">
+                    <div
+                        v-for="(req, index) in passwordRequirements"
                         :key="index"
-                        class="pa-0 mb-1"
-                        density="compact"
-                        tabindex="-1">
-                        <template v-slot:prepend>
-                            <v-icon
-                                :icon="req.icon"
-                                :color="req.met ? 'success' : 'grey'"
-                                size="small"
-                                class="mr-2"
-                                tabindex="-1">
-                            </v-icon>
-                        </template>
-                        <v-list-item-title
-                            class="text-caption"
-                            :class="req.met ? 'text-success' : 'text-medium-emphasis'">
-                            {{ req.text }}
-                        </v-list-item-title>
-                    </v-list-item>
-                </v-list>
+                        class="requirement-item"
+                        :class="req.met ? 'requirement-met' : 'requirement-unmet'">
+                        <v-icon
+                            :icon="req.met ? 'mdi-check-circle' : 'mdi-close'"
+                            :color="req.met ? 'success' : 'error'"
+                            size="small"
+                            class="requirement-icon">
+                        </v-icon>
+                        <span class="requirement-text">{{ req.text }}</span>
+                    </div>
+                </div>
             </div>
         </v-expand-transition>
 
@@ -122,6 +114,31 @@ export default {
          */
         strength() {
             return calculatePasswordStrength(this.password);
+        },
+        /**
+         * Builds password requirements list with check/cross indicators
+         * @returns {Array} Array of requirement objects with met status and text
+         */
+        passwordRequirements() {
+            const pwd = this.password;
+            return [
+                {
+                    met: pwd.length >= 12,
+                    text: 'At least 12 characters'
+                },
+                {
+                    met: /[a-z]/.test(pwd) && /[A-Z]/.test(pwd),
+                    text: 'Uppercase and lowercase letters'
+                },
+                {
+                    met: /\d/.test(pwd),
+                    text: 'At least one number'
+                },
+                {
+                    met: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd),
+                    text: 'At least one special character'
+                }
+            ];
         }
     },
     watch: {
@@ -142,5 +159,37 @@ export default {
 <style scoped>
 .password-strength-indicator {
     margin-top: 8px;
+}
+
+.requirements-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.requirement-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.813rem;
+    line-height: 1.4;
+}
+
+.requirement-icon {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+}
+
+.requirement-text {
+    flex: 1;
+}
+
+.requirement-met .requirement-text {
+    color: rgb(var(--v-theme-success));
+}
+
+.requirement-unmet .requirement-text {
+    color: rgb(var(--v-theme-error));
 }
 </style>

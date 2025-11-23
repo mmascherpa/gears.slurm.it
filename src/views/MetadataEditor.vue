@@ -258,12 +258,6 @@
                       :key="field.key"
                     >
                       <td class="table-col-label text-body-2 font-weight-medium">
-                        <v-icon
-                          :icon="field.icon"
-                          size="x-small"
-                          color="grey"
-                          class="mr-2"
-                        ></v-icon>
                         {{ field.label }}
                         <v-icon
                           v-if="isFieldModified(field) && !isClearedField(field)"
@@ -354,12 +348,6 @@
                   >
                     <v-card-text class="pa-3">
                       <div class="d-flex align-center mb-2">
-                        <v-icon
-                          :icon="field.icon"
-                          size="small"
-                          color="grey"
-                          class="mr-2"
-                        ></v-icon>
                         <span class="text-body-2 font-weight-medium">{{ field.label }}</span>
                         <v-spacer></v-spacer>
                         <v-icon
