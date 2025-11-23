@@ -250,8 +250,12 @@ function organizeMetadata(rawMetadata) {
 
   // Process each metadata field
   for (const [keyword, value] of Object.entries(rawMetadata)) {
-    // Skip PNG image header data (IHDR fields)
-    if (['width', 'height', 'bitDepth', 'colorType', 'compressionMethod', 'filterMethod', 'interlaceMethod'].includes(keyword)) {
+    // Skip PNG image header data (IHDR fields) - check both lowercase and capitalized versions
+    const skipFields = [
+      'width', 'height', 'bitDepth', 'colorType', 'compressionMethod', 'filterMethod', 'interlaceMethod',
+      'ImageWidth', 'ImageHeight', 'BitDepth', 'ColorType', 'Compression', 'Filter', 'Interlace'
+    ];
+    if (skipFields.includes(keyword)) {
       continue;
     }
 

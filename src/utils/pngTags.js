@@ -113,34 +113,40 @@ export const PNG_STANDARD_KEYWORDS = {
  */
 export const PNG_SECTIONS = {
   Description: {
-    label: 'Description',
-    icon: 'mdi-text-box',
-    order: 1
+    name: 'Description',
+    icon: 'mdi-text',
+    color: 'primary',
+    description: 'Image title, description, and comments'
   },
   Author: {
-    label: 'Author & Copyright',
-    icon: 'mdi-account-circle',
-    order: 2
+    name: 'Author & Copyright',
+    icon: 'mdi-account',
+    color: 'secondary',
+    description: 'Author, copyright, and disclaimer information'
   },
   Timestamps: {
-    label: 'Timestamps',
-    icon: 'mdi-clock-outline',
-    order: 3
+    name: 'Timestamps',
+    icon: 'mdi-clock',
+    color: 'info',
+    description: 'Creation time and modification dates'
   },
   Technical: {
-    label: 'Technical',
+    name: 'Technical',
     icon: 'mdi-cog',
-    order: 4
+    color: 'grey',
+    description: 'Software, source device, and technical details'
   },
   Hidden: {
-    label: 'Hidden/Advanced',
+    name: 'Hidden/Advanced',
     icon: 'mdi-eye-off',
-    order: 5
+    color: 'warning',
+    description: 'XMP metadata and advanced fields'
   },
   Custom: {
-    label: 'Custom Fields',
-    icon: 'mdi-plus-box',
-    order: 6
+    name: 'Custom Fields',
+    icon: 'mdi-plus-circle',
+    color: 'success',
+    description: 'User-defined custom metadata fields'
   }
 };
 
