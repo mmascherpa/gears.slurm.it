@@ -7,6 +7,44 @@
       icon="mdi-file-code"
       avatar-color="primary" />
 
+    <!-- Tier 1: Educational Panel -->
+    <LearnMorePanel
+      title="What is a Hex Viewer?"
+      storage-key="slurm-help-hex-viewer"
+    >
+      <p class="mb-2">
+        <strong>Hexadecimal (hex) viewing</strong> displays the raw binary content of any file in hexadecimal
+        format, allowing you to see the actual bytes that make up the file.
+      </p>
+      <ul class="ml-4 mb-2">
+        <li><strong>Binary inspection</strong> - View file contents at the byte level</li>
+        <li><strong>File analysis</strong> - Identify file types by magic numbers/signatures</li>
+        <li><strong>Data recovery</strong> - Find hidden or corrupted data within files</li>
+        <li><strong>Forensics</strong> - Examine files for debugging or security analysis</li>
+      </ul>
+      <p class="mt-3 mb-2">
+        <strong>Common use cases:</strong> Analyzing file headers, verifying file integrity, debugging
+        binary formats, reverse engineering, detecting file corruption.
+      </p>
+
+      <!-- Reference Links -->
+      <div class="text-caption text-medium-emphasis mt-3">
+        <strong>Learn more:</strong>
+        <a href="https://en.wikipedia.org/wiki/Hex_dump" target="_blank" rel="noopener noreferrer" class="text-info">
+          Wikipedia: Hex Dump
+        </a>
+        •
+        <a href="https://en.wikipedia.org/wiki/Hexadecimal" target="_blank" rel="noopener noreferrer" class="text-info">
+          Hexadecimal System
+        </a>
+      </div>
+
+      <!-- Technical Details -->
+      <div class="text-caption text-medium-emphasis mt-2">
+        <strong>Technical:</strong> Displays files in traditional hex dump format (offset, hex bytes, ASCII). Supports files up to 200 MB.
+      </div>
+    </LearnMorePanel>
+
     <!-- File Upload Section -->
     <v-row>
       <v-col cols="12" lg="4" md="5">
@@ -297,6 +335,7 @@ import { useSnackbar } from '@/composables/useSnackbar';
 import { useVirtualScroll } from '@/composables/useVirtualScroll';
 import CardSectionHeader from '@/components/CardSectionHeader.vue';
 import FileUpload from '@/components/FileUpload.vue';
+import LearnMorePanel from '@/components/LearnMorePanel.vue';
 import SharedSnackbar from '@/components/SharedSnackbar.vue';
 import ToolPageHeader from '@/components/ToolPageHeader.vue';
 
@@ -306,6 +345,7 @@ export default {
   components: {
     CardSectionHeader,
     FileUpload,
+    LearnMorePanel,
     SharedSnackbar,
     ToolPageHeader
   },

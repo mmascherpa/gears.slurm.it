@@ -8,6 +8,51 @@
       avatar-color="primary"
     />
 
+    <!-- Tier 1: Educational Panel -->
+    <LearnMorePanel
+      title="What is AES Encryption?"
+      storage-key="slurm-help-aes-encrypt"
+    >
+      <p class="mb-2">
+        <strong>AES (Advanced Encryption Standard)</strong> is a military-grade encryption algorithm
+        trusted by governments and organizations worldwide to protect sensitive data.
+      </p>
+      <ul class="ml-4 mb-2">
+        <li><strong>AES-256</strong> - This tool uses 256-bit keys, the strongest AES variant</li>
+        <li><strong>Password-based</strong> - Your password is converted into an encryption key</li>
+        <li><strong>Unbreakable</strong> - With a strong password, AES-256 would take billions of years to crack</li>
+      </ul>
+      <EducationalAlert title="Important Limitation" type="warning" spacing="mt-3">
+        If you forget your password, your encrypted data <strong>cannot be recovered</strong>.
+        There is no "reset password" option - the password IS the key.
+      </EducationalAlert>
+      <p class="mt-3 mb-2">
+        <strong>Common use cases:</strong> Encrypt sensitive documents before uploading to cloud storage,
+        secure backups, protect confidential files on shared computers.
+      </p>
+
+      <!-- Reference Links -->
+      <div class="text-caption text-medium-emphasis mt-3">
+        <strong>Learn more:</strong>
+        <a href="https://en.wikipedia.org/wiki/Advanced_Encryption_Standard" target="_blank" rel="noopener noreferrer" class="text-info">
+          Wikipedia: AES
+        </a>
+        •
+        <a href="https://csrc.nist.gov/projects/cryptographic-standards-and-guidelines/archived-crypto-projects/aes-development" target="_blank" rel="noopener noreferrer" class="text-info">
+          NIST: AES Standard
+        </a>
+      </div>
+
+      <!-- Technical Details -->
+      <div class="text-caption text-medium-emphasis mt-2">
+        <strong>Technical:</strong> Uses
+        <a href="https://github.com/BrightSoul/javascript-aes-file-encryption" target="_blank" rel="noopener noreferrer" class="text-info">jsAesCrypt</a>
+        with
+        <a href="https://cryptojs.gitbook.io/docs/" target="_blank" rel="noopener noreferrer" class="text-info">CryptoJS</a>
+        for AES-256-CBC encryption. Password-based key derivation (PBKDF2) with 10,000 iterations.
+      </div>
+    </LearnMorePanel>
+
     <!-- Error Alert -->
     <v-alert
       v-if="error"
@@ -24,8 +69,19 @@
       <v-card-title class="bg-surface-variant">
         <v-icon icon="mdi-key" class="mr-2"></v-icon>
         Password Protection
+        <!-- Tier 2: Contextual Tooltip -->
+        <InfoTooltip
+          text="Password strength directly determines your encryption security. A weak 6-character password can be cracked in minutes, while a strong 16+ character password would take centuries to brute-force."
+          location="bottom"
+        />
       </v-card-title>
       <v-card-text class="pa-4">
+        <!-- Tier 3: Security Alert -->
+        <EducationalAlert title="Password Strength Matters" type="info" spacing="mb-3">
+          Use at least 12 characters with a mix of uppercase, lowercase, numbers, and symbols.
+          Your password security determines how long your encrypted data stays protected.
+        </EducationalAlert>
+
         <form @submit.prevent>
           <!-- Hidden username field for browser accessibility compliance -->
           <input type="text" name="username" autocomplete="username" style="display: none;" aria-hidden="true">
@@ -162,7 +218,10 @@ import { useDebounce } from '@/composables/useDebounce';
 import { usePasswordSession } from '@/composables/usePasswordSession';
 import { useSnackbar } from '@/composables/useSnackbar';
 import CsvPreviewTable from '@/components/CsvPreviewTable.vue';
+import EducationalAlert from '@/components/EducationalAlert.vue';
 import FileUploadWithValidation from '@/components/FileUploadWithValidation.vue';
+import InfoTooltip from '@/components/InfoTooltip.vue';
+import LearnMorePanel from '@/components/LearnMorePanel.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import SharedSnackbar from '@/components/SharedSnackbar.vue';
 import TextInputWithActions from '@/components/TextInputWithActions.vue';
@@ -172,7 +231,10 @@ export default {
   name: 'AesEncrypt',
   components: {
     CsvPreviewTable,
+    EducationalAlert,
     FileUploadWithValidation,
+    InfoTooltip,
+    LearnMorePanel,
     PasswordInput,
     SharedSnackbar,
     TextInputWithActions,

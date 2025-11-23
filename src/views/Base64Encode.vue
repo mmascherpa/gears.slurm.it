@@ -6,6 +6,41 @@
       icon="mdi-arrow-down-bold-box"
       avatar-color="secondary" />
 
+    <!-- Tier 1: Educational Panel -->
+    <LearnMorePanel
+      title="What is Base64 Encoding?"
+      storage-key="slurm-help-base64-encode"
+    >
+      <p class="mb-2">
+        <strong>Base64</strong> is a way to convert binary data (like files or images) into text format
+        using only 64 printable characters (A-Z, a-z, 0-9, +, /).
+      </p>
+      <ul class="ml-4 mb-2">
+        <li><strong>Not encryption</strong> - Base64 does NOT protect your data, anyone can decode it</li>
+        <li><strong>Size increase</strong> - Encoded data is ~33% larger than the original</li>
+        <li><strong>Text-safe</strong> - Perfect for embedding binary data in text formats (JSON, XML, HTML)</li>
+      </ul>
+      <EducationalAlert title="Common Misconception" type="warning" spacing="mt-3">
+        Base64 is NOT a security measure. It's simply a format conversion. Don't use it to "hide" sensitive data.
+      </EducationalAlert>
+      <p class="mt-3 mb-2">
+        <strong>Common use cases:</strong> Embedding images in HTML/CSS, sending binary data via APIs,
+        email attachments (MIME encoding), storing binary data in JSON.
+      </p>
+
+      <!-- Reference Links -->
+      <div class="text-caption text-medium-emphasis mt-3">
+        <strong>Learn more:</strong>
+        <a href="https://en.wikipedia.org/wiki/Base64" target="_blank" rel="noopener noreferrer" class="text-info">
+          Wikipedia: Base64
+        </a>
+        •
+        <a href="https://developer.mozilla.org/en-US/docs/Glossary/Base64" target="_blank" rel="noopener noreferrer" class="text-info">
+          MDN: Base64
+        </a>
+      </div>
+    </LearnMorePanel>
+
     <v-card class="mb-4">
       <v-card-title class="bg-surface-variant">
         <v-icon icon="mdi-text" class="mr-2"></v-icon>
@@ -75,7 +110,9 @@ import { validateFileSize } from '@/utils/fileSizeValidator';
 import { useClipboard } from '@/composables/useClipboard';
 import { useDebounce } from '@/composables/useDebounce';
 import { useSnackbar } from '@/composables/useSnackbar';
+import EducationalAlert from '@/components/EducationalAlert.vue';
 import FileUploadWithValidation from '@/components/FileUploadWithValidation.vue';
+import LearnMorePanel from '@/components/LearnMorePanel.vue';
 import SharedSnackbar from '@/components/SharedSnackbar.vue';
 import TextInputWithActions from '@/components/TextInputWithActions.vue';
 import ToolPageHeader from '@/components/ToolPageHeader.vue';
@@ -83,7 +120,9 @@ import ToolPageHeader from '@/components/ToolPageHeader.vue';
 export default {
   name: 'Base64Encode',
   components: {
+    EducationalAlert,
     FileUploadWithValidation,
+    LearnMorePanel,
     SharedSnackbar,
     TextInputWithActions,
     ToolPageHeader

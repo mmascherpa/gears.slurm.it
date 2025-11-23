@@ -6,6 +6,50 @@
       icon="mdi-form-textbox-password"
       avatar-color="primary" />
 
+    <!-- Tier 1: Educational Panel -->
+    <LearnMorePanel
+      title="Password Security Best Practices"
+      storage-key="slurm-help-password-generator"
+    >
+      <p class="mb-2">
+        <strong>Strong passwords</strong> are your first line of defense against unauthorized access.
+        The strength of a password determines how long it would take an attacker to guess it through brute-force.
+      </p>
+      <ul class="ml-4 mb-2">
+        <li><strong>Length matters most</strong> - A 16-character password is exponentially stronger than an 8-character one</li>
+        <li><strong>Mix character types</strong> - Combine uppercase, lowercase, numbers, and symbols</li>
+        <li><strong>Avoid patterns</strong> - Don't use dictionary words, names, or predictable sequences</li>
+        <li><strong>Unique per account</strong> - Never reuse passwords across different services</li>
+      </ul>
+      <EducationalAlert title="Time to Crack" type="info" spacing="mt-3">
+        An 8-character password with mixed types: ~8 hours to crack.
+        A 16-character password with mixed types: billions of years to crack.
+      </EducationalAlert>
+      <p class="mt-3 mb-2">
+        <strong>Best practice:</strong> Use a password manager to generate and store unique passwords
+        for each account. This tool generates cryptographically random passwords using your browser's secure random number generator.
+      </p>
+
+      <!-- Reference Links -->
+      <div class="text-caption text-medium-emphasis mt-3">
+        <strong>Learn more:</strong>
+        <a href="https://en.wikipedia.org/wiki/Password_strength" target="_blank" rel="noopener noreferrer" class="text-info">
+          Wikipedia: Password Strength
+        </a>
+        •
+        <a href="https://pages.nist.gov/800-63-3/sp800-63b.html" target="_blank" rel="noopener noreferrer" class="text-info">
+          NIST: Password Guidelines
+        </a>
+      </div>
+
+      <!-- Technical Details -->
+      <div class="text-caption text-medium-emphasis mt-2">
+        <strong>Technical:</strong> Uses
+        <a href="https://developer.mozilla.org/en-US/docs/Web/API/Crypto/getRandomValues" target="_blank" rel="noopener noreferrer" class="text-info">Web Crypto API's crypto.getRandomValues()</a>
+        for cryptographically secure random generation.
+      </div>
+    </LearnMorePanel>
+
     <v-card class="mb-4">
       <v-card-title class="bg-surface-variant">
         <v-icon icon="mdi-cog" class="mr-2"></v-icon>
@@ -156,6 +200,8 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { generatePassword } from '@/utils/passwordGenerator';
 import { useClipboard } from '@/composables/useClipboard';
 import { useSnackbar } from '@/composables/useSnackbar';
+import EducationalAlert from '@/components/EducationalAlert.vue';
+import LearnMorePanel from '@/components/LearnMorePanel.vue';
 import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator.vue';
 import SharedSnackbar from '@/components/SharedSnackbar.vue';
 import ToolPageHeader from '@/components/ToolPageHeader.vue';
@@ -163,6 +209,8 @@ import ToolPageHeader from '@/components/ToolPageHeader.vue';
 export default {
   name: 'PasswordGenerator',
   components: {
+    EducationalAlert,
+    LearnMorePanel,
     PasswordStrengthIndicator,
     SharedSnackbar,
     ToolPageHeader

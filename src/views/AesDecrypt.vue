@@ -8,6 +8,52 @@
       avatar-color="primary-darken-1"
     />
 
+    <!-- Tier 1: Educational Panel -->
+    <LearnMorePanel
+      title="How Does AES Decryption Work?"
+      storage-key="slurm-help-aes-decrypt"
+    >
+      <p class="mb-2">
+        <strong>AES decryption</strong> reverses the encryption process, converting encrypted data back
+        to its original form using the same password that was used for encryption.
+      </p>
+      <ul class="ml-4 mb-2">
+        <li><strong>Password required</strong> - You must use the EXACT same password that was used to encrypt the data</li>
+        <li><strong>Case-sensitive</strong> - "Password123" and "password123" are different passwords</li>
+        <li><strong>No recovery</strong> - If you forgot the password, the data cannot be decrypted</li>
+        <li><strong>Secure process</strong> - Decryption happens entirely in your browser, nothing is sent to any server</li>
+      </ul>
+      <EducationalAlert title="Password Must Match Exactly" type="warning" spacing="mt-3">
+        The decryption password must be identical to the encryption password. Even a single character
+        difference will result in failed decryption. There is no "close enough" - it must be exact.
+      </EducationalAlert>
+      <p class="mt-3 mb-2">
+        <strong>Common use cases:</strong> Decrypting files from cloud storage, accessing encrypted backups,
+        retrieving protected documents.
+      </p>
+
+      <!-- Reference Links -->
+      <div class="text-caption text-medium-emphasis mt-3">
+        <strong>Learn more:</strong>
+        <a href="https://en.wikipedia.org/wiki/Advanced_Encryption_Standard" target="_blank" rel="noopener noreferrer" class="text-info">
+          Wikipedia: AES
+        </a>
+        •
+        <a href="https://csrc.nist.gov/projects/cryptographic-standards-and-guidelines/archived-crypto-projects/aes-development" target="_blank" rel="noopener noreferrer" class="text-info">
+          NIST: AES Standard
+        </a>
+      </div>
+
+      <!-- Technical Details -->
+      <div class="text-caption text-medium-emphasis mt-2">
+        <strong>Technical:</strong> Uses
+        <a href="https://github.com/BrightSoul/javascript-aes-file-encryption" target="_blank" rel="noopener noreferrer" class="text-info">jsAesCrypt</a>
+        with
+        <a href="https://cryptojs.gitbook.io/docs/" target="_blank" rel="noopener noreferrer" class="text-info">CryptoJS</a>
+        for AES-256-CBC decryption. Compatible with files encrypted using this tool.
+      </div>
+    </LearnMorePanel>
+
     <!-- Form -->
     <form @submit.prevent="decryptFile">
       <!-- Hidden username field for browser accessibility compliance -->
@@ -230,7 +276,9 @@ import { useDebounce } from '@/composables/useDebounce';
 import { usePasswordSession } from '@/composables/usePasswordSession';
 import { useSnackbar } from '@/composables/useSnackbar';
 import CsvPreviewTable from '@/components/CsvPreviewTable.vue';
+import EducationalAlert from '@/components/EducationalAlert.vue';
 import FileUploadWithValidation from '@/components/FileUploadWithValidation.vue';
+import LearnMorePanel from '@/components/LearnMorePanel.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import SharedSnackbar from '@/components/SharedSnackbar.vue';
 import TextInputWithActions from '@/components/TextInputWithActions.vue';
@@ -240,7 +288,9 @@ export default {
   name: 'AesDecrypt',
   components: {
     CsvPreviewTable,
+    EducationalAlert,
     FileUploadWithValidation,
+    LearnMorePanel,
     PasswordInput,
     SharedSnackbar,
     TextInputWithActions,

@@ -7,6 +7,50 @@
       icon="mdi-qrcode"
       avatar-color="primary" />
 
+    <!-- Tier 1: Educational Panel -->
+    <LearnMorePanel
+      title="What are QR Codes?"
+      storage-key="slurm-help-qr-code"
+    >
+      <p class="mb-2">
+        <strong>QR Codes</strong> (Quick Response codes) are 2D barcodes that can be scanned by smartphone
+        cameras to quickly access information without typing.
+      </p>
+      <ul class="ml-4 mb-2">
+        <li><strong>WiFi Sharing</strong> - Generate codes that connect devices to WiFi networks instantly</li>
+        <li><strong>Contact Cards</strong> - Share contact information (vCard format) via a single scan</li>
+        <li><strong>URLs & Text</strong> - Direct users to websites or display messages</li>
+        <li><strong>Error Correction</strong> - QR codes can still work even if partially damaged or obscured</li>
+      </ul>
+      <EducationalAlert title="WiFi Security Note" type="info" spacing="mt-3">
+        WiFi QR codes contain your network password in plain text. Only share with trusted individuals
+        and consider using guest networks for public sharing.
+      </EducationalAlert>
+      <p class="mt-3 mb-2">
+        <strong>Common use cases:</strong> Restaurant menus, event check-ins, WiFi guest access,
+        business cards, product packaging, payment links.
+      </p>
+
+      <!-- Reference Links -->
+      <div class="text-caption text-medium-emphasis mt-3">
+        <strong>Learn more:</strong>
+        <a href="https://en.wikipedia.org/wiki/QR_code" target="_blank" rel="noopener noreferrer" class="text-info">
+          Wikipedia: QR Code
+        </a>
+        •
+        <a href="https://www.qr-code-generator.com/qr-code-marketing/qr-codes-basics/" target="_blank" rel="noopener noreferrer" class="text-info">
+          QR Code Basics
+        </a>
+      </div>
+
+      <!-- Technical Details -->
+      <div class="text-caption text-medium-emphasis mt-2">
+        <strong>Technical:</strong> Uses the
+        <a href="https://github.com/soldair/node-qrcode" target="_blank" rel="noopener noreferrer" class="text-info">qrcode</a>
+        npm library. All QR codes generated locally in your browser.
+      </div>
+    </LearnMorePanel>
+
     <!-- Main Layout Row -->
     <v-row>
       <!-- Configuration Column (70%) -->
@@ -261,6 +305,8 @@
 import { computed, ref, watch } from 'vue';
 import { useDebounce } from '@/composables/useDebounce';
 import { useSnackbar } from '@/composables/useSnackbar';
+import EducationalAlert from '@/components/EducationalAlert.vue';
+import LearnMorePanel from '@/components/LearnMorePanel.vue';
 import SharedSnackbar from '@/components/SharedSnackbar.vue';
 import ToolPageHeader from '@/components/ToolPageHeader.vue';
 import { generateQrCode, downloadQrCode, copyQrCodeToClipboard } from '@/utils/qrCodeGenerator';
@@ -269,6 +315,8 @@ import { formatPlainText, formatWiFi, formatVCard, formatEmail, formatSMS } from
 export default {
   name: 'QrCodeGenerator',
   components: {
+    EducationalAlert,
+    LearnMorePanel,
     SharedSnackbar,
     ToolPageHeader,
   },

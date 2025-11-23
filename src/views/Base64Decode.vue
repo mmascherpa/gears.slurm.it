@@ -6,6 +6,38 @@
       icon="mdi-arrow-up-bold-box"
       avatar-color="secondary-darken-1" />
 
+    <!-- Tier 1: Educational Panel -->
+    <LearnMorePanel
+      title="What is Base64 Decoding?"
+      storage-key="slurm-help-base64-decode"
+    >
+      <p class="mb-2">
+        <strong>Base64 decoding</strong> reverses the encoding process, converting Base64 text back
+        into its original binary format (files, images, etc.).
+      </p>
+      <ul class="ml-4 mb-2">
+        <li><strong>No password needed</strong> - Base64 is not encryption, anyone can decode it</li>
+        <li><strong>Original size restored</strong> - Decoded data returns to its original size</li>
+        <li><strong>Works with any Base64</strong> - Can decode data from any source</li>
+      </ul>
+      <p class="mt-3 mb-2">
+        <strong>Common use cases:</strong> Extracting embedded images from HTML/CSS, decoding API responses,
+        recovering files from Base64-encoded email attachments.
+      </p>
+
+      <!-- Reference Links -->
+      <div class="text-caption text-medium-emphasis mt-3">
+        <strong>Learn more:</strong>
+        <a href="https://en.wikipedia.org/wiki/Base64" target="_blank" rel="noopener noreferrer" class="text-info">
+          Wikipedia: Base64
+        </a>
+        •
+        <a href="https://developer.mozilla.org/en-US/docs/Web/API/atob" target="_blank" rel="noopener noreferrer" class="text-info">
+          MDN: atob() Function
+        </a>
+      </div>
+    </LearnMorePanel>
+
     <v-card class="mb-4">
       <v-card-title class="bg-surface-variant">
         <v-icon icon="mdi-text" class="mr-2"></v-icon>
@@ -143,6 +175,7 @@ import { useDebounce } from '@/composables/useDebounce';
 import { useSnackbar } from '@/composables/useSnackbar';
 import CsvPreviewTable from '@/components/CsvPreviewTable.vue';
 import FileUploadWithValidation from '@/components/FileUploadWithValidation.vue';
+import LearnMorePanel from '@/components/LearnMorePanel.vue';
 import SharedSnackbar from '@/components/SharedSnackbar.vue';
 import TextInputWithActions from '@/components/TextInputWithActions.vue';
 import ToolPageHeader from '@/components/ToolPageHeader.vue';
@@ -152,6 +185,7 @@ export default {
   components: {
     CsvPreviewTable,
     FileUploadWithValidation,
+    LearnMorePanel,
     SharedSnackbar,
     TextInputWithActions,
     ToolPageHeader

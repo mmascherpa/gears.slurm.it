@@ -8,6 +8,54 @@
       avatar-color="warning"
     />
 
+    <!-- Tier 1: Educational Panel -->
+    <LearnMorePanel
+      title="What is Photo Metadata?"
+      storage-key="slurm-help-metadata-editor"
+    >
+      <p class="mb-2">
+        <strong>Photo metadata</strong> is hidden information embedded inside your image files.
+        Modern smartphones and cameras automatically store data like:
+      </p>
+      <ul class="ml-4 mb-2">
+        <li><strong>GPS Location</strong> - Exact coordinates showing where the photo was taken</li>
+        <li><strong>Camera/Phone Model</strong> - Device manufacturer and model number</li>
+        <li><strong>Date & Time</strong> - When the photo was captured</li>
+        <li><strong>Camera Settings</strong> - ISO, aperture, shutter speed, etc.</li>
+      </ul>
+      <EducationalAlert title="Privacy Warning" type="warning" spacing="mt-3">
+        Most smartphone photos contain GPS coordinates that reveal your exact location.
+        This can expose where you live, work, or travel when you share photos online.
+      </EducationalAlert>
+      <p class="mt-3 mb-2">
+        <strong>Common use cases:</strong> Remove metadata before posting photos to social media,
+        selling items online, or sharing images publicly to protect your privacy.
+      </p>
+
+      <!-- Reference Links -->
+      <div class="text-caption text-medium-emphasis mt-3">
+        <strong>Learn more:</strong>
+        <a href="https://en.wikipedia.org/wiki/Exif" target="_blank" rel="noopener noreferrer" class="text-info">
+          Wikipedia: EXIF
+        </a>
+        •
+        <a href="https://en.wikipedia.org/wiki/Portable_Network_Graphics#Metadata" target="_blank" rel="noopener noreferrer" class="text-info">
+          PNG Metadata
+        </a>
+      </div>
+
+      <!-- Technical Details -->
+      <div class="text-caption text-medium-emphasis mt-2">
+        <strong>Technical:</strong> Uses
+        <a href="https://github.com/MikeKovarik/exifr" target="_blank" rel="noopener noreferrer" class="text-info">exifr</a>
+        and
+        <a href="https://github.com/hMatoba/piexifjs" target="_blank" rel="noopener noreferrer" class="text-info">piexifjs</a>
+        for JPEG,
+        <a href="https://github.com/SteamDiesel/png-metadata" target="_blank" rel="noopener noreferrer" class="text-info">png-metadata</a>
+        for PNG. All processing happens in your browser.
+      </div>
+    </LearnMorePanel>
+
     <!-- Main Layout: Left Sidebar + Right Content -->
     <v-row>
       <!-- LEFT SIDEBAR: Upload + Preview (35% width on desktop) -->
@@ -20,6 +68,11 @@
               Edit image metadata
             </v-card-title>
             <v-card-text class="pa-3">
+              <!-- Tier 3: Privacy Alert -->
+              <EducationalAlert title="Privacy Tip" type="info" spacing="mb-3">
+                Photos often contain GPS coordinates, camera model, and timestamps. Check your metadata below before sharing photos publicly.
+              </EducationalAlert>
+
               <FileUpload
                 v-model="selectedFile"
                 label="Select Image"
@@ -93,6 +146,11 @@
               <v-card-title class="bg-surface-variant">
                 <v-icon icon="mdi-format-list-bulleted" class="mr-2"></v-icon>
                 Categories
+                <!-- Tier 2: Contextual Tooltip -->
+                <InfoTooltip
+                  text="Click a category to view its fields. The Location category often contains GPS coordinates that reveal where photos were taken - a common privacy risk."
+                  location="bottom"
+                />
               </v-card-title>
               <v-list density="compact" class="pa-0">
                 <v-list-item
@@ -540,7 +598,10 @@ import { useSnackbar } from '@/composables/useSnackbar';
 import AddCustomFieldDialog from '@/components/AddCustomFieldDialog.vue';
 import AddPngFieldDialog from '@/components/AddPngFieldDialog.vue';
 import CardSectionHeader from '@/components/CardSectionHeader.vue';
+import EducationalAlert from '@/components/EducationalAlert.vue';
 import FileUpload from '@/components/FileUpload.vue';
+import InfoTooltip from '@/components/InfoTooltip.vue';
+import LearnMorePanel from '@/components/LearnMorePanel.vue';
 import MetadataFieldEditor from '@/components/MetadataFieldEditor.vue';
 import MetadataViewer from '@/components/MetadataViewer.vue';
 import SharedSnackbar from '@/components/SharedSnackbar.vue';
@@ -552,7 +613,10 @@ export default {
     AddCustomFieldDialog,
     AddPngFieldDialog,
     CardSectionHeader,
+    EducationalAlert,
     FileUpload,
+    InfoTooltip,
+    LearnMorePanel,
     MetadataFieldEditor,
     MetadataViewer,
     SharedSnackbar,
