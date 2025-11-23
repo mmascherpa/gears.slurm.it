@@ -1,7 +1,7 @@
 // Debug flag - disabled for production (enable only during development)
 const DEBUG = false;
 
-const CACHE_NAME = 'slurm-cache-2025-11-20T03-50-12';
+const CACHE_NAME = 'slurm-cache-2025-11-23T15-34-45';
 const urlsToCache = [
     '/',
     '/index.html',
@@ -16,8 +16,36 @@ const urlsToCache = [
     '/icons/icon.svg',
     '/libs/enc-uint8array.min.js',
     '/libs/aes_crypt.min.js',
-    '/assets/index-CKa2cD32.js',
-    '/assets/index-NX09oNgf.css',
+    '/assets/About-Drlo_eJO.js',
+    '/assets/AesDecrypt-hJiQkZVx.js',
+    '/assets/AesEncrypt-BTSHl3Tv.js',
+    '/assets/Base64Decode-eGwbctbd.js',
+    '/assets/Base64Encode-CJSZukFS.js',
+    '/assets/CardSectionHeader-DEBdNANb.js',
+    '/assets/CsvPreviewTable-B7WrNYcs.js',
+    '/assets/FileUpload-DN3uNZSJ.js',
+    '/assets/HexViewer-CIR67Z7H.js',
+    '/assets/MetadataEditor-bQwMGI0E.js',
+    '/assets/PasswordGenerator-eQ1-gfQG.js',
+    '/assets/PasswordInput-BWVNZBiK.js',
+    '/assets/PasswordStrengthIndicator-BZCzWfbr.js',
+    '/assets/QrCodeGenerator-BWX2Or2L.js',
+    '/assets/TextInputWithActions-CFUGD0eU.js',
+    '/assets/ToolPageHeader-BuloaM-X.js',
+    '/assets/fileDownload-B1vhVzTR.js',
+    '/assets/index-CHYnOP-6.js',
+    '/assets/useClipboard-KqVwDR14.js',
+    '/assets/useDebounce-Bghpcebw.js',
+    '/assets/Base64Decode-C5Zh3uju.css',
+    '/assets/Base64Encode-Bwc-B4O9.css',
+    '/assets/FileUpload-Bh0Hu62H.css',
+    '/assets/HexViewer-DMwYSDPx.css',
+    '/assets/MetadataEditor-zlyojKvv.css',
+    '/assets/PasswordGenerator-BRtFcpxv.css',
+    '/assets/PasswordStrengthIndicator-Dj7jaOTX.css',
+    '/assets/QrCodeGenerator-BPovKVYp.css',
+    '/assets/TextInputWithActions-CmArFb31.css',
+    '/assets/index-DJpMW925.css',
     '/assets/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa0ZL7SUc-DqGufNeO.woff2',
     '/assets/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7-Dx4kXJAl.woff2',
     '/assets/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1pL7SUc-CkhJZR-_.woff2',
@@ -28,10 +56,6 @@ const urlsToCache = [
     '/assets/V8mDoQDjQSkFtoMM3T6r8E7mPb54C-s0-D0rl6rjA.woff2',
     '/assets/V8mDoQDjQSkFtoMM3T6r8E7mPb94C-s0-D9tNdqV9.woff2',
     '/assets/V8mDoQDjQSkFtoMM3T6r8E7mPbF4Cw-BhU9QXUp.woff2',
-    '/assets/materialdesignicons-webfont-B7mPwVP_.ttf',
-    '/assets/materialdesignicons-webfont-CSr8KVlo.eot',
-    '/assets/materialdesignicons-webfont-Dp5v-WZN.woff2',
-    '/assets/materialdesignicons-webfont-PXm3-2wK.woff',
     'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/core.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/enc-utf16.min.js'
 ];

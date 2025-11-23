@@ -1,0 +1,1 @@
+function d(t,n){const c=new Blob([t],{type:"application/octet-stream"}),e=document.createElement("a");document.body.appendChild(e),e.style.display="none";const o=window.URL.createObjectURL(c);e.href=o,e.download=n,e.click(),window.URL.revokeObjectURL(o),e.remove()}export{d};
