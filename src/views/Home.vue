@@ -2,8 +2,11 @@
     <div>
         <!-- Header Section -->
         <div class="text-center mb-8">
-            <v-icon icon="mdi-shield-key" :size="$vuetify.display.xs ? 48 : 64" color="primary" class="mb-4"></v-icon>
-            <h1 class="text-h4 text-sm-h3 font-weight-bold mb-2">Slurm Tools</h1>
+            <h1 class="text-h4 text-sm-h3 font-weight-bold mb-2 d-flex align-center justify-center">
+                <span>Slurm</span>
+                <v-icon icon="mdi-shield-key" :size="$vuetify.display.xs ? 40 : 52" color="primary" class="mx-2"></v-icon>
+                <span>Tools</span>
+            </h1>
             <p class="text-subtitle-1 text-sm-h6 text-medium-emphasis mb-4">
                 Privacy-focused cryptographic utilities that work entirely in your browser
             </p>
@@ -139,11 +142,51 @@
                 </div>
             </div>
         </div>
+
+        <!-- Educational Panel -->
+        <div class="educational-section mt-8">
+            <LearnMorePanel
+                title="New to Slurm Tools?"
+                storageKey="slurm-help-home">
+                <p class="text-body-2 mb-3">
+                    Slurm Tools is a collection of privacy-focused utilities that run entirely in your browser.
+                    No accounts, no servers, no data collection—just tools that work.
+                </p>
+
+                <p class="text-body-2 mb-3 font-weight-medium">What makes Slurm Tools different?</p>
+                <ul class="text-body-2 mb-3">
+                    <li><strong>Complete privacy:</strong> All processing happens on your device. Files never leave your browser.</li>
+                    <li><strong>Works offline:</strong> After your first visit, use any tool without internet access.</li>
+                    <li><strong>No installation:</strong> Works in any modern browser. Optionally install as a PWA for app-like experience.</li>
+                    <li><strong>Open source:</strong> Transparent code you can inspect and verify on GitHub.</li>
+                </ul>
+
+                <p class="text-body-2 mb-3 font-weight-medium">Quick tool guide:</p>
+                <ul class="text-body-2 mb-3">
+                    <li><strong>AES Encryption/Decryption:</strong> Password-protect files with military-grade encryption</li>
+                    <li><strong>Password Generator:</strong> Create cryptographically secure random passwords</li>
+                    <li><strong>Base64 Encoder/Decoder:</strong> Convert files to text format for APIs and web use</li>
+                    <li><strong>QR Code Generator:</strong> Create scannable codes for WiFi, URLs, contacts, and more</li>
+                    <li><strong>Metadata Editor:</strong> Remove GPS and camera data from photos before sharing</li>
+                    <li><strong>Hex Viewer:</strong> Inspect binary files and analyze their structure</li>
+                </ul>
+
+                <p class="text-body-2">
+                    Learn more about privacy, security, and use cases on the
+                    <router-link to="/about" class="text-info">About page</router-link>.
+                </p>
+            </LearnMorePanel>
+        </div>
     </div>
 </template>
 
 <script>
+import LearnMorePanel from '@/components/LearnMorePanel.vue'
+
 export default {
+    components: {
+        LearnMorePanel
+    },
     data() {
         return {
             securityTools: [
@@ -234,6 +277,11 @@ export default {
 
 <style scoped>
 .tools-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.educational-section {
     max-width: 900px;
     margin: 0 auto;
 }
