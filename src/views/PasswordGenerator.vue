@@ -82,32 +82,28 @@
                   v-model="includeUppercase"
                   label="Uppercase (A-Z)"
                   color="primary"
-                  hide-details
-                  density="compact"></v-checkbox>
+                  hide-details></v-checkbox>
               </v-col>
               <v-col cols="6">
                 <v-checkbox
                   v-model="includeLowercase"
                   label="Lowercase (a-z)"
                   color="primary"
-                  hide-details
-                  density="compact"></v-checkbox>
+                  hide-details></v-checkbox>
               </v-col>
               <v-col cols="6">
                 <v-checkbox
                   v-model="includeNumbers"
                   label="Numbers (0-9)"
                   color="primary"
-                  hide-details
-                  density="compact"></v-checkbox>
+                  hide-details></v-checkbox>
               </v-col>
               <v-col cols="6">
                 <v-checkbox
                   v-model="includeSpecial"
                   label="Special (!@#$%)"
                   color="primary"
-                  hide-details
-                  density="compact"></v-checkbox>
+                  hide-details></v-checkbox>
               </v-col>
             </v-row>
           </v-col>

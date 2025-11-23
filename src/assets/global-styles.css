@@ -348,14 +348,26 @@
 .v-selection-control .v-label {
   opacity: 1 !important;
   color: inherit !important;
-  padding-left: 8px !important; /* Add spacing between checkbox and label */
 }
 
-/* Ensure proper layout for checkbox with label */
+/* Display checkbox with label inline, but hints below */
 .v-checkbox,
 .v-selection-control {
+  display: block !important;
+}
+
+/* Keep input and label on same line */
+.v-checkbox .v-selection-control__wrapper,
+.v-selection-control .v-selection-control__wrapper {
   display: inline-flex !important;
   align-items: center !important;
+}
+
+/* Force hints to display below on new line */
+.v-checkbox .v-input__details,
+.v-selection-control .v-input__details {
+  display: block !important;
+  padding-left: 0 !important;
 }
 
 /* ============================================================================
