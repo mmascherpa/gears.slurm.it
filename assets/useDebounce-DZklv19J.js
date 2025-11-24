@@ -1,1 +1,0 @@
-import{r as t,m as r}from"./index-CWG1oA9_.js";function i(l,n=350){const e=t(null),o=(...a)=>{e.value&&clearTimeout(e.value),e.value=setTimeout(()=>{l(...a),e.value=null},n)},u=()=>{e.value&&(clearTimeout(e.value),e.value=null)};return r(()=>{u()}),{debounce:o,cancel:u}}export{i as u};
