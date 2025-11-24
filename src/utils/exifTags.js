@@ -3,6 +3,8 @@
  * Maps piexifjs tag keys to human-readable labels with metadata
  */
 
+import { ICONS } from '@/constants/icons'
+
 /**
  * EXIF tag configuration with display metadata
  * @typedef {Object} ExifTagConfig
@@ -129,37 +131,37 @@ export const EXIF_TAGS = {
 export const EXIF_SECTIONS = {
   Camera: {
     name: 'Camera Information',
-    icon: 'mdi-camera',
+    icon: ICONS.CAMERA,
     color: 'primary',
     description: 'Camera make, model, and lens information'
   },
   Location: {
     name: 'Location (GPS)',
-    icon: 'mdi-map-marker',
+    icon: ICONS.MAP_PIN,
     color: 'info',
     description: 'GPS coordinates and location data'
   },
   Timestamps: {
     name: 'Timestamps',
-    icon: 'mdi-clock',
+    icon: ICONS.CLOCK,
     color: 'info',
     description: 'When the photo was taken and modified'
   },
   Author: {
     name: 'Copyright & Author',
-    icon: 'mdi-copyright',
+    icon: ICONS.COPYRIGHT,
     color: 'secondary',
     description: 'Copyright and authorship information'
   },
   Technical: {
     name: 'Technical Details',
-    icon: 'mdi-cog',
+    icon: ICONS.SETTINGS,
     color: 'grey',
     description: 'Camera settings and image properties'
   },
   Hidden: {
     name: 'Hidden Data',
-    icon: 'mdi-incognito',
+    icon: ICONS.EYE_OFF,
     color: 'warning',
     description: 'User comments and custom fields'
   }

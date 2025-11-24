@@ -12,7 +12,9 @@ import { getPngTagDefinition, PNG_SECTIONS, PNG_STANDARD_KEYWORDS } from './pngT
  * Convert base64 string to ArrayBuffer
  */
 function base64ToArrayBuffer(base64) {
-  const base64Data = base64.replace(/^data:image\/png;base64,/, '');
+  // Strip any data URI prefix (handle both image/png and other variations)
+  const base64Data = base64.replace(/^data:image\/[a-z]+;base64,/, '');
+
   const binaryString = atob(base64Data);
   const bytes = new Uint8Array(binaryString.length);
   for (let i = 0; i < binaryString.length; i++) {
@@ -119,7 +121,6 @@ function writePngChunks(chunks) {
 
   const buffer = new ArrayBuffer(totalSize);
   const view = new DataView(buffer);
-  const bytes = new Uint8Array(buffer);
 
   // Write PNG signature
   let offset = 0;
@@ -382,6 +383,15 @@ export async function editPngMetadataField(base64Data, field, newValue) {
 
     // Write chunks back
     const modifiedBuffer = writePngChunks(chunks);
+
+    // Verify the written PNG is valid by trying to read it back
+    try {
+      readPngChunks(modifiedBuffer);
+    } catch (verifyError) {
+      console.error('[editPngMetadataField] Verification failed! Written PNG is invalid:', verifyError);
+      throw new Error(`Written PNG is invalid: ${verifyError.message}`);
+    }
+
     return arrayBufferToBase64(modifiedBuffer);
   } catch (error) {
     console.error('PNG metadata edit error:', error);

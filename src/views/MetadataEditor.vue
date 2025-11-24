@@ -85,22 +85,20 @@
 
           <!-- Image Preview Card (when metadata loaded) -->
           <v-card v-if="metadata && imagePreviewUrl">
-            <v-card-title class="bg-surface-variant">
+            <v-card-title class="bg-surface-variant d-flex align-center">
               <v-icon icon="mdi-image" class="mr-2"></v-icon>
               Preview
+              <v-spacer></v-spacer>
+              <v-chip
+                v-if="isModified"
+                size="x-small"
+                color="warning"
+                variant="flat"
+              >
+                <v-icon start icon="mdi-pencil" size="x-small"></v-icon>
+                Modified
+              </v-chip>
             </v-card-title>
-              <template #actions>
-                <v-chip
-                  v-if="isModified"
-                  size="x-small"
-                  color="warning"
-                  variant="flat"
-                  class="ml-2"
-                >
-                  <v-icon start icon="mdi-pencil" size="x-small"></v-icon>
-                  Modified
-                </v-chip>
-              </template>
             <v-card-text class="pa-3">
               <v-img
                 :src="isModified ? modifiedImageUrl : imagePreviewUrl"
@@ -127,9 +125,12 @@
               <div class="text-caption text-medium-emphasis">
                 {{ fileSize }}
               </div>
-              <div v-if="isModified" class="text-caption text-warning mt-1">
-                <v-icon icon="mdi-alert" size="x-small" class="mr-1"></v-icon>
-                {{ editCount }} unsaved change{{ editCount !== 1 ? 's' : '' }}
+              <!-- Fixed height container to prevent layout shift -->
+              <div class="modification-status" :class="{ 'has-content': isModified }">
+                <div v-if="isModified" class="text-caption text-warning">
+                  <v-icon icon="mdi-alert" size="x-small" class="mr-1"></v-icon>
+                  {{ editCount }} unsaved change{{ editCount !== 1 ? 's' : '' }}
+                </div>
               </div>
             </v-card-text>
           </v-card>
@@ -531,9 +532,9 @@
 
 
     <!-- Image Preview Dialog (Full Size) -->
-    <v-dialog v-model="showImageDialog" max-width="90vw">
-      <v-card>
-        <v-card-title class="d-flex align-center bg-surface-variant">
+    <v-dialog v-model="showImageDialog" max-width="90vw" max-height="90vh">
+      <v-card class="d-flex flex-column" style="max-height: 90vh;">
+        <v-card-title class="d-flex align-center bg-surface-variant flex-shrink-0">
           <v-icon icon="mdi-image" class="mr-2"></v-icon>
           {{ fileName }}
           <v-spacer></v-spacer>
@@ -543,10 +544,10 @@
             @click="showImageDialog = false"
           ></v-btn>
         </v-card-title>
-        <v-card-text class="pa-0">
+        <v-card-text class="pa-0 flex-grow-1" style="overflow: hidden;">
           <v-img
             :src="imagePreviewUrl"
-            max-height="80vh"
+            max-height="calc(90vh - 100px)"
             contain
           >
             <template v-slot:placeholder>
@@ -556,7 +557,7 @@
             </template>
           </v-img>
         </v-card-text>
-        <v-card-actions class="bg-surface-variant">
+        <v-card-actions class="bg-surface-variant flex-shrink-0">
           <v-spacer></v-spacer>
           <div class="text-caption text-medium-emphasis">
             {{ fileSize }}
@@ -850,8 +851,8 @@ export default {
         const base64Data = await fileToBase64(file);
         imageBase64.value = base64Data;
 
-        // Detect image format
-        const format = detectImageFormat(file);
+        // Detect image format (checks magic bytes, not extension)
+        const format = await detectImageFormat(file);
         imageFormat.value = format;
 
         if (format === IMAGE_FORMATS.UNKNOWN) {
@@ -1326,5 +1327,22 @@ export default {
 .gap-2 {
   gap: 8px;
   flex-wrap: wrap;
+}
+
+/* Fixed height for modification status to prevent layout shift */
+.modification-status {
+  min-height: 24px;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.modification-status:not(.has-content) {
+  /* Reserve space even when empty */
+  visibility: hidden;
+}
+
+.modification-status.has-content {
+  visibility: visible;
 }
 </style>

@@ -36,50 +36,51 @@ export const IMAGE_FORMATS = {
 
 /**
  * Detect image format from file or base64 data
+ * ALWAYS checks magic bytes (file signature) to determine actual format,
+ * regardless of file extension or MIME type
  *
  * @param {File|string} input - File object or base64 string
- * @returns {string} Format constant from IMAGE_FORMATS
+ * @returns {Promise<string>} Format constant from IMAGE_FORMATS
  */
-export function detectImageFormat(input) {
+export async function detectImageFormat(input) {
+  let binaryString = null;
+
+  // Get binary data for magic byte checking
   if (input instanceof File) {
-    const extension = input.name.split('.').pop().toLowerCase();
-    const mimeType = input.type;
-
-    if (extension === 'png' || mimeType === 'image/png') {
-      return IMAGE_FORMATS.PNG;
-    } else if (extension === 'jpg' || extension === 'jpeg' || mimeType === 'image/jpeg') {
-      return IMAGE_FORMATS.JPEG;
-    }
+    // Read first 8 bytes from File
+    const slice = input.slice(0, 8);
+    const arrayBuffer = await slice.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuffer);
+    binaryString = String.fromCharCode(...bytes);
   } else if (typeof input === 'string') {
-    // Check data URI prefix
-    if (input.startsWith('data:image/png')) {
-      return IMAGE_FORMATS.PNG;
-    } else if (input.startsWith('data:image/jpeg') || input.startsWith('data:image/jpg')) {
-      return IMAGE_FORMATS.JPEG;
-    }
-
-    // Check magic bytes if base64
+    // Extract from base64 string
     try {
       const base64Data = input.replace(/^data:image\/[a-z]+;base64,/, '');
-      const binaryString = atob(base64Data.substring(0, 20));
-
-      // PNG magic bytes: 89 50 4E 47 0D 0A 1A 0A
-      if (binaryString.charCodeAt(0) === 0x89 &&
-          binaryString.charCodeAt(1) === 0x50 &&
-          binaryString.charCodeAt(2) === 0x4E &&
-          binaryString.charCodeAt(3) === 0x47) {
-        return IMAGE_FORMATS.PNG;
-      }
-
-      // JPEG magic bytes: FF D8 FF
-      if (binaryString.charCodeAt(0) === 0xFF &&
-          binaryString.charCodeAt(1) === 0xD8 &&
-          binaryString.charCodeAt(2) === 0xFF) {
-        return IMAGE_FORMATS.JPEG;
-      }
+      binaryString = atob(base64Data.substring(0, 20));
     } catch (error) {
-      console.error('Error detecting format from magic bytes:', error);
+      console.error('Error decoding base64 for format detection:', error);
+      return IMAGE_FORMATS.UNKNOWN;
     }
+  }
+
+  if (!binaryString) {
+    return IMAGE_FORMATS.UNKNOWN;
+  }
+
+  // Check magic bytes (file signatures) - MOST RELIABLE METHOD
+  // PNG magic bytes: 89 50 4E 47 0D 0A 1A 0A
+  if (binaryString.charCodeAt(0) === 0x89 &&
+      binaryString.charCodeAt(1) === 0x50 &&
+      binaryString.charCodeAt(2) === 0x4E &&
+      binaryString.charCodeAt(3) === 0x47) {
+    return IMAGE_FORMATS.PNG;
+  }
+
+  // JPEG magic bytes: FF D8 FF
+  if (binaryString.charCodeAt(0) === 0xFF &&
+      binaryString.charCodeAt(1) === 0xD8 &&
+      binaryString.charCodeAt(2) === 0xFF) {
+    return IMAGE_FORMATS.JPEG;
   }
 
   return IMAGE_FORMATS.UNKNOWN;

@@ -43,32 +43,32 @@ import { themes } from './theme.js'
 // Lucide Icons - specific imports for tree-shaking
 import { h } from 'vue'
 import {
-  AlertCircle, Archive, ArrowDownToLine, ArrowLeft, ArrowLeftRight, ArrowUpDown, ArrowUpFromLine,
-  Barcode, Box, Calendar, CalendarClock, Camera, Check, CheckCircle, CheckSquare, ChevronDown, ChevronUp,
+  AlertCircle, Archive, ArrowDownToLine, ArrowLeft, ArrowLeftRight, ArrowRight, ArrowRightCircle, ArrowUpDown, ArrowUpFromLine,
+  Barcode, Binary, Box, Calendar, CalendarClock, Camera, Check, CheckCircle, CheckSquare, ChevronDown, ChevronLeft, ChevronRight, ChevronUp,
   Circle, ClipboardPaste, Clock, Code, Code2, Cog, Compass, Contrast, Copy, Copyright, Cpu,
-  Crop, DatabaseZap, Download, Droplet, Eraser, Eye, EyeOff, File, FileCode, FileLock,
-  FileText, Fingerprint, Folder, Gauge, Grid2x2, HelpCircle, Home, Image, ImageIcon, ImageOff, ImagePlus,
+  Crop, DatabaseZap, Download, Droplet, Eraser, Eye, EyeOff, File, FileCode, FileLock, FileSearch,
+  FileText, FileType, Fingerprint, Folder, Gauge, GitBranch, Grid2x2, Hash, Heading1, Heart, HelpCircle, Home, Image, ImageIcon, ImageOff, ImagePlus,
   Info, Key, KeyRound, Lightbulb, List, ListOrdered, Lock, LockKeyhole, LockOpen,
-  Map, MapPin, MapPinCheck, Menu, MessageSquareText, MinusSquare, Moon, MoreVertical, Mountain, Palette,
+  Map, MapPin, MapPinCheck, Menu, MessageSquare, MessageSquareText, MinusSquare, Moon, MoreVertical, Mountain, Palette,
   Paperclip, Pencil, PencilLine, Plus, PlusCircle, QrCode, RefreshCw, RotateCcw, Ruler, Satellite,
   Save, ScanLine, Search, ServerOff, Settings, Shield, ShieldCheck, Smartphone, Sparkles, Square, Sun,
-  SunDim, SunMedium, SunMoon, Table, Tag, Timer, Trash2, Undo, Upload, User, Wifi, WifiOff, Wrench,
-  X, XOctagon, Zap, ZoomIn
+  SunDim, SunMedium, SunMoon, Table, TableProperties, Tag, Timer, Trash2, Undo, Upload, User, Wifi, WifiOff, Wrench,
+  X, XCircle, XOctagon, Zap, ZoomIn
 } from 'lucide-vue-next'
 
 // Create a lookup object for imported icons
 const LucideIcons = {
-  AlertCircle, Archive, ArrowDownToLine, ArrowLeft, ArrowLeftRight, ArrowUpDown, ArrowUpFromLine,
-  Barcode, Box, Calendar, CalendarClock, Camera, Check, CheckCircle, CheckSquare, ChevronDown, ChevronUp,
+  AlertCircle, Archive, ArrowDownToLine, ArrowLeft, ArrowLeftRight, ArrowRight, ArrowRightCircle, ArrowUpDown, ArrowUpFromLine,
+  Barcode, Binary, Box, Calendar, CalendarClock, Camera, Check, CheckCircle, CheckSquare, ChevronDown, ChevronLeft, ChevronRight, ChevronUp,
   Circle, ClipboardPaste, Clock, Code, Code2, Cog, Compass, Contrast, Copy, Copyright, Cpu,
-  Crop, DatabaseZap, Download, Droplet, Eraser, Eye, EyeOff, File, FileCode, FileLock,
-  FileText, Fingerprint, Folder, Gauge, Grid2x2, HelpCircle, Home, Image, ImageIcon, ImageOff, ImagePlus,
+  Crop, DatabaseZap, Download, Droplet, Eraser, Eye, EyeOff, File, FileCode, FileLock, FileSearch,
+  FileText, FileType, Fingerprint, Folder, Gauge, GitBranch, Grid2x2, Hash, Heading1, Heart, HelpCircle, Home, Image, ImageIcon, ImageOff, ImagePlus,
   Info, Key, KeyRound, Lightbulb, List, ListOrdered, Lock, LockKeyhole, LockOpen,
-  Map, MapPin, MapPinCheck, Menu, MessageSquareText, MinusSquare, Moon, MoreVertical, Mountain, Palette,
+  Map, MapPin, MapPinCheck, Menu, MessageSquare, MessageSquareText, MinusSquare, Moon, MoreVertical, Mountain, Palette,
   Paperclip, Pencil, PencilLine, Plus, PlusCircle, QrCode, RefreshCw, RotateCcw, Ruler, Satellite,
   Save, ScanLine, Search, ServerOff, Settings, Shield, ShieldCheck, Smartphone, Sparkles, Square, Sun,
-  SunDim, SunMedium, SunMoon, Table, Tag, Timer, Trash2, Undo, Upload, User, Wifi, WifiOff, Wrench,
-  X, XOctagon, Zap, ZoomIn
+  SunDim, SunMedium, SunMoon, Table, TableProperties, Tag, Timer, Trash2, Undo, Upload, User, Wifi, WifiOff, Wrench,
+  X, XCircle, XOctagon, Zap, ZoomIn
 }
 
 // MDI to Lucide icon mapping
@@ -81,6 +81,10 @@ const iconMap = {
   'mdi-chevron-down': 'ChevronDown',
   'mdi-chevron-up': 'ChevronUp',
   'mdi-menu': 'Menu',
+  'mdi-menu-down': 'ChevronDown',
+  'mdi-menu-up': 'ChevronUp',
+  'mdi-menu-left': 'ChevronLeft',
+  'mdi-menu-right': 'ChevronRight',
   'mdi-dots-vertical': 'MoreVertical',
   'mdi-close': 'X',
 
@@ -115,6 +119,7 @@ const iconMap = {
   // Status & Feedback
   'mdi-check': 'Check',
   'mdi-check-circle': 'CheckCircle',
+  'mdi-close-circle': 'XCircle',
   'mdi-alert': 'AlertCircle',
   'mdi-alert-circle': 'AlertCircle',
   'mdi-alert-circle-outline': 'AlertCircle',
@@ -221,6 +226,36 @@ const iconMap = {
   'mdi-timer': 'Timer',
   'mdi-white-balance-auto': 'SunMoon',
   'mdi-zip-box': 'Archive',
+
+  // PNG metadata icons
+  'mdi-format-title': 'Heading1',
+  'mdi-comment-text': 'MessageSquare',
+  'mdi-source-branch': 'GitBranch',
+  'mdi-xml': 'FileType',
+  'mdi-clock-outline': 'Clock',
+  'mdi-text-box': 'FileText',
+
+  // HexViewer specific icons
+  'mdi-hexadecimal': 'Hash',
+  'mdi-numeric': 'Binary',
+  'mdi-arrow-right-circle': 'ArrowRightCircle',
+  'mdi-file-eye': 'FileSearch',
+  'mdi-selection': 'Square',
+  'mdi-chevron-left': 'ChevronLeft',
+  'mdi-chevron-right': 'ChevronRight',
+
+  // About page icons
+  'mdi-numeric-1-circle': 'Circle',  // Note: Lucide doesn't have numbered circles, using plain circle
+  'mdi-numeric-2-circle': 'Circle',
+  'mdi-numeric-3-circle': 'Circle',
+  'mdi-numeric-4-circle': 'Circle',
+  'mdi-heart': 'Heart',
+
+  // Table & Data icons
+  'mdi-table-off': 'TableProperties',
+
+  // Additional security icons
+  'mdi-shield-check-outline': 'ShieldCheck',
 }
 
 // Create Lucide icon set for Vuetify
@@ -228,15 +263,19 @@ const lucideIconSet = {
   component: (props) => {
     let iconName = props.icon
 
-    // If it's an MDI icon, try to map it to Lucide
+    // Step 1: If it's an MDI icon (backward compatibility), map it to Lucide
     if (typeof iconName === 'string' && iconName.startsWith('mdi-')) {
       iconName = iconMap[iconName] || null
     }
 
-    // Convert kebab-case to PascalCase for Lucide
+    // Step 2: Convert kebab-case to PascalCase for Lucide
+    // This supports direct Lucide names like 'lock-open' → 'LockOpen'
     if (typeof iconName === 'string' && iconName.includes('-')) {
       iconName = iconName.split('-').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join('')
     }
+
+    // Step 3: Icon name is already in PascalCase (from ICONS constants or direct usage)
+    // No transformation needed, just look it up
 
     const LucideIcon = iconName ? LucideIcons[iconName] : null
 
@@ -252,7 +291,7 @@ const lucideIconSet = {
 
     // No icon found - log warning in development
     if (import.meta.env.DEV) {
-      console.warn(`Icon not found: ${props.icon}`)
+      console.warn(`Icon not found: ${props.icon} (original: ${props.icon})`)
     }
     return null
   }

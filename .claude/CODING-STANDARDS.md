@@ -276,7 +276,158 @@ watch([password, passwordConfirm], () => {
 });
 ```
 
+## 13. Icon Usage
+
+### Icon Library
+- **Current**: Lucide Icons (via `lucide-vue-next`)
+- **Migration**: Fully migrated from Material Design Icons
+- **Backward Compatibility**: Legacy `mdi-*` names still supported via mapping layer
+
+### Using Icons in Components
+
+#### Recommended: Semantic Icon Constants (Future-Proof)
+```vue
+<script setup>
+import { ICONS } from '@/constants/icons'
+</script>
+
+<template>
+  <!-- Preferred: Semantic constants -->
+  <v-icon :icon="ICONS.LOCK"></v-icon>
+  <v-icon :icon="ICONS.DOWNLOAD"></v-icon>
+
+  <!-- Alternative: Icon wrapper component (most flexible) -->
+  <Icon name="LOCK" />
+  <Icon name="DOWNLOAD" size="small" color="primary" />
+</template>
+```
+
+#### Legacy: Direct Icon Names (Backward Compatible)
+```vue
+<template>
+  <!-- Still supported for existing code -->
+  <v-icon icon="mdi-lock"></v-icon>
+  <v-icon>mdi-download</v-icon>
+
+  <!-- Direct Lucide names also work -->
+  <v-icon icon="Lock"></v-icon>
+  <v-icon>Download</v-icon>
+</template>
+```
+
+### Using Icons in Utility Files
+
+**Always use semantic constants from `@/constants/icons`**:
+
+```javascript
+import { ICONS } from '@/constants/icons'
+
+export const METADATA_TAGS = {
+  'Title': {
+    label: 'Title',
+    icon: ICONS.TITLE,  // ✅ Correct
+    // icon: 'mdi-format-title',  // ❌ Avoid
+  }
+}
+```
+
+### Available Semantic Icon Constants
+
+Icons are organized by category in `/src/constants/icons.js`:
+
+- **Navigation**: `HOME`, `MENU`, `ARROW_LEFT`, `ARROW_RIGHT`, `CHEVRON_DOWN`, etc.
+- **Security**: `LOCK`, `UNLOCK`, `SHIELD`, `SHIELD_CHECK`, `KEY`, `PASSWORD`, etc.
+- **Files**: `FILE`, `FILE_TEXT`, `FILE_CODE`, `FOLDER`, `DOWNLOAD`, `UPLOAD`, `SAVE`
+- **Images**: `IMAGE`, `IMAGE_ICON`, `IMAGE_PLUS`, `CAMERA`, `CROP`
+- **Editing**: `PENCIL`, `EDIT`, `DELETE`, `COPY`, `PASTE`, `UNDO`, `RESTORE`
+- **Status**: `CHECK`, `SUCCESS`, `ERROR`, `ALERT`, `WARNING`, `INFO`, `HELP`
+- **Code**: `CODE`, `QR_CODE`, `BARCODE`, `HASH`, `BINARY`
+- **Theme**: `SUN`, `MOON`, `PALETTE`, `CONTRAST`
+- **Metadata**: `TITLE`, `COMMENT`, `USER`, `CALENDAR`, `CLOCK`, `MAP_PIN`, `CAMERA`
+
+See [`/src/constants/icons.js`](../src/constants/icons.js) for the complete list.
+
+### Adding New Icons
+
+1. **Import the Lucide icon** in `/src/main.js`:
+```javascript
+import { NewIcon, AnotherIcon } from 'lucide-vue-next'
+```
+
+2. **Add to LucideIcons lookup** in `/src/main.js`:
+```javascript
+const LucideIcons = {
+  // ... existing icons
+  NewIcon, AnotherIcon
+}
+```
+
+3. **Add semantic constant** in `/src/constants/icons.js`:
+```javascript
+export const ICONS = {
+  // ... existing icons
+  MY_NEW_ICON: 'NewIcon',
+  ANOTHER: 'AnotherIcon',
+}
+```
+
+4. **Use in components**:
+```vue
+<v-icon :icon="ICONS.MY_NEW_ICON"></v-icon>
+```
+
+### Future Icon Library Migrations
+
+If we need to change icon libraries again:
+
+1. **Option 1: Update mapping in `main.js`** (minimal changes)
+   - Update icon imports from new library
+   - Update `LucideIcons` lookup object
+   - Keep semantic constants unchanged
+
+2. **Option 2: Use Icon component** (maximum flexibility)
+   - Update [`Icon.vue`](../src/components/Icon.vue) component implementation
+   - All components using `<Icon name="..." />` work unchanged
+   - No changes needed in consuming components
+
+3. **Option 3: Update constants** (if icon names change significantly)
+   - Update [`/src/constants/icons.js`](../src/constants/icons.js) mappings
+   - All code using `ICONS.*` constants works unchanged
+
+### Icon Naming Conventions
+
+When choosing semantic names for new icons:
+
+- Use **UPPERCASE_SNAKE_CASE** for constant names
+- Use **descriptive, semantic names** (not library-specific)
+- Group related icons with common prefixes:
+  - `FILE`, `FILE_TEXT`, `FILE_CODE`, `FILE_LOCK`
+  - `LOCK`, `LOCK_OPEN`, `LOCK_KEYHOLE`
+  - `ARROW_LEFT`, `ARROW_RIGHT`, `ARROW_UP`, `ARROW_DOWN`
+
+### Migration Notes
+
+- All `mdi-*` icon references are automatically mapped to Lucide equivalents
+- Legacy MDI names will continue to work indefinitely via the compatibility layer
+- **New code should use semantic constants** from `ICONS` for future-proofing
+- Some MDI icons don't have exact Lucide equivalents (e.g., numbered circles use plain circles)
+
+### Future Migration Path
+
+**Current State (as of 2025-11-23):**
+- All existing components use `<v-icon icon="mdi-...">` with backward compatibility mapping
+- Utility files (pngTags.js, exifTags.js) use `ICONS.*` semantic constants
+- Icon.vue wrapper component exists but is **not yet used** in any components
+
+**Future Consideration:**
+At some point, we may want to migrate all components to use the `Icon` wrapper component (`<Icon name="..." />`) instead of direct `v-icon` usage. This would provide:
+- Maximum abstraction from icon library implementation
+- Easier future icon library migrations (update only Icon.vue)
+- Consistent icon API across the application
+
+This migration is **optional** and not urgent - the current architecture with semantic constants already provides excellent flexibility.
+
 ---
 
-**Last Updated**: 2025-11-01
+**Last Updated**: 2025-11-23
 **Applies To**: All Vue 3 components in `/src/`

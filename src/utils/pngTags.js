@@ -7,6 +7,8 @@
  * Reference: http://www.libpng.org/pub/png/spec/1.2/PNG-Chunks.html#C.Anc-text
  */
 
+import { ICONS } from '@/constants/icons'
+
 /**
  * PNG Text Chunk Keywords
  * These are standardized keywords for PNG tEXt/iTXt chunks
@@ -16,28 +18,28 @@ export const PNG_STANDARD_KEYWORDS = {
   'Title': {
     label: 'Title',
     section: 'Description',
-    icon: 'mdi-text-box',
+    icon: ICONS.TITLE,
     description: 'Short title or caption for the image',
     editable: true
   },
   'Author': {
     label: 'Author',
     section: 'Author',
-    icon: 'mdi-account',
+    icon: ICONS.ACCOUNT,
     description: 'Name of image creator',
     editable: true
   },
   'Description': {
     label: 'Description',
     section: 'Description',
-    icon: 'mdi-text',
+    icon: ICONS.FILE_TEXT,
     description: 'Longer description of image',
     editable: true
   },
   'Copyright': {
     label: 'Copyright',
     section: 'Author',
-    icon: 'mdi-copyright',
+    icon: ICONS.COPYRIGHT,
     description: 'Copyright notice',
     editable: true
   },
@@ -46,7 +48,7 @@ export const PNG_STANDARD_KEYWORDS = {
   'Creation Time': {
     label: 'Creation Time',
     section: 'Timestamps',
-    icon: 'mdi-clock-outline',
+    icon: ICONS.CLOCK,
     description: 'Time of original image creation',
     editable: true,
     editWarning: 'Should be in RFC 1123 format (e.g., "21 Jan 2025 15:30:00 +0000")'
@@ -56,7 +58,7 @@ export const PNG_STANDARD_KEYWORDS = {
   'Software': {
     label: 'Software',
     section: 'Technical',
-    icon: 'mdi-application',
+    icon: ICONS.FILE_CODE,
     description: 'Software used to create the image',
     editable: true
   },
@@ -65,7 +67,7 @@ export const PNG_STANDARD_KEYWORDS = {
   'Disclaimer': {
     label: 'Disclaimer',
     section: 'Author',
-    icon: 'mdi-alert-circle-outline',
+    icon: ICONS.ALERT_CIRCLE,
     description: 'Legal disclaimer',
     editable: true
   },
@@ -74,7 +76,7 @@ export const PNG_STANDARD_KEYWORDS = {
   'Warning': {
     label: 'Warning',
     section: 'Technical',
-    icon: 'mdi-alert',
+    icon: ICONS.ALERT,
     description: 'Warning of nature of content',
     editable: true
   },
@@ -83,7 +85,7 @@ export const PNG_STANDARD_KEYWORDS = {
   'Source': {
     label: 'Source',
     section: 'Technical',
-    icon: 'mdi-source-branch',
+    icon: ICONS.SOURCE,
     description: 'Device used to create the image',
     editable: true
   },
@@ -92,7 +94,7 @@ export const PNG_STANDARD_KEYWORDS = {
   'Comment': {
     label: 'Comment',
     section: 'Description',
-    icon: 'mdi-comment-text',
+    icon: ICONS.COMMENT,
     description: 'Miscellaneous comment',
     editable: true
   },
@@ -101,7 +103,7 @@ export const PNG_STANDARD_KEYWORDS = {
   'XML:com.adobe.xmp': {
     label: 'XMP Metadata',
     section: 'Hidden',
-    icon: 'mdi-xml',
+    icon: ICONS.FILE_TYPE,
     description: 'Adobe XMP metadata (XML format)',
     editable: false,
     editWarning: 'XMP metadata is complex XML data and should not be manually edited'
@@ -114,37 +116,37 @@ export const PNG_STANDARD_KEYWORDS = {
 export const PNG_SECTIONS = {
   Description: {
     name: 'Description',
-    icon: 'mdi-text',
+    icon: ICONS.FILE_TEXT,
     color: 'primary',
     description: 'Image title, description, and comments'
   },
   Author: {
     name: 'Author & Copyright',
-    icon: 'mdi-account',
+    icon: ICONS.ACCOUNT,
     color: 'secondary',
     description: 'Author, copyright, and disclaimer information'
   },
   Timestamps: {
     name: 'Timestamps',
-    icon: 'mdi-clock',
+    icon: ICONS.CLOCK,
     color: 'info',
     description: 'Creation time and modification dates'
   },
   Technical: {
     name: 'Technical',
-    icon: 'mdi-cog',
+    icon: ICONS.SETTINGS,
     color: 'grey',
     description: 'Software, source device, and technical details'
   },
   Hidden: {
     name: 'Hidden/Advanced',
-    icon: 'mdi-eye-off',
+    icon: ICONS.EYE_OFF,
     color: 'warning',
     description: 'XMP metadata and advanced fields'
   },
   Custom: {
     name: 'Custom Fields',
-    icon: 'mdi-plus-circle',
+    icon: ICONS.PLUS_CIRCLE,
     color: 'success',
     description: 'User-defined custom metadata fields'
   }
@@ -157,7 +159,7 @@ export function getPngTagDefinition(keyword) {
   return PNG_STANDARD_KEYWORDS[keyword] || {
     label: keyword,
     section: 'Custom',
-    icon: 'mdi-tag',
+    icon: ICONS.TAG,
     description: 'Custom PNG text chunk',
     editable: true
   };
