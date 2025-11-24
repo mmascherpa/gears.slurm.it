@@ -80,9 +80,8 @@ export async function copyQrCodeToClipboard(dataUrl) {
   }
 
   try {
-    // Convert data URL to blob
-    const response = await fetch(dataUrl);
-    const blob = await response.blob();
+    // Convert data URL to blob manually (fetch doesn't work with data URLs in all browsers)
+    const blob = await dataUrlToBlob(dataUrl);
 
     // Copy to clipboard
     await navigator.clipboard.write([
@@ -94,6 +93,29 @@ export async function copyQrCodeToClipboard(dataUrl) {
     const errorMessage = typeof error === 'string' ? error : (error.message || 'Unknown error');
     throw new Error(`Failed to copy QR code: ${errorMessage}`);
   }
+}
+
+/**
+ * Converts a data URL to a Blob
+ * @param {string} dataUrl - Data URL to convert
+ * @returns {Promise<Blob>} Blob representation of the data URL
+ */
+async function dataUrlToBlob(dataUrl) {
+  // Split the data URL to get the base64 data
+  const parts = dataUrl.split(',');
+  const mimeMatch = parts[0].match(/:(.*?);/);
+  const mime = mimeMatch ? mimeMatch[1] : 'image/png';
+  const base64Data = parts[1];
+
+  // Decode base64 to binary
+  const binaryString = atob(base64Data);
+  const bytes = new Uint8Array(binaryString.length);
+
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+
+  return new Blob([bytes], { type: mime });
 }
 
 /**
