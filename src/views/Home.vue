@@ -163,7 +163,7 @@
 
                 <p class="text-body-2 mb-3 font-weight-medium">Quick tool guide:</p>
                 <ul class="text-body-2 mb-3">
-                    <li><strong>AES Encryption/Decryption:</strong> Password-protect files with military-grade encryption</li>
+                    <li><strong>File Encryption/Decryption:</strong> Password-protect files with AES-256 or Age encryption</li>
                     <li><strong>Password Generator:</strong> Create cryptographically secure random passwords</li>
                     <li><strong>Base64 Encoder/Decoder:</strong> Convert files to text format for APIs and web use</li>
                     <li><strong>QR Code Generator:</strong> Create scannable codes for WiFi, URLs, contacts, and more</li>
@@ -191,24 +191,24 @@ export default {
         return {
             securityTools: [
                 {
-                    title: 'AES Encryption',
-                    shortName: 'AES Encrypt',
+                    title: 'File Encryption',
+                    shortName: 'Encrypt',
                     icon: 'mdi-lock',
-                    route: '/aes-encrypt',
+                    route: '/encrypt',
                     category: 'Security Tool',
                     color: 'primary',
                     featured: true,
-                    description: 'Encrypt files and text with password protection using AES algorithm for maximum security.'
+                    description: 'Encrypt files and text with password protection using AES-256 or Age encryption for maximum security.'
                 },
                 {
-                    title: 'AES Decryption',
-                    shortName: 'AES Decrypt',
+                    title: 'File Decryption',
+                    shortName: 'Decrypt',
                     icon: 'mdi-lock-open',
-                    route: '/aes-decrypt',
+                    route: '/decrypt',
                     category: 'Security Tool',
                     color: 'primary-darken-1',
                     featured: true,
-                    description: 'Decrypt password-protected AES encrypted files and text securely in your browser.'
+                    description: 'Decrypt password-protected encrypted files (.aes, .enc, .age) and text securely in your browser.'
                 },
                 {
                     title: 'Password Generator',

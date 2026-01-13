@@ -1,8 +1,13 @@
 /**
- * Composable for AES encryption/decryption using Web Worker
+ * Composable for file encryption/decryption using Web Workers
  *
- * Manages Web Worker lifecycle, handles encryption/decryption operations,
- * and provides consistent error handling across all AES components.
+ * Manages Web Worker lifecycle, handles multi-algorithm encryption/decryption operations,
+ * and provides consistent error handling across all encryption components.
+ *
+ * Supports three encryption algorithms:
+ * - jsAesCrypt: AES-256-CBC compatible with AES Crypt format (.aes files)
+ * - webCrypto: Browser-native AES-256-GCM (.enc files)
+ * - age: Modern age encryption format (.age files)
  *
  * Automatically terminates worker on component unmount to prevent memory leaks.
  *
@@ -18,7 +23,7 @@
  *
  * @example
  * // Use default provider (jsAesCrypt)
- * const { isLoading, encrypt, decrypt } = useAESWorker(
+ * const { isLoading, encrypt, decrypt } = useCryptoWorker(
  *   (data, fileName) => {
  *     downloadFile(data, fileName);
  *     showSnackbar('✓ File encrypted!', 'success');
@@ -30,7 +35,7 @@
  * );
  *
  * // Use specific provider
- * const { isLoading, encrypt, decrypt } = useAESWorker(
+ * const { isLoading, encrypt, decrypt } = useCryptoWorker(
  *   onSuccess,
  *   onError,
  *   { providerType: 'webCrypto' }
@@ -50,7 +55,7 @@
  */
 import { ref, onBeforeUnmount } from 'vue';
 
-export function useAESWorker(onSuccess, onError, options = {}) {
+export function useCryptoWorker(onSuccess, onError, options = {}) {
   const worker = ref(null);
   const isLoading = ref(false);
   const providerType = options.providerType || 'jsAesCrypt';

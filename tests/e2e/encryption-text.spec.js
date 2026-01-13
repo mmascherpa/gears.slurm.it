@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('AES Text Encryption/Decryption', () => {
   test('should encrypt plain text with password', async ({ page }) => {
-    await page.goto('/#/aes-encrypt');
+    await page.goto('/#/encrypt');
     await page.waitForLoadState('networkidle');
 
     const plainText = 'Secret message';
@@ -41,7 +41,7 @@ test.describe('AES Text Encryption/Decryption', () => {
     const password = 'TestPassword456!';
 
     // First encrypt text
-    await page.goto('/#/aes-encrypt');
+    await page.goto('/#/encrypt');
     await page.waitForLoadState('networkidle');
 
     const textInput = page.locator('textarea').first();
@@ -59,7 +59,7 @@ test.describe('AES Text Encryption/Decryption', () => {
     expect(encrypted).toBeTruthy();
 
     // Now decrypt it
-    await page.goto('/#/aes-decrypt');
+    await page.goto('/#/decrypt');
     await page.waitForLoadState('networkidle');
 
     // Wait for Vue app to fully mount
@@ -105,7 +105,7 @@ test.describe('AES Text Encryption/Decryption', () => {
   });
 
   test('should show error with incorrect password', async ({ page }) => {
-    await page.goto('/#/aes-encrypt');
+    await page.goto('/#/encrypt');
     await page.waitForLoadState('networkidle');
 
     const plainText = 'Secret data';
@@ -127,7 +127,7 @@ test.describe('AES Text Encryption/Decryption', () => {
     const encrypted = await outputTextarea.inputValue();
 
     // Try to decrypt with wrong password
-    await page.goto('/#/aes-decrypt');
+    await page.goto('/#/decrypt');
     await page.waitForLoadState('networkidle');
 
     const decryptInput = page.locator('textarea').first();
@@ -155,7 +155,7 @@ test.describe('AES Text Encryption/Decryption', () => {
   });
 
   test('should require password field to be filled', async ({ page }) => {
-    await page.goto('/#/aes-encrypt');
+    await page.goto('/#/encrypt');
     await page.waitForLoadState('networkidle');
 
     const plainText = 'Test message';
@@ -177,7 +177,7 @@ test.describe('AES Text Encryption/Decryption', () => {
   });
 
   test('should handle long passwords', async ({ page }) => {
-    await page.goto('/#/aes-encrypt');
+    await page.goto('/#/encrypt');
     await page.waitForLoadState('networkidle');
 
     const plainText = 'Message';
@@ -203,7 +203,7 @@ test.describe('AES Text Encryption/Decryption', () => {
   });
 
   test('should handle special characters in plaintext', async ({ page }) => {
-    await page.goto('/#/aes-encrypt');
+    await page.goto('/#/encrypt');
     await page.waitForLoadState('networkidle');
 
     const plainText = '!@#$%^&*() \n\t 中文 العربية 🔒';
@@ -229,7 +229,7 @@ test.describe('AES Text Encryption/Decryption', () => {
   });
 
   test('should clear both inputs when reset button clicked', async ({ page }) => {
-    await page.goto('/#/aes-encrypt');
+    await page.goto('/#/encrypt');
     await page.waitForLoadState('networkidle');
 
     const textInput = page.locator('textarea').first();

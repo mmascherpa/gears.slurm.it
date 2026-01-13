@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { useAESWorker } from '@/composables/useAESWorker'
+import { useCryptoWorker } from '@/composables/useCryptoWorker'
 import { WorkerMock, createAESWorkerMock, createFailingAESWorkerMock, createErrorScenarioWorker } from '../../mocks/WorkerMock'
 import { nextTick } from '../../setup/test-utils'
 
-describe('useAESWorker', () => {
+describe('useCryptoWorker', () => {
   let mockWorker
   let originalWorker
   let WorkerConstructorSpy
@@ -33,14 +33,14 @@ describe('useAESWorker', () => {
 
   describe('initialization', () => {
     it('should initialize with null worker and not loading', () => {
-      const { worker, isLoading } = useAESWorker()
+      const { worker, isLoading } = useCryptoWorker()
 
       expect(worker.value).toBe(null)
       expect(isLoading.value).toBe(false)
     })
 
     it('should not create worker until encrypt/decrypt is called', () => {
-      useAESWorker()
+      useCryptoWorker()
 
       expect(WorkerConstructorSpy).not.toHaveBeenCalled()
     })
@@ -48,7 +48,7 @@ describe('useAESWorker', () => {
 
   describe('encrypt', () => {
     it('should create worker when encrypt is called', () => {
-      const { encrypt } = useAESWorker()
+      const { encrypt } = useCryptoWorker()
 
       const fileData = new Blob(['test data'])
       encrypt(fileData, 'password123', 'test.txt')
@@ -57,7 +57,7 @@ describe('useAESWorker', () => {
     })
 
     it('should set isLoading to true when encryption starts', () => {
-      const { encrypt, isLoading } = useAESWorker()
+      const { encrypt, isLoading } = useCryptoWorker()
 
       expect(isLoading.value).toBe(false)
 
@@ -72,7 +72,7 @@ describe('useAESWorker', () => {
 
     it('should call onSuccess callback when encryption succeeds', async () => {
       const onSuccess = vi.fn()
-      const { encrypt } = useAESWorker(onSuccess)
+      const { encrypt } = useCryptoWorker(onSuccess)
 
       const fileData = new Blob(['test data'])
       encrypt(fileData, 'password123', 'test.txt')
@@ -87,7 +87,7 @@ describe('useAESWorker', () => {
     })
 
     it('should set isLoading to false after encryption completes', async () => {
-      const { encrypt, isLoading } = useAESWorker()
+      const { encrypt, isLoading } = useCryptoWorker()
 
       const fileData = new Blob(['test data'])
       encrypt(fileData, 'password123', 'test.txt')
@@ -101,30 +101,30 @@ describe('useAESWorker', () => {
     })
 
     it('should not call encrypt if fileData is missing', () => {
-      const { encrypt } = useAESWorker()
+      const { encrypt } = useCryptoWorker()
 
       const consoleErrorSpy = vi.spyOn(console, 'error')
       encrypt(null, 'password123', 'test.txt')
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith('useAESWorker: Missing fileData or password')
+      expect(consoleErrorSpy).toHaveBeenCalledWith('useCryptoWorker: Missing fileData or password')
       expect(WorkerConstructorSpy).not.toHaveBeenCalled()
     })
 
     it('should not call encrypt if password is missing', () => {
-      const { encrypt } = useAESWorker()
+      const { encrypt } = useCryptoWorker()
 
       const consoleErrorSpy = vi.spyOn(console, 'error')
       const fileData = new Blob(['test data'])
       encrypt(fileData, '', 'test.txt')
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith('useAESWorker: Missing fileData or password')
+      expect(consoleErrorSpy).toHaveBeenCalledWith('useCryptoWorker: Missing fileData or password')
       expect(WorkerConstructorSpy).not.toHaveBeenCalled()
     })
 
     // Skipped: Spy timing issue - spy created after worker already exists
     // Worker termination functionality is verified in other tests
     it.skip('should terminate existing worker before creating new one', () => {
-      const { encrypt } = useAESWorker()
+      const { encrypt } = useCryptoWorker()
 
       const fileData = new Blob(['test data'])
       encrypt(fileData, 'password123', 'test1.txt')
@@ -140,7 +140,7 @@ describe('useAESWorker', () => {
 
   describe('decrypt', () => {
     it('should create worker when decrypt is called', () => {
-      const { decrypt } = useAESWorker()
+      const { decrypt } = useCryptoWorker()
 
       const fileData = new Blob(['encrypted data'])
       decrypt(fileData, 'password123', 'test.txt.aes')
@@ -149,7 +149,7 @@ describe('useAESWorker', () => {
     })
 
     it('should set isLoading to true when decryption starts', () => {
-      const { decrypt, isLoading } = useAESWorker()
+      const { decrypt, isLoading } = useCryptoWorker()
 
       expect(isLoading.value).toBe(false)
 
@@ -164,7 +164,7 @@ describe('useAESWorker', () => {
 
     it('should call onSuccess callback when decryption succeeds', async () => {
       const onSuccess = vi.fn()
-      const { decrypt } = useAESWorker(onSuccess)
+      const { decrypt } = useCryptoWorker(onSuccess)
 
       const fileData = new Blob(['encrypted data'])
       decrypt(fileData, 'password123', 'test.txt.aes')
@@ -176,7 +176,7 @@ describe('useAESWorker', () => {
     })
 
     it('should set isLoading to false after decryption completes', async () => {
-      const { decrypt, isLoading } = useAESWorker()
+      const { decrypt, isLoading } = useCryptoWorker()
 
       const fileData = new Blob(['encrypted data'])
       decrypt(fileData, 'password123', 'test.txt.aes')
@@ -190,23 +190,23 @@ describe('useAESWorker', () => {
     })
 
     it('should not call decrypt if fileData is missing', () => {
-      const { decrypt } = useAESWorker()
+      const { decrypt } = useCryptoWorker()
 
       const consoleErrorSpy = vi.spyOn(console, 'error')
       decrypt(null, 'password123', 'test.txt.aes')
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith('useAESWorker: Missing fileData or password')
+      expect(consoleErrorSpy).toHaveBeenCalledWith('useCryptoWorker: Missing fileData or password')
       expect(WorkerConstructorSpy).not.toHaveBeenCalled()
     })
 
     it('should not call decrypt if password is missing', () => {
-      const { decrypt } = useAESWorker()
+      const { decrypt } = useCryptoWorker()
 
       const consoleErrorSpy = vi.spyOn(console, 'error')
       const fileData = new Blob(['encrypted data'])
       decrypt(fileData, '', 'test.txt.aes')
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith('useAESWorker: Missing fileData or password')
+      expect(consoleErrorSpy).toHaveBeenCalledWith('useCryptoWorker: Missing fileData or password')
       expect(WorkerConstructorSpy).not.toHaveBeenCalled()
     })
   })
@@ -220,7 +220,7 @@ describe('useAESWorker', () => {
       }
 
       const onError = vi.fn()
-      const { encrypt } = useAESWorker(null, onError)
+      const { encrypt } = useCryptoWorker(null, onError)
 
       const fileData = new Blob(['test data'])
       encrypt(fileData, 'password123', 'test.txt')
@@ -243,7 +243,7 @@ describe('useAESWorker', () => {
       }
 
       const onError = vi.fn()
-      const { decrypt } = useAESWorker(null, onError)
+      const { decrypt } = useCryptoWorker(null, onError)
 
       const fileData = new Blob(['encrypted data'])
       decrypt(fileData, 'password123', 'test.txt.aes')
@@ -266,7 +266,7 @@ describe('useAESWorker', () => {
       }
 
       const onError = vi.fn()
-      const { decrypt } = useAESWorker(null, onError)
+      const { decrypt } = useCryptoWorker(null, onError)
 
       const fileData = new Blob(['encrypted data'])
       decrypt(fileData, 'wrongpass', 'test.txt.aes')
@@ -285,7 +285,7 @@ describe('useAESWorker', () => {
       }
 
       const onError = vi.fn()
-      const { decrypt } = useAESWorker(null, onError)
+      const { decrypt } = useCryptoWorker(null, onError)
 
       const fileData = new Blob(['encrypted data'])
       decrypt(fileData, 'wrongpass', 'test.txt.aes')
@@ -304,7 +304,7 @@ describe('useAESWorker', () => {
       }
 
       const onError = vi.fn()
-      const { decrypt } = useAESWorker(null, onError)
+      const { decrypt } = useCryptoWorker(null, onError)
 
       const fileData = new Blob(['corrupted data'])
       decrypt(fileData, 'password123', 'test.txt.aes')
@@ -323,7 +323,7 @@ describe('useAESWorker', () => {
       }
 
       const onError = vi.fn()
-      const { decrypt } = useAESWorker(null, onError)
+      const { decrypt } = useCryptoWorker(null, onError)
 
       const fileData = new Blob(['not aes data'])
       decrypt(fileData, 'password123', 'test.txt')
@@ -342,7 +342,7 @@ describe('useAESWorker', () => {
       }
 
       const onError = vi.fn()
-      const { encrypt } = useAESWorker(null, onError)
+      const { encrypt } = useCryptoWorker(null, onError)
 
       const fileData = new Blob(['test data'])
       const longPassword = 'a'.repeat(1025)
@@ -361,7 +361,7 @@ describe('useAESWorker', () => {
         }
       }
 
-      const { encrypt, isLoading } = useAESWorker()
+      const { encrypt, isLoading } = useCryptoWorker()
 
       const fileData = new Blob(['test data'])
       encrypt(fileData, 'password123', 'test.txt')
@@ -376,13 +376,13 @@ describe('useAESWorker', () => {
 
   describe('worker lifecycle', () => {
     it('should expose worker ref', () => {
-      const { worker } = useAESWorker()
+      const { worker } = useCryptoWorker()
 
       expect(worker.value).toBe(null)
     })
 
     it('should update worker ref when worker is created', () => {
-      const { worker, encrypt } = useAESWorker()
+      const { worker, encrypt } = useCryptoWorker()
 
       expect(worker.value).toBe(null)
 
@@ -394,13 +394,13 @@ describe('useAESWorker', () => {
     })
 
     it('should expose terminateWorker method', () => {
-      const { terminateWorker } = useAESWorker()
+      const { terminateWorker } = useCryptoWorker()
 
       expect(typeof terminateWorker).toBe('function')
     })
 
     it('should terminate worker when terminateWorker is called', () => {
-      const { encrypt, terminateWorker, worker } = useAESWorker()
+      const { encrypt, terminateWorker, worker } = useCryptoWorker()
 
       const fileData = new Blob(['test data'])
       encrypt(fileData, 'password123', 'test.txt')
@@ -415,7 +415,7 @@ describe('useAESWorker', () => {
     })
 
     it('should not error when terminating null worker', () => {
-      const { terminateWorker } = useAESWorker()
+      const { terminateWorker } = useCryptoWorker()
 
       expect(() => terminateWorker()).not.toThrow()
     })
@@ -423,7 +423,7 @@ describe('useAESWorker', () => {
 
   describe('callback handling', () => {
     it('should work without onSuccess callback', async () => {
-      const { encrypt } = useAESWorker()
+      const { encrypt } = useCryptoWorker()
 
       const fileData = new Blob(['test data'])
 
@@ -441,7 +441,7 @@ describe('useAESWorker', () => {
         }
       }
 
-      const { encrypt } = useAESWorker()
+      const { encrypt } = useCryptoWorker()
 
       const fileData = new Blob(['test data'])
 
@@ -456,7 +456,7 @@ describe('useAESWorker', () => {
       const onSuccess = vi.fn()
       const onError = vi.fn()
 
-      const { encrypt } = useAESWorker(onSuccess, onError)
+      const { encrypt } = useCryptoWorker(onSuccess, onError)
 
       const fileData = new Blob(['test data'])
       encrypt(fileData, 'password123', 'test.txt')

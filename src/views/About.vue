@@ -90,7 +90,7 @@
                                 </template>
                                 <v-list-item-title class="font-weight-medium mb-1">Web Workers</v-list-item-title>
                                 <v-list-item-subtitle class="text-wrap mb-1">
-                                    Heavy operations like AES encryption and large file processing run on background threads.
+                                    Heavy operations like file encryption and large file processing run on background threads.
                                 </v-list-item-subtitle>
                                 <v-list-item-subtitle class="text-wrap text-info">
                                     <v-icon size="x-small" class="mr-1">mdi-arrow-right</v-icon>
@@ -150,12 +150,12 @@
                                 </v-expansion-panel-title>
                                 <v-expansion-panel-text>
                                     <p class="text-body-2 mb-2">
-                                        Use <strong>AES Encryption</strong> to password-protect documents, images, or any file before
+                                        Use <strong>File Encryption</strong> to password-protect documents, images, or any file before
                                         storing them in the cloud or sending them via email. Only someone with the password can decrypt them.
                                     </p>
                                     <p class="text-body-2 text-medium-emphasis">
                                         <strong>Example:</strong> Encrypt tax documents before uploading to cloud storage, then decrypt them
-                                        only when needed using AES Decryption.
+                                        only when needed using File Decryption.
                                     </p>
                                 </v-expansion-panel-text>
                             </v-expansion-panel>
@@ -229,7 +229,7 @@
                                 </v-expansion-panel-title>
                                 <v-expansion-panel-text>
                                     <p class="text-body-2 mb-2">
-                                        Use <strong>AES Encryption</strong> to encrypt files before uploading them to cloud storage (Dropbox, Google Drive, etc.)
+                                        Use <strong>File Encryption</strong> to encrypt files before uploading them to cloud storage (Dropbox, Google Drive, etc.)
                                         or sending via email. Share the password separately through a different channel (text message, phone call).
                                     </p>
                                     <p class="text-body-2 text-medium-emphasis">
@@ -322,7 +322,7 @@
                                 </v-expansion-panel-title>
                                 <v-expansion-panel-text>
                                     <p class="text-body-2">
-                                        <strong>No.</strong> AES encryption is extremely secure, and there's no backdoor or password recovery.
+                                        <strong>No.</strong> Modern encryption (AES-256, Age) is extremely secure, and there's no backdoor or password recovery.
                                         If you lose your password, the encrypted file cannot be recovered. This is a feature, not a bug -
                                         it ensures your data remains secure even if someone gains access to the encrypted file.
                                     </p>
@@ -453,10 +453,10 @@
                                         Common issues and solutions:
                                     </p>
                                     <ul class="text-body-2 ml-4 mb-2">
-                                        <li><strong>Wrong password</strong> - AES decryption requires the exact password used for encryption.
+                                        <li><strong>Wrong password</strong> - Decryption requires the exact password used for encryption.
                                         Passwords are case-sensitive.</li>
                                         <li><strong>Corrupted file</strong> - If a file was modified or incompletely transferred, decryption will fail</li>
-                                        <li><strong>Wrong file format</strong> - Ensure you're using the correct tool (e.g., .aes files for AES Decryption)</li>
+                                        <li><strong>Wrong file format</strong> - Ensure you're using the correct algorithm (e.g., .aes files for AES algorithm, .age files for Age algorithm)</li>
                                         <li><strong>Browser compatibility</strong> - Use a modern browser (Chrome 90+, Firefox 88+, Safari 14+)</li>
                                         <li><strong>File size exceeded</strong> - Check that your file is within the size limits (see "Are there file size limits?")</li>
                                     </ul>
@@ -517,8 +517,8 @@
                                 <template v-slot:prepend>
                                     <v-icon size="small">mdi-lock</v-icon>
                                 </template>
-                                <v-list-item-title>jsAesCrypt - AES file encryption library</v-list-item-title>
-                                <v-list-item-subtitle>Uses CryptoJS for cryptographic primitives</v-list-item-subtitle>
+                                <v-list-item-title>Encryption Libraries</v-list-item-title>
+                                <v-list-item-subtitle>jsAesCrypt (AES-256-CBC), Web Crypto API (AES-256-GCM), rage-wasm (Age encryption)</v-list-item-subtitle>
                             </v-list-item>
                             <v-list-item>
                                 <template v-slot:prepend>
@@ -547,7 +547,7 @@
                                 <template v-slot:prepend>
                                     <v-icon size="small" color="success">mdi-check-circle</v-icon>
                                 </template>
-                                <v-list-item-title>AES-256 Encryption Standard</v-list-item-title>
+                                <v-list-item-title>Military-Grade Encryption (AES-256 & Age)</v-list-item-title>
                             </v-list-item>
                             <v-list-item>
                                 <template v-slot:prepend>

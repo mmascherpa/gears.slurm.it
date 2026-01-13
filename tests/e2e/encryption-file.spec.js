@@ -7,7 +7,7 @@ const fixturesDir = path.join(__dirname, 'fixtures');
 
 test.describe('AES File Encryption/Decryption', () => {
   test('should encrypt a text file', async ({ page }) => {
-    await page.goto('/#/aes-encrypt');
+    await page.goto('/#/encrypt');
     await page.waitForLoadState('networkidle');
 
     const testFile = path.join(fixturesDir, 'test.txt');
@@ -36,7 +36,7 @@ test.describe('AES File Encryption/Decryption', () => {
   });
 
   test('should encrypt CSV file and show preview', async ({ page }) => {
-    await page.goto('/#/aes-encrypt');
+    await page.goto('/#/encrypt');
     await page.waitForLoadState('networkidle');
 
     const csvFile = path.join(fixturesDir, 'test-data.csv');
@@ -66,7 +66,7 @@ test.describe('AES File Encryption/Decryption', () => {
   });
 
   test('should trigger download when encrypt button clicked', async ({ page }) => {
-    await page.goto('/#/aes-encrypt');
+    await page.goto('/#/encrypt');
     await page.waitForLoadState('networkidle');
 
     const testFile = path.join(fixturesDir, 'test.txt');
@@ -115,7 +115,7 @@ test.describe('AES File Encryption/Decryption', () => {
   });
 
   test('should validate password confirmation', async ({ page }) => {
-    await page.goto('/#/aes-encrypt');
+    await page.goto('/#/encrypt');
     await page.waitForLoadState('networkidle');
 
     const testFile = path.join(fixturesDir, 'test.txt');
@@ -145,7 +145,7 @@ test.describe('AES File Encryption/Decryption', () => {
   });
 
   test('should prevent encryption with empty password', async ({ page }) => {
-    await page.goto('/#/aes-encrypt');
+    await page.goto('/#/encrypt');
     await page.waitForLoadState('networkidle');
 
     const testFile = path.join(fixturesDir, 'test.txt');
@@ -167,7 +167,7 @@ test.describe('AES File Encryption/Decryption', () => {
   });
 
   test('should show file size warning for large files', async ({ page }) => {
-    await page.goto('/#/aes-encrypt');
+    await page.goto('/#/encrypt');
     await page.waitForLoadState('networkidle');
 
     const testFile = path.join(fixturesDir, 'test.txt');
@@ -189,7 +189,7 @@ test.describe('AES File Encryption/Decryption', () => {
   });
 
   test('should clear file selection when clear button clicked', async ({ page }) => {
-    await page.goto('/#/aes-encrypt');
+    await page.goto('/#/encrypt');
     await page.waitForLoadState('networkidle');
 
     const testFile = path.join(fixturesDir, 'test.txt');
@@ -215,7 +215,7 @@ test.describe('AES File Encryption/Decryption', () => {
   });
 
   test('should handle file with special characters in name', async ({ page }) => {
-    await page.goto('/#/aes-encrypt');
+    await page.goto('/#/encrypt');
     await page.waitForLoadState('networkidle');
 
     const testFile = path.join(fixturesDir, 'test.txt');
@@ -248,7 +248,7 @@ test.describe('AES File Encryption/Decryption', () => {
 
 test.describe('AES File Decryption', () => {
   test('should show error when trying to decrypt non-encrypted file', async ({ page }) => {
-    await page.goto('/#/aes-decrypt');
+    await page.goto('/#/decrypt');
     await page.waitForLoadState('networkidle');
 
     const testFile = path.join(fixturesDir, 'test.txt');
@@ -282,7 +282,7 @@ test.describe('AES File Decryption', () => {
   });
 
   test('should prevent decryption without password', async ({ page }) => {
-    await page.goto('/#/aes-decrypt');
+    await page.goto('/#/decrypt');
     await page.waitForLoadState('networkidle');
 
     const testFile = path.join(fixturesDir, 'test.txt');

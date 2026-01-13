@@ -4,54 +4,142 @@
     <ToolPageHeader
       icon="mdi-lock-open"
       title="Decryption"
-      description="Decrypt password-protected AES or Age encrypted files and text"
+      description="Decrypt password-protected encrypted files and text"
       avatar-color="primary-darken-1"
     />
 
     <!-- Tier 1: Educational Panel -->
     <LearnMorePanel
-      title="How Does AES Decryption Work?"
-      storage-key="slurm-help-aes-decrypt"
+      :title="infoPanelTitle"
+      storage-key="slurm-help-decrypt"
     >
-      <p class="mb-2">
-        <strong>AES decryption</strong> reverses the encryption process, converting encrypted data back
-        to its original form using the same password that was used for encryption.
-      </p>
-      <ul class="ml-4 mb-2">
-        <li><strong>Password required</strong> - You must use the EXACT same password that was used to encrypt the data</li>
-        <li><strong>Case-sensitive</strong> - "Password123" and "password123" are different passwords</li>
-        <li><strong>No recovery</strong> - If you forgot the password, the data cannot be decrypted</li>
-        <li><strong>Secure process</strong> - Decryption happens entirely in your browser, nothing is sent to any server</li>
-      </ul>
-      <EducationalAlert title="Password Must Match Exactly" type="warning" spacing="mt-3">
-        The decryption password must be identical to the encryption password. Even a single character
-        difference will result in failed decryption. There is no "close enough" - it must be exact.
-      </EducationalAlert>
-      <p class="mt-3 mb-2">
-        <strong>Common use cases:</strong> Decrypting files from cloud storage, accessing encrypted backups,
-        retrieving protected documents.
-      </p>
+      <!-- jsAesCrypt Content -->
+      <template v-if="selectedAlgorithm === 'jsAesCrypt'">
+        <p class="mb-2">
+          <strong>AES decryption</strong> reverses the AES-256 encryption process, converting encrypted data back
+          to its original form using the same password that was used for encryption.
+        </p>
+        <ul class="ml-4 mb-2">
+          <li><strong>Password required</strong> - You must use the EXACT same password that was used to encrypt the data</li>
+          <li><strong>Case-sensitive</strong> - "Password123" and "password123" are different passwords</li>
+          <li><strong>No recovery</strong> - If you forgot the password, the data cannot be decrypted</li>
+          <li><strong>Secure process</strong> - Decryption happens entirely in your browser, nothing is sent to any server</li>
+        </ul>
+        <EducationalAlert title="Password Must Match Exactly" type="warning" spacing="mt-3">
+          The decryption password must be identical to the encryption password. Even a single character
+          difference will result in failed decryption. There is no "close enough" - it must be exact.
+        </EducationalAlert>
+        <p class="mt-3 mb-2">
+          <strong>Common use cases:</strong> Decrypting files from cloud storage, accessing encrypted backups,
+          retrieving protected documents.
+        </p>
 
-      <!-- Reference Links -->
-      <div class="text-caption text-medium-emphasis mt-3">
-        <strong>Learn more:</strong>
-        <a href="https://en.wikipedia.org/wiki/Advanced_Encryption_Standard" target="_blank" rel="noopener noreferrer" class="text-info">
-          Wikipedia: AES
-        </a>
-        •
-        <a href="https://csrc.nist.gov/projects/cryptographic-standards-and-guidelines/archived-crypto-projects/aes-development" target="_blank" rel="noopener noreferrer" class="text-info">
-          NIST: AES Standard
-        </a>
-      </div>
+        <!-- Reference Links -->
+        <div class="text-caption text-medium-emphasis mt-3">
+          <strong>Learn more:</strong>
+          <a href="https://en.wikipedia.org/wiki/Advanced_Encryption_Standard" target="_blank" rel="noopener noreferrer" class="text-info">
+            Wikipedia: AES
+          </a>
+          •
+          <a href="https://csrc.nist.gov/projects/cryptographic-standards-and-guidelines/archived-crypto-projects/aes-development" target="_blank" rel="noopener noreferrer" class="text-info">
+            NIST: AES Standard
+          </a>
+          •
+          <a href="https://github.com/BrightSoul/javascript-aes-file-encryption" target="_blank" rel="noopener noreferrer" class="text-info">
+            jsAesCrypt
+          </a>
+        </div>
 
-      <!-- Technical Details -->
-      <div class="text-caption text-medium-emphasis mt-2">
-        <strong>Technical:</strong> Uses
-        <a href="https://github.com/BrightSoul/javascript-aes-file-encryption" target="_blank" rel="noopener noreferrer" class="text-info">jsAesCrypt</a>
-        with
-        <a href="https://cryptojs.gitbook.io/docs/" target="_blank" rel="noopener noreferrer" class="text-info">CryptoJS</a>
-        for AES-256-CBC decryption. Compatible with files encrypted using this tool.
-      </div>
+        <!-- Technical Details -->
+        <div class="text-caption text-medium-emphasis mt-2">
+          <strong>Technical:</strong> AES-256-CBC cipher mode with PBKDF2 key derivation (10,000 iterations).
+          Compatible with .aes files encrypted using AES Crypt format.
+        </div>
+      </template>
+
+      <!-- WebCrypto Content -->
+      <template v-else-if="selectedAlgorithm === 'webCrypto'">
+        <p class="mb-2">
+          <strong>WebCrypto decryption</strong> uses the browser's native Web Cryptography API to decrypt AES-256-GCM
+          encrypted data back to its original form using the password.
+        </p>
+        <ul class="ml-4 mb-2">
+          <li><strong>Password required</strong> - You must use the EXACT same password that was used to encrypt the data</li>
+          <li><strong>Case-sensitive</strong> - "Password123" and "password123" are different passwords</li>
+          <li><strong>GCM mode</strong> - Authenticated encryption automatically verifies data integrity</li>
+          <li><strong>Hardware-accelerated</strong> - Faster decryption using CPU crypto instructions</li>
+        </ul>
+        <EducationalAlert title="Password Must Match Exactly" type="warning" spacing="mt-3">
+          The decryption password must be identical to the encryption password. Even a single character
+          difference will result in failed decryption. There is no "close enough" - it must be exact.
+        </EducationalAlert>
+        <p class="mt-3 mb-2">
+          <strong>Common use cases:</strong> Decrypting browser-encrypted files, high-performance decryption,
+          accessing modern encrypted backups.
+        </p>
+
+        <!-- Reference Links -->
+        <div class="text-caption text-medium-emphasis mt-3">
+          <strong>Learn more:</strong>
+          <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API" target="_blank" rel="noopener noreferrer" class="text-info">
+            MDN: Web Crypto API
+          </a>
+          •
+          <a href="https://www.w3.org/TR/WebCryptoAPI/" target="_blank" rel="noopener noreferrer" class="text-info">
+            W3C Specification
+          </a>
+        </div>
+
+        <!-- Technical Details -->
+        <div class="text-caption text-medium-emphasis mt-2">
+          <strong>Technical:</strong> AES-256-GCM authenticated encryption with PBKDF2 key derivation (100,000 iterations).
+          Browser-native Web Crypto API. Decrypts .enc files.
+        </div>
+      </template>
+
+      <!-- Age Content -->
+      <template v-else-if="selectedAlgorithm === 'age'">
+        <p class="mb-2">
+          <strong>Age decryption</strong> reverses age encryption, converting encrypted .age files back to their
+          original form using the passphrase.
+        </p>
+        <ul class="ml-4 mb-2">
+          <li><strong>Passphrase required</strong> - You must use the EXACT same passphrase that was used to encrypt the data</li>
+          <li><strong>Case-sensitive</strong> - "Passphrase123" and "passphrase123" are different passphrases</li>
+          <li><strong>CLI-compatible</strong> - Works with age and rage command-line tools</li>
+          <li><strong>Armor format</strong> - Supports both binary and ASCII-armored .age files</li>
+        </ul>
+        <EducationalAlert title="Passphrase Must Match Exactly" type="warning" spacing="mt-3">
+          The decryption passphrase must be identical to the encryption passphrase. Even a single character
+          difference will result in failed decryption. There is no "close enough" - it must be exact.
+        </EducationalAlert>
+        <p class="mt-3 mb-2">
+          <strong>Common use cases:</strong> Decrypting age-encrypted backups, cross-platform file decryption,
+          scripting workflows, command-line integration.
+        </p>
+
+        <!-- Reference Links -->
+        <div class="text-caption text-medium-emphasis mt-3">
+          <strong>Learn more:</strong>
+          <a href="https://age-encryption.org" target="_blank" rel="noopener noreferrer" class="text-info">
+            Age specification
+          </a>
+          •
+          <a href="https://github.com/FiloSottile/age" target="_blank" rel="noopener noreferrer" class="text-info">
+            Age on GitHub
+          </a>
+          •
+          <a href="https://github.com/str4d/rage" target="_blank" rel="noopener noreferrer" class="text-info">
+            rage (Rust)
+          </a>
+        </div>
+
+        <!-- Technical Details -->
+        <div class="text-caption text-medium-emphasis mt-2">
+          <strong>Technical:</strong> Uses rage-wasm (Rust compiled to WebAssembly) with scrypt password derivation.
+          Decrypts .age files with optional armor format.
+        </div>
+      </template>
     </LearnMorePanel>
 
     <!-- Form -->
@@ -323,7 +411,7 @@
 import { computed, ref, watch } from 'vue';
 import { downloadFile } from '@/utils/fileDownload';
 import { parseCSV } from '@/utils/csvParser';
-import { useAESWorker } from '@/composables/useAESWorker';
+import { useCryptoWorker } from '@/composables/useCryptoWorker';
 import { useClipboard } from '@/composables/useClipboard';
 import { useDebounce } from '@/composables/useDebounce';
 import { usePasswordSession } from '@/composables/usePasswordSession';
@@ -338,7 +426,7 @@ import TextInputWithActions from '@/components/TextInputWithActions.vue';
 import ToolPageHeader from '@/components/ToolPageHeader.vue';
 
 export default {
-  name: 'AesDecrypt',
+  name: 'Decrypt',
   components: {
     CsvPreviewTable,
     EducationalAlert,
@@ -383,8 +471,8 @@ export default {
       password.value = storedPassword;
     }
 
-    // AES Worker for decryption
-    const { decrypt, isLoading } = useAESWorker(
+    // Crypto Worker for decryption
+    const { decrypt, isLoading } = useCryptoWorker(
       // onSuccess callback
       (data, fileName) => {
         // Text decryption: display inline
@@ -404,6 +492,18 @@ export default {
     );
 
     // Computed Properties
+
+    /**
+     * Dynamic info panel title based on selected algorithm.
+     */
+    const infoPanelTitle = computed(() => {
+      const titles = {
+        jsAesCrypt: 'How Does AES Decryption Work?',
+        webCrypto: 'How Does WebCrypto Decryption Work?',
+        age: 'How Does Age Decryption Work?'
+      };
+      return titles[selectedAlgorithm.value] || 'How Does Decryption Work?';
+    });
 
     /**
      * Checks if decryption is possible with valid inputs.
@@ -742,6 +842,7 @@ export default {
 
       // Computed
       canDecrypt,
+      infoPanelTitle,
       isEncryptedTextPopulated,
       isFilePopulated,
       isPasswordPopulated,

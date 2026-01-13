@@ -4,53 +4,142 @@
     <ToolPageHeader
       icon="mdi-lock"
       title="Encryption"
-      description="Encrypt files and text with AES-256 or Age encryption"
+      description="Encrypt files and text with password protection using military-grade encryption"
       avatar-color="primary"
     />
 
     <!-- Tier 1: Educational Panel -->
     <LearnMorePanel
-      title="What is AES Encryption?"
-      storage-key="slurm-help-aes-encrypt"
+      :title="infoPanelTitle"
+      storage-key="slurm-help-encrypt"
     >
-      <p class="mb-2">
-        <strong>AES (Advanced Encryption Standard)</strong> is a military-grade encryption algorithm
-        trusted by governments and organizations worldwide to protect sensitive data.
-      </p>
-      <ul class="ml-4 mb-2">
-        <li><strong>AES-256</strong> - This tool uses 256-bit keys, the strongest AES variant</li>
-        <li><strong>Password-based</strong> - Your password is converted into an encryption key</li>
-        <li><strong>Unbreakable</strong> - With a strong password, AES-256 would take billions of years to crack</li>
-      </ul>
-      <EducationalAlert title="Important Limitation" type="warning" spacing="mt-3">
-        If you forget your password, your encrypted data <strong>cannot be recovered</strong>.
-        There is no "reset password" option - the password IS the key.
-      </EducationalAlert>
-      <p class="mt-3 mb-2">
-        <strong>Common use cases:</strong> Encrypt sensitive documents before uploading to cloud storage,
-        secure backups, protect confidential files on shared computers.
-      </p>
+      <!-- jsAesCrypt Content -->
+      <template v-if="selectedAlgorithm === 'jsAesCrypt'">
+        <p class="mb-2">
+          <strong>AES (Advanced Encryption Standard)</strong> is a military-grade encryption algorithm
+          trusted by governments and organizations worldwide to protect sensitive data.
+        </p>
+        <ul class="ml-4 mb-2">
+          <li><strong>AES-256</strong> - This tool uses 256-bit keys, the strongest AES variant</li>
+          <li><strong>Password-based</strong> - Your password is converted into an encryption key</li>
+          <li><strong>Cross-platform</strong> - Compatible with desktop AES Crypt applications</li>
+          <li><strong>Unbreakable</strong> - With a strong password, AES-256 would take billions of years to crack</li>
+        </ul>
+        <EducationalAlert title="Important Limitation" type="warning" spacing="mt-3">
+          If you forget your password, your encrypted data <strong>cannot be recovered</strong>.
+          There is no "reset password" option - the password IS the key.
+        </EducationalAlert>
+        <p class="mt-3 mb-2">
+          <strong>Common use cases:</strong> Encrypt sensitive documents before uploading to cloud storage,
+          secure backups, protect confidential files on shared computers.
+        </p>
 
-      <!-- Reference Links -->
-      <div class="text-caption text-medium-emphasis mt-3">
-        <strong>Learn more:</strong>
-        <a href="https://en.wikipedia.org/wiki/Advanced_Encryption_Standard" target="_blank" rel="noopener noreferrer" class="text-info">
-          Wikipedia: AES
-        </a>
-        •
-        <a href="https://csrc.nist.gov/projects/cryptographic-standards-and-guidelines/archived-crypto-projects/aes-development" target="_blank" rel="noopener noreferrer" class="text-info">
-          NIST: AES Standard
-        </a>
-      </div>
+        <!-- Reference Links -->
+        <div class="text-caption text-medium-emphasis mt-3">
+          <strong>Learn more:</strong>
+          <a href="https://en.wikipedia.org/wiki/Advanced_Encryption_Standard" target="_blank" rel="noopener noreferrer" class="text-info">
+            Wikipedia: AES
+          </a>
+          •
+          <a href="https://csrc.nist.gov/projects/cryptographic-standards-and-guidelines/archived-crypto-projects/aes-development" target="_blank" rel="noopener noreferrer" class="text-info">
+            NIST: AES Standard
+          </a>
+          •
+          <a href="https://github.com/BrightSoul/javascript-aes-file-encryption" target="_blank" rel="noopener noreferrer" class="text-info">
+            jsAesCrypt
+          </a>
+        </div>
 
-      <!-- Technical Details -->
-      <div class="text-caption text-medium-emphasis mt-2">
-        <strong>Technical:</strong> Uses
-        <a href="https://github.com/BrightSoul/javascript-aes-file-encryption" target="_blank" rel="noopener noreferrer" class="text-info">jsAesCrypt</a>
-        with
-        <a href="https://cryptojs.gitbook.io/docs/" target="_blank" rel="noopener noreferrer" class="text-info">CryptoJS</a>
-        for AES-256-CBC encryption. Password-based key derivation (PBKDF2) with 10,000 iterations.
-      </div>
+        <!-- Technical Details -->
+        <div class="text-caption text-medium-emphasis mt-2">
+          <strong>Technical:</strong> AES-256-CBC cipher mode with PBKDF2 key derivation (10,000 iterations).
+          Uses jsAesCrypt and CryptoJS libraries. Produces .aes files compatible with AES Crypt format.
+        </div>
+      </template>
+
+      <!-- WebCrypto Content -->
+      <template v-else-if="selectedAlgorithm === 'webCrypto'">
+        <p class="mb-2">
+          <strong>Web Cryptography API</strong> provides browser-native AES-256 encryption with hardware acceleration,
+          offering fast, secure encryption without external libraries.
+        </p>
+        <ul class="ml-4 mb-2">
+          <li><strong>AES-256-GCM</strong> - Modern authenticated encryption mode that prevents tampering</li>
+          <li><strong>Hardware-accelerated</strong> - Uses CPU crypto instructions for optimal performance</li>
+          <li><strong>Browser-native</strong> - Built into modern browsers, no external dependencies</li>
+          <li><strong>High security</strong> - PBKDF2 with 100,000 iterations for strong key derivation</li>
+        </ul>
+        <EducationalAlert title="Important Limitation" type="warning" spacing="mt-3">
+          If you forget your password, your encrypted data <strong>cannot be recovered</strong>.
+          There is no "reset password" option - the password IS the key.
+        </EducationalAlert>
+        <p class="mt-3 mb-2">
+          <strong>Common use cases:</strong> Fast encryption for modern browsers, maximum compatibility,
+          browser-based secure storage, privacy-focused applications.
+        </p>
+
+        <!-- Reference Links -->
+        <div class="text-caption text-medium-emphasis mt-3">
+          <strong>Learn more:</strong>
+          <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API" target="_blank" rel="noopener noreferrer" class="text-info">
+            MDN: Web Crypto API
+          </a>
+          •
+          <a href="https://www.w3.org/TR/WebCryptoAPI/" target="_blank" rel="noopener noreferrer" class="text-info">
+            W3C Specification
+          </a>
+        </div>
+
+        <!-- Technical Details -->
+        <div class="text-caption text-medium-emphasis mt-2">
+          <strong>Technical:</strong> AES-256-GCM authenticated encryption with PBKDF2 key derivation (100,000 iterations).
+          Browser-native Web Crypto API. Produces .enc files.
+        </div>
+      </template>
+
+      <!-- Age Content -->
+      <template v-else-if="selectedAlgorithm === 'age'">
+        <p class="mb-2">
+          <strong>Age encryption</strong> is a modern, simple file encryption tool designed as a replacement for GPG.
+          Created by Filippo Valsorda, it focuses on simplicity and ease of use.
+        </p>
+        <ul class="ml-4 mb-2">
+          <li><strong>Simple format</strong> - Compact, easy-to-use encryption format</li>
+          <li><strong>CLI-compatible</strong> - Works with age and rage command-line tools</li>
+          <li><strong>scrypt derivation</strong> - Secure against GPU-based password cracking</li>
+          <li><strong>Armor format</strong> - ASCII-armored output for text-safe transmission</li>
+        </ul>
+        <EducationalAlert title="Important Limitation" type="warning" spacing="mt-3">
+          If you forget your password, your encrypted data <strong>cannot be recovered</strong>.
+          There is no "reset password" option - the password IS the key.
+        </EducationalAlert>
+        <p class="mt-3 mb-2">
+          <strong>Common use cases:</strong> Cross-platform encrypted backups, scripting and automation,
+          developer workflows, command-line integration.
+        </p>
+
+        <!-- Reference Links -->
+        <div class="text-caption text-medium-emphasis mt-3">
+          <strong>Learn more:</strong>
+          <a href="https://age-encryption.org" target="_blank" rel="noopener noreferrer" class="text-info">
+            Age specification
+          </a>
+          •
+          <a href="https://github.com/FiloSottile/age" target="_blank" rel="noopener noreferrer" class="text-info">
+            Age on GitHub
+          </a>
+          •
+          <a href="https://github.com/str4d/rage" target="_blank" rel="noopener noreferrer" class="text-info">
+            rage (Rust)
+          </a>
+        </div>
+
+        <!-- Technical Details -->
+        <div class="text-caption text-medium-emphasis mt-2">
+          <strong>Technical:</strong> Uses rage-wasm (Rust compiled to WebAssembly) with scrypt password derivation.
+          Produces .age files with optional armor encoding.
+        </div>
+      </template>
     </LearnMorePanel>
 
     <!-- Error Alert -->
@@ -265,7 +354,7 @@
 import { computed, ref, watch } from 'vue';
 import { downloadFile } from '@/utils/fileDownload';
 import { parseCSV } from '@/utils/csvParser';
-import { useAESWorker } from '@/composables/useAESWorker';
+import { useCryptoWorker } from '@/composables/useCryptoWorker';
 import { useClipboard } from '@/composables/useClipboard';
 import { useDebounce } from '@/composables/useDebounce';
 import { usePasswordSession } from '@/composables/usePasswordSession';
@@ -281,7 +370,7 @@ import TextInputWithActions from '@/components/TextInputWithActions.vue';
 import ToolPageHeader from '@/components/ToolPageHeader.vue';
 
 export default {
-  name: 'AesEncrypt',
+  name: 'Encrypt',
   components: {
     CsvPreviewTable,
     EducationalAlert,
@@ -323,8 +412,8 @@ export default {
       passwordConfirm.value = storedPassword;
     }
 
-    // AES Worker for encryption
-    const { encrypt, isLoading } = useAESWorker(
+    // Crypto Worker for encryption
+    const { encrypt, isLoading } = useCryptoWorker(
       // onSuccess callback
       (data, fileName) => {
         // Text encryption: convert to Base64 and display
@@ -346,6 +435,18 @@ export default {
     );
 
     // Computed Properties
+
+    /**
+     * Dynamic info panel title based on selected algorithm.
+     */
+    const infoPanelTitle = computed(() => {
+      const titles = {
+        jsAesCrypt: 'What is AES Encryption?',
+        webCrypto: 'What is WebCrypto AES Encryption?',
+        age: 'What is Age Encryption?'
+      };
+      return titles[selectedAlgorithm.value] || 'What is Encryption?';
+    });
 
     /**
      * Checks if encryption is possible with valid inputs.
@@ -608,6 +709,7 @@ export default {
 
       // Computed
       canEncrypt,
+      infoPanelTitle,
       isFilePopulated,
       isOutputPopulated,
       isPasswordConfirmed,

@@ -163,16 +163,16 @@ theme.global.name.value = getSavedTheme();
 
                 <v-list-subheader>ENCRYPTION TOOLS</v-list-subheader>
                 <v-list-item
-                    to="/aes-encrypt"
+                    to="/encrypt"
                     prepend-icon="mdi-lock"
-                    title="AES Encryption"
-                    value="aes-encrypt">
+                    title="File Encryption"
+                    value="encrypt">
                 </v-list-item>
                 <v-list-item
-                    to="/aes-decrypt"
+                    to="/decrypt"
                     prepend-icon="mdi-lock-open"
-                    title="AES Decryption"
-                    value="aes-decrypt">
+                    title="File Decryption"
+                    value="decrypt">
                 </v-list-item>
                 <v-list-item
                     to="/password-generator"

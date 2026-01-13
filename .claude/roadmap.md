@@ -11,10 +11,10 @@ This file tracks feature planning, completed work, and future development priori
 - ✅ **Base64 Encoder** - Text and file encoding with clipboard operations
 - ✅ **Base64 Decoder** - Text and file decoding with clipboard operations
 - ✅ **QR Code Generator** - Generate QR codes for text/URLs, WiFi, contacts (vCard), email, and SMS with customizable size and error correction
-- ✅ **AES File Encryption** - Password-protected encryption with CSV preview
-- ✅ **AES File Decryption** - Password-protected decryption with text/CSV preview (up to 8MB inline)
-- ✅ **AES Text Encryption** - Quick text encryption with password protection and auto-encrypt
-- ✅ **AES Text Decryption** - Quick text decryption with password protection
+- ✅ **File Encryption** - Multi-algorithm encryption (AES-256, Age) with CSV preview
+- ✅ **File Decryption** - Multi-algorithm decryption (AES-256, Age) with text/CSV preview (up to 8MB inline)
+- ✅ **Text Encryption** - Quick text encryption with password protection and auto-encrypt
+- ✅ **Text Decryption** - Quick text decryption with password protection
 - ✅ **Password Generator** - Cryptographically secure random password generation with strength indicator
 - ✅ **Progressive Web App** - Offline functionality via Service Worker
 - ✅ **Responsive Layout** - Material Design UI adapting to mobile/tablet/desktop

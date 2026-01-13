@@ -13,8 +13,8 @@ Privacy-first cryptography tools in your browser. 100% client-side with full off
 ### Core Tools
 - **Base64 Encoder** - Text and file encoding with clipboard operations
 - **Base64 Decoder** - Text and file decoding with clipboard operations
-- **AES Encryption** - Password-protected file and text encryption
-- **AES Decryption** - Decrypt `.aes` files and Base64 text
+- **File Encryption** - Password-protected encryption with AES-256 or Age
+- **File Decryption** - Decrypt `.aes`, `.enc`, or `.age` encrypted files
 - **Password Generator** - Cryptographically secure random password generation
 - **File Preview** - CSV table and text preview for encrypted content
 
@@ -31,7 +31,7 @@ Privacy-first cryptography tools in your browser. 100% client-side with full off
 ## Technology Stack
 
 - **Frontend**: Vue 3 + Vuetify 3 + Vite
-- **Encryption**: Web Crypto API + jsAesEncrypt library
+- **Encryption**: AES-256 (jsAesCrypt, Web Crypto API) + Age (rage-wasm)
 - **PWA**: Service Worker with cache-first strategy
 - **Testing**: Vitest (unit, 423 tests) + Playwright (E2E, 47 tests)
 - **Deployment**: Manual to GitHub Pages (gears.slurm.it repo)

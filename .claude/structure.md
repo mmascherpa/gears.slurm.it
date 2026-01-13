@@ -6,7 +6,7 @@ This file documents the file organization, component responsibilities, and archi
 **Last Updated**: 2026-01-12
 **Total Files**: 98 (+5 from Age encryption integration)
 **Total Lines of Code**: ~5,065 lines (+250 from dual-worker architecture)
-**Tool Components**: 5 (Base64Encode, Base64Decode, AesEncrypt, AesDecrypt, PasswordGenerator)
+**Tool Components**: 5 (Base64Encode, Base64Decode, Encrypt, Decrypt, PasswordGenerator)
 **Encryption Algorithms**: 3 (jsAesCrypt AES-256-CBC, WebCrypto AES-256-GCM, Age encryption)
 
 ---
@@ -80,8 +80,8 @@ src/
 │   └── pngTags.js           # PNG metadata tag definitions
 ├── views/                  # Tool page components (ALL PAGES MOVED HERE)
 │   ├── About.vue            # About page (178 lines)
-│   ├── AesDecrypt.vue       # Multi-algorithm decryption (jsAesCrypt/WebCrypto/Age) (750 lines)
-│   ├── AesEncrypt.vue       # Multi-algorithm encryption (jsAesCrypt/WebCrypto/Age) (550 lines)
+│   ├── Decrypt.vue          # Multi-algorithm decryption (jsAesCrypt/WebCrypto/Age) (750 lines)
+│   ├── Encrypt.vue          # Multi-algorithm encryption (jsAesCrypt/WebCrypto/Age) (550 lines)
 │   ├── Base64Decode.vue     # Base64 decoder page (226 lines)
 │   ├── Base64Encode.vue     # Base64 encoder page (252 lines)
 │   ├── HexViewer.vue        # Binary file hex viewer (689 lines)
