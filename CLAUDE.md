@@ -4,9 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Slurm Tools** - Privacy-focused Progressive Web Application for browser-based cryptography and utilities (Base64 encoding/decoding, QR code generation, AES file encryption/decryption, metadata editing). 100% client-side with full offline functionality.
+**Slurm Tools** - Privacy-focused Progressive Web Application for browser-based cryptography and utilities (Base64 encoding/decoding, QR code generation, AES/Age file encryption/decryption, metadata editing). 100% client-side with full offline functionality.
 
 **Stack**: Vue 3, Vuetify, Vite
+**Encryption**: Supports AES-256 (via jsAesCrypt/WebCrypto) and Age encryption (via rage-wasm)
 
 ## Essential Commands
 
@@ -36,32 +37,57 @@ npm run generate-icons     # Generate PNG icons from SVG
 **Component-Based**: Vue 3 SFCs, each tool is a standalone page component
 
 **Worker-Based Parallelism**:
-- Web Worker (`public/worker.js`) - AES encryption/decryption on background thread
-- Service Worker (`public/sw.js`) - Offline caching with cache-first strategy
+- **Classic Web Worker** (`public/worker.js`) - jsAesCrypt encryption/decryption (CDN-loaded libraries)
+- **ES Module Web Worker** (`src/workers/cryptoWorker.js`) - WebCrypto/Age encryption (Vite-bundled with rage-wasm)
+- **Service Worker** (`public/sw.js`) - Offline caching with cache-first strategy
+
+**Note**: The application uses two different worker types because:
+- jsAesCrypt requires classic worker with `importScripts()` for CDN libraries
+- Age encryption requires ES module worker for proper WASM bundling via Vite
+- The correct worker is automatically selected based on the chosen algorithm
 
 **Worker Communication Protocol**:
 ```javascript
 // Component → Worker
-worker.postMessage(["ENCRYPT", fileData, password, fileName])
-worker.postMessage(["DECRYPT", fileData, password, fileName])
+worker.postMessage(["ENCRYPT", fileData, password, fileName, algorithm])
+worker.postMessage(["DECRYPT", fileData, password, fileName, algorithm])
 
 // Worker → Component
 self.postMessage(["ENCRYPT", encryptedData, outputFileName])
 self.postMessage(["ERROR", errorMessage, operationType])
 ```
 
+**Provider Pattern** (Pluggable Encryption Backends):
+- **jsAesCrypt** - AES-256-CBC (.aes files) compatible with AES Crypt format
+- **WebCrypto** - Browser-native AES-256-GCM (.enc files)
+- **Age** - Modern age encryption (.age files) compatible with age CLI tools
+
+Each provider implements: `encrypt()`, `decrypt()`, `getInfo()`, `normalizeError()`, `validatePassword()`
+
 ### Entry Points
 
 1. **Main App**: `index.html` → `src/main.js` (router, Vuetify, Vue setup)
 2. **Service Worker**: `public/sw.js` (offline caching, auto-updated on build)
-3. **Web Worker**: `public/worker.js` (AES crypto operations)
+3. **Web Workers**:
+   - **Classic Worker**: `public/worker.js` (jsAesCrypt operations)
+   - **ES Module Worker**: `src/workers/cryptoWorker.js` (WebCrypto/Age operations)
+4. **Encryption Providers**:
+   - **Classic Worker Providers** (in `public/providers/`):
+     - `JsAesCryptWorkerProvider.js` - AES-256-CBC (.aes files)
+     - `WebCryptoWorkerProvider.js` - AES-256-GCM (not used by classic worker)
+     - `AgeWorkerProvider.js` - Age encryption (not used by classic worker)
+   - **ES Module Worker Providers** (in `src/workers/providers/`):
+     - `JsAesCryptWorkerProvider.js` - Not used (classic worker only)
+     - `WebCryptoWorkerProvider.js` - Browser-native AES-256-GCM (.enc files)
+     - `AgeWorkerProvider.js` - Modern age encryption (.age files)
 
 ### Key Constraints
 
 - Must work entirely client-side (no backend)
 - Must function offline after initial load
 - Must handle large files without blocking UI (use Web Workers)
-- AES library throws strings (not Error objects) - handle both types
+- Encryption libraries may throw strings (not Error objects) - handle both types
+- WASM modules (like rage-wasm) load asynchronously - handle loading states
 
 ## Where to Find Detailed Information
 
@@ -108,4 +134,4 @@ See [roadmap.md](.claude/roadmap.md) for detailed progress and next steps.
 
 ---
 
-**Last Updated**: 2025-11-22
+**Last Updated**: 2026-01-12 (Completed Age encryption integration with dual-worker architecture)

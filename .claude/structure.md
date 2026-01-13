@@ -3,10 +3,11 @@
 ## Purpose
 This file documents the file organization, component responsibilities, and architectural layers of the Slurm Tools codebase.
 
-**Last Updated**: 2025-11-08
-**Total Files**: 93 (was 95, -2 from AES consolidation)
-**Total Lines of Code**: ~4,815 lines (-285 net from consolidation)
+**Last Updated**: 2026-01-12
+**Total Files**: 98 (+5 from Age encryption integration)
+**Total Lines of Code**: ~5,065 lines (+250 from dual-worker architecture)
 **Tool Components**: 5 (Base64Encode, Base64Decode, AesEncrypt, AesDecrypt, PasswordGenerator)
+**Encryption Algorithms**: 3 (jsAesCrypt AES-256-CBC, WebCrypto AES-256-GCM, Age encryption)
 
 ---
 
@@ -49,15 +50,15 @@ src/
 │   ├── MetadataViewer.vue             # Metadata viewer component
 │   └── PasswordInput.vue              # Password input component
 ├── composables/            # Reusable composition functions
-│   ├── useAESWorker.js          # AES worker management with auto-cleanup (163 lines)
+│   ├── useAESWorker.js          # Dual-worker management with auto-switching (200 lines)
 │   ├── useClipboard.js          # Clipboard operations (74 lines)
 │   ├── useDebounce.js           # Debounced function calls (66 lines)
 │   ├── useFileSizeValidation.js # File size validation logic (99 lines)
-│   ├── useHexViewer.js          # Hex viewer state management (NEW)
+│   ├── useHexViewer.js          # Hex viewer state management
 │   ├── usePasswordSession.js    # Password session storage management (132 lines)
 │   ├── useServiceWorkerUpdate.js # Service worker update detection
 │   ├── useSnackbar.js           # Snackbar state management (41 lines)
-│   └── useVirtualScroll.js      # Virtual scrolling for large datasets (NEW)
+│   └── useVirtualScroll.js      # Virtual scrolling for large datasets
 ├── crypto/                 # Encryption provider abstraction layer (Phase 2)
 │   ├── CryptoProvider.js   # Base provider interface and factory (157 lines)
 │   └── providers/          # Concrete provider implementations
@@ -79,14 +80,20 @@ src/
 │   └── pngTags.js           # PNG metadata tag definitions
 ├── views/                  # Tool page components (ALL PAGES MOVED HERE)
 │   ├── About.vue            # About page (178 lines)
-│   ├── AesDecrypt.vue       # AES decryption for files AND text (620 lines)
-│   ├── AesEncrypt.vue       # AES encryption for files AND text (479 lines)
+│   ├── AesDecrypt.vue       # Multi-algorithm decryption (jsAesCrypt/WebCrypto/Age) (750 lines)
+│   ├── AesEncrypt.vue       # Multi-algorithm encryption (jsAesCrypt/WebCrypto/Age) (550 lines)
 │   ├── Base64Decode.vue     # Base64 decoder page (226 lines)
 │   ├── Base64Encode.vue     # Base64 encoder page (252 lines)
-│   ├── HexViewer.vue        # Binary file hex viewer (689 lines, NEW)
+│   ├── HexViewer.vue        # Binary file hex viewer (689 lines)
 │   ├── Home.vue             # Landing page with tool grid (121 lines)
 │   ├── MetadataEditor.vue   # Image metadata editor (947 lines)
 │   └── PasswordGenerator.vue # Password generator tool (257 lines)
+├── workers/                # ES Module Web Workers (NEW)
+│   ├── cryptoWorker.js     # Modern crypto worker with WASM support (175 lines)
+│   └── providers/          # ES module provider implementations
+│       ├── AgeWorkerProvider.js        # Age encryption via rage-wasm (200 lines)
+│       ├── JsAesCryptWorkerProvider.js # Fallback jsAesCrypt (not used, 175 lines)
+│       └── WebCryptoWorkerProvider.js  # Browser-native AES-GCM (280 lines)
 └── assets/                 # Static assets and utilities
     ├── base.css            # Global CSS variables
     ├── global-styles.css   # Global UX styles
@@ -135,15 +142,16 @@ public/
 ├── favicon.ico             # Browser favicon
 ├── manifest.json           # PWA manifest
 ├── sw.js                   # Service Worker for offline caching (97 lines - enhanced)
-├── worker.js               # Web Worker for AES operations (117 lines - provider-based)
-├── providers/              # Worker-compatible crypto providers (NEW - Phase 2)
-│   ├── JsAesCryptWorkerProvider.js  # jsAesCrypt worker provider (144 lines)
-│   └── WebCryptoWorkerProvider.js   # Web Crypto worker provider (235 lines)
+├── worker.js               # Classic Web Worker for jsAesCrypt (150 lines - CDN-based)
+├── providers/              # Classic worker crypto providers
+│   ├── JsAesCryptWorkerProvider.js  # jsAesCrypt provider for classic worker (144 lines)
+│   ├── WebCryptoWorkerProvider.js   # WebCrypto provider (not used in classic worker)
+│   └── AgeWorkerProvider.js         # Age provider (not used in classic worker) (NEW)
 ├── icons/                  # PWA app icons
 │   ├── icon.svg
 │   ├── icon-192x192.png
 │   └── icon-512x512.png
-└── libs/                   # Bundled crypto libraries
+└── libs/                   # Bundled crypto libraries (CDN-loaded by classic worker)
     ├── aes_crypt.min.js    # AES encryption library
     └── enc-uint8array.min.js # Uint8Array encoding
 ```
@@ -152,8 +160,13 @@ public/
 
 **Key Files**:
 - **sw.js** (97 lines) - Service Worker with CORS caching, improved error handling, immediate activation
-- **worker.js** (73 lines) - Web Worker with user-friendly error messages for AES operations
+- **worker.js** (150 lines) - Classic Web Worker for jsAesCrypt operations (uses importScripts)
 - **manifest.json** - PWA manifest defining app metadata, icons, and installability
+
+**Worker Architecture**:
+- **Classic Worker** (`public/worker.js`) - For jsAesCrypt (.aes files), uses `importScripts()` to load CDN libraries
+- **ES Module Worker** (`src/workers/cryptoWorker.js`) - For WebCrypto/Age (.enc/.age files), bundled by Vite with rage-wasm
+- **Auto-switching** - `useAESWorker` composable terminates and recreates workers when switching algorithm types
 
 ### External Library (`/jsAesCrypt-main/`)
 ```

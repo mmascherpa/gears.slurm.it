@@ -18,6 +18,7 @@
     "test:e2e:debug": "playwright test --debug"
   },
   "dependencies": {
+    "@kanru/rage-wasm": "^0.3.2",
     "buffer": "^6.0.3",
     "events": "^3.3.0",
     "exifr": "^7.1.3",

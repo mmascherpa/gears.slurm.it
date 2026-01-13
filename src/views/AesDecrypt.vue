@@ -3,8 +3,8 @@
     <!-- Page Header -->
     <ToolPageHeader
       icon="mdi-lock-open"
-      title="AES Decryption"
-      description="Decrypt password-protected AES encrypted files and text"
+      title="Decryption"
+      description="Decrypt password-protected AES or Age encrypted files and text"
       avatar-color="primary-darken-1"
     />
 
@@ -58,6 +58,59 @@
     <form @submit.prevent="decryptFile">
       <!-- Hidden username field for browser accessibility compliance -->
       <input type="text" name="username" autocomplete="username" style="display: none;" aria-hidden="true">
+
+      <!-- Algorithm Selection Card -->
+      <v-card class="mb-4">
+        <v-card-title class="bg-surface-variant">
+          <v-icon icon="mdi-shield-lock" class="mr-2"></v-icon>
+          Encryption Algorithm
+        </v-card-title>
+        <v-card-text class="pa-4">
+          <v-radio-group v-model="selectedAlgorithm" inline>
+            <v-radio
+              value="jsAesCrypt"
+            >
+              <template #label>
+                <div>
+                  <div class="font-weight-medium">AES-256 (jsAesCrypt)</div>
+                  <div class="text-caption text-medium-emphasis">Compatible with AES Crypt format (.aes files)</div>
+                </div>
+              </template>
+            </v-radio>
+            <v-radio
+              value="webCrypto"
+            >
+              <template #label>
+                <div>
+                  <div class="font-weight-medium">AES-256 (WebCrypto)</div>
+                  <div class="text-caption text-medium-emphasis">Browser-native encryption (.enc files)</div>
+                </div>
+              </template>
+            </v-radio>
+            <v-radio
+              value="age"
+            >
+              <template #label>
+                <div>
+                  <div class="font-weight-medium">Age Encryption</div>
+                  <div class="text-caption text-medium-emphasis">Modern encryption format (.age files)</div>
+                </div>
+              </template>
+            </v-radio>
+          </v-radio-group>
+
+          <v-alert
+            v-if="selectedAlgorithm === 'age'"
+            type="info"
+            variant="tonal"
+            density="compact"
+            class="mt-2"
+          >
+            Age encrypted files (.age) are compatible with the
+            <a href="https://age-encryption.org" target="_blank" class="text-info">age CLI tool</a>
+          </v-alert>
+        </v-card-text>
+      </v-card>
 
       <!-- Password Section -->
       <v-card class="mb-4">
@@ -152,8 +205,8 @@
         <v-card-text class="pa-4">
           <FileUploadWithValidation
             v-model="encryptedFile"
-            label="Select encrypted file (.aes)"
-            accept=".aes"
+            label="Select encrypted file (.aes or .age)"
+            accept=".aes,.age"
             button-text="Decrypt"
             button-icon="mdi-lock-open"
             :disabled="isEncryptedTextPopulated"
@@ -309,6 +362,7 @@ export default {
     const error = ref('');
     const password = ref('');
     const plainText = ref('');
+    const selectedAlgorithm = ref('jsAesCrypt'); // Default to jsAesCrypt for backwards compatibility
     const tableData = ref([]);
     const tableHeaders = ref([]);
 
@@ -457,7 +511,7 @@ export default {
       const encryptedBlob = convertFromBase64();
       if (!encryptedBlob) return;
 
-      decrypt(encryptedBlob, password.value, 'encrypted.aes');
+      decrypt(encryptedBlob, password.value, 'encrypted.aes', selectedAlgorithm.value);
     };
 
     /**
@@ -470,7 +524,7 @@ export default {
       }
 
       error.value = '';
-      decrypt(encryptedFile.value, password.value, encryptedFile.value.name);
+      decrypt(encryptedFile.value, password.value, encryptedFile.value.name, selectedAlgorithm.value);
     };
 
     /**
@@ -618,6 +672,17 @@ export default {
     // Watchers
 
     watch(encryptedFile, (newVal) => {
+      // Auto-detect algorithm from file extension
+      if (newVal) {
+        if (newVal.name.endsWith('.age')) {
+          selectedAlgorithm.value = 'age';
+        } else if (newVal.name.endsWith('.aes')) {
+          selectedAlgorithm.value = 'jsAesCrypt';
+        } else if (newVal.name.endsWith('.enc')) {
+          selectedAlgorithm.value = 'webCrypto';
+        }
+      }
+
       // Only clear outputs if user is changing to a different file
       // Don't clear if encryptedFile is being set to null (clearing inputs after successful decryption)
       if (newVal && (isOutputPopulated.value || decryptedFileName.value)) {
@@ -661,6 +726,7 @@ export default {
       isLoading,
       password,
       plainText,
+      selectedAlgorithm,
       tableData,
       tableHeaders,
 

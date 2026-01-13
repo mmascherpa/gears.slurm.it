@@ -20,5 +20,8 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
+  },
+  worker: {
+    format: 'es' // Enable ES module format for workers
   }
 })

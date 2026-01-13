@@ -3,8 +3,8 @@
     <!-- Page Header -->
     <ToolPageHeader
       icon="mdi-lock"
-      title="AES Encryption"
-      description="Encrypt files and text with password-protected AES encryption"
+      title="Encryption"
+      description="Encrypt files and text with AES-256 or Age encryption"
       avatar-color="primary"
     />
 
@@ -63,6 +63,59 @@
       class="mb-4">
       {{ error }}
     </v-alert>
+
+    <!-- Algorithm Selection Card -->
+    <v-card class="mb-4">
+      <v-card-title class="bg-surface-variant">
+        <v-icon icon="mdi-shield-lock" class="mr-2"></v-icon>
+        Encryption Algorithm
+      </v-card-title>
+      <v-card-text class="pa-4">
+        <v-radio-group v-model="selectedAlgorithm" inline>
+          <v-radio
+            value="jsAesCrypt"
+          >
+            <template #label>
+              <div>
+                <div class="font-weight-medium">AES-256 (jsAesCrypt)</div>
+                <div class="text-caption text-medium-emphasis">Compatible with AES Crypt format (.aes files)</div>
+              </div>
+            </template>
+          </v-radio>
+          <v-radio
+            value="webCrypto"
+          >
+            <template #label>
+              <div>
+                <div class="font-weight-medium">AES-256 (WebCrypto)</div>
+                <div class="text-caption text-medium-emphasis">Browser-native encryption (.enc files)</div>
+              </div>
+            </template>
+          </v-radio>
+          <v-radio
+            value="age"
+          >
+            <template #label>
+              <div>
+                <div class="font-weight-medium">Age Encryption</div>
+                <div class="text-caption text-medium-emphasis">Modern encryption format (.age files)</div>
+              </div>
+            </template>
+          </v-radio>
+        </v-radio-group>
+
+        <v-alert
+          v-if="selectedAlgorithm === 'age'"
+          type="info"
+          variant="tonal"
+          density="compact"
+          class="mt-2"
+        >
+          Age encrypted files (.age) are compatible with the
+          <a href="https://age-encryption.org" target="_blank" class="text-info">age CLI tool</a>
+        </v-alert>
+      </v-card-text>
+    </v-card>
 
     <!-- Password Protection Section -->
     <v-card class="mb-4">
@@ -248,6 +301,7 @@ export default {
     const passwordConfirm = ref('');
     const plainFile = ref(null);
     const plainText = ref('');
+    const selectedAlgorithm = ref('jsAesCrypt'); // Default to jsAesCrypt for backwards compatibility
     const tableData = ref([]);
     const tableHeaders = ref([]);
 
@@ -416,7 +470,7 @@ export default {
       }
 
       if (fileData && fileName) {
-        encrypt(fileData, password.value, fileName);
+        encrypt(fileData, password.value, fileName, selectedAlgorithm.value);
       }
     };
 
@@ -457,7 +511,7 @@ export default {
 
       try {
         const textBlob = new Blob([plainText.value], { type: 'text/plain' });
-        encrypt(textBlob, password.value, 'plaintext.txt');
+        encrypt(textBlob, password.value, 'plaintext.txt', selectedAlgorithm.value);
       } catch (err) {
         console.error('Encryption error:', err);
         error.value = 'Failed to initiate encryption';
@@ -538,6 +592,7 @@ export default {
       passwordConfirm,
       plainFile,
       plainText,
+      selectedAlgorithm,
       tableData,
       tableHeaders,
 

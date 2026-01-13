@@ -307,6 +307,8 @@ const vuetify = createVuetify({
       checkboxOn: 'CheckSquare',
       checkboxOff: 'Square',
       checkboxIndeterminate: 'MinusSquare',
+      radioOn: 'CheckCircle',
+      radioOff: 'Circle',
     },
     sets: {
       lucide: lucideIconSet,

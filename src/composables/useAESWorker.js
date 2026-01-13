@@ -36,11 +36,17 @@
  *   { providerType: 'webCrypto' }
  * );
  *
- * // Encrypt a file
+ * // Encrypt a file with default provider
  * encrypt(fileBlob, password, 'document.txt');
  *
- * // Decrypt a file
+ * // Encrypt a file with specific algorithm
+ * encrypt(fileBlob, password, 'document.txt', 'age');
+ *
+ * // Decrypt a file with default provider
  * decrypt(encryptedBlob, password, 'encrypted.aes');
+ *
+ * // Decrypt a file with specific algorithm
+ * decrypt(encryptedBlob, password, 'encrypted.age', 'age');
  */
 import { ref, onBeforeUnmount } from 'vue';
 
@@ -49,13 +55,46 @@ export function useAESWorker(onSuccess, onError, options = {}) {
   const isLoading = ref(false);
   const providerType = options.providerType || 'jsAesCrypt';
 
+  // Track which worker type is currently loaded
+  let currentWorkerType = null;
+
   /**
-   * Setup Web Worker instance (initialize once and reuse)
-   * Only creates worker if it doesn't already exist
+   * Setup Web Worker instance
+   * Creates a new worker if none exists, or if algorithm requires different worker type
+   *
+   * @param {string} algorithm - Algorithm to determine which worker to use
    */
-  const setupWorker = () => {
+  const setupWorker = (algorithm) => {
+    const needsClassicWorker = algorithm === 'jsAesCrypt';
+    const needsModernWorker = algorithm === 'webCrypto' || algorithm === 'age';
+
+    // Determine if we need to switch worker types
+    const shouldSwitchWorker = worker.value && (
+      (needsClassicWorker && currentWorkerType !== 'classic') ||
+      (needsModernWorker && currentWorkerType !== 'modern')
+    );
+
+    // Terminate existing worker if switching types
+    if (shouldSwitchWorker) {
+      worker.value.terminate();
+      worker.value = null;
+      currentWorkerType = null;
+    }
+
+    // Create new worker if needed
     if (!worker.value) {
-      worker.value = new Worker('/worker.js');
+      if (needsClassicWorker) {
+        // Use classic worker for jsAesCrypt (supports .aes files)
+        worker.value = new Worker('/worker.js');
+        currentWorkerType = 'classic';
+      } else {
+        // Use ES module worker for webCrypto and age (supports rage-wasm)
+        worker.value = new Worker(
+          new URL('../workers/cryptoWorker.js', import.meta.url),
+          { type: 'module' }
+        );
+        currentWorkerType = 'modern';
+      }
       worker.value.onmessage = handleWorkerResponse;
     }
   };
@@ -82,16 +121,17 @@ export function useAESWorker(onSuccess, onError, options = {}) {
    * @param {Blob|File} fileData - Data to encrypt
    * @param {string} password - Encryption password
    * @param {string} fileName - Original file name
+   * @param {string} algorithm - Algorithm to use ('jsAesCrypt', 'webCrypto', or 'age')
    */
-  const encrypt = (fileData, password, fileName) => {
+  const encrypt = (fileData, password, fileName, algorithm = providerType) => {
     if (!fileData || !password) {
       console.error('useAESWorker: Missing fileData or password');
       return;
     }
 
     isLoading.value = true;
-    setupWorker();
-    worker.value.postMessage(['ENCRYPT', fileData, password, fileName]);
+    setupWorker(algorithm);
+    worker.value.postMessage(['ENCRYPT', fileData, password, fileName, algorithm]);
   };
 
   /**
@@ -99,16 +139,17 @@ export function useAESWorker(onSuccess, onError, options = {}) {
    * @param {Blob|File} fileData - Data to decrypt
    * @param {string} password - Decryption password
    * @param {string} fileName - Encrypted file name
+   * @param {string} algorithm - Algorithm to use ('jsAesCrypt', 'webCrypto', or 'age')
    */
-  const decrypt = (fileData, password, fileName) => {
+  const decrypt = (fileData, password, fileName, algorithm = providerType) => {
     if (!fileData || !password) {
       console.error('useAESWorker: Missing fileData or password');
       return;
     }
 
     isLoading.value = true;
-    setupWorker();
-    worker.value.postMessage(['DECRYPT', fileData, password, fileName]);
+    setupWorker(algorithm);
+    worker.value.postMessage(['DECRYPT', fileData, password, fileName, algorithm]);
   };
 
   /**
