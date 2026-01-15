@@ -1,8 +1,4 @@
 import { test, expect } from '@playwright/test';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 test.describe('Metadata Editor', () => {
   test.beforeEach(async ({ page }) => {
@@ -34,51 +30,12 @@ test.describe('Metadata Editor', () => {
     expect(isVisible).toBe(false);
   });
 
-  test.skip('accepts JPEG file upload', async ({ page }) => {
-    // SKIPPED: Metadata parsing library (exif-js, piexifjs, etc.) may not be installed
-    // This test validates full metadata extraction workflow. Page UI and basic
-    // file upload functionality are tested in other tests.
-  });
-
-  test.skip('accepts PNG file upload - requires metadata library', async ({ page }) => {});
-  test.skip('displays file preview after upload - requires metadata library', async ({ page }) => {});
-  test.skip('can clear file selection - requires metadata library', async ({ page }) => {});
-  test.skip('displays action buttons when metadata loaded - requires metadata library', async ({ page }) => {});
-  test.skip('shows add custom field dialog - requires metadata library', async ({ page }) => {});
-  test.skip('shows download button - requires metadata library', async ({ page }) => {});
-  test.skip('can expand preview image - requires metadata library', async ({ page }) => {});
-  test.skip('navigation - can access from drawer menu - route may not exist yet', async ({ page }) => {});
-  test.skip('handles corrupted file gracefully - requires metadata library', async ({ page }) => {});
-
-  test.skip('displays metadata categories when JPEG uploaded', async ({ page }) => {
-    // SKIPPED: Full metadata parsing may not be implemented yet.
-    // This test validates that EXIF/metadata extraction works correctly.
-    // Basic file upload and UI workflow is tested in other tests.
-  });
-
-  test.skip('allows editing field values', async ({ page }) => {
-    // SKIPPED: Metadata editing UI may not be fully implemented.
-    // This test would validate the edit dialog and field modification workflow.
-    // Basic UI components are tested in other tests.
-  });
-
-  test.skip('tracks edit count correctly', async ({ page }) => {
-    // SKIPPED: Edit tracking requires full metadata editing implementation.
-    // This validates advanced UX beyond core functionality.
-  });
-
-  test.skip('can remove individual metadata fields', async ({ page }) => {
-    // SKIPPED: Field removal requires full metadata editing implementation.
-    // This validates advanced UX beyond core functionality.
-  });
-
-  test.skip('confirms before removing all metadata', async ({ page }) => {
-    // SKIPPED: Remove all metadata requires full implementation.
-    // This validates advanced UX beyond core functionality.
-  });
-
-  test.skip('downloads modified image with updated metadata', async ({ page }) => {
-    // SKIPPED: Full metadata modification and re-encoding may not be implemented.
-    // This validates advanced image processing functionality.
-  });
+  // Future tests for metadata editing workflow:
+  // - File upload and metadata extraction (JPEG/PNG)
+  // - Metadata category display
+  // - Field editing dialog
+  // - Field removal
+  // - Bulk metadata removal with confirmation
+  // - Modified image download
+  // These require full metadata library integration to test properly
 });

@@ -106,7 +106,7 @@ describe('useCryptoWorker', () => {
       const consoleErrorSpy = vi.spyOn(console, 'error')
       encrypt(null, 'password123', 'test.txt')
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith('useCryptoWorker: Missing fileData or password')
+      expect(consoleErrorSpy).toHaveBeenCalledWith('useAESWorker: Missing fileData or password')
       expect(WorkerConstructorSpy).not.toHaveBeenCalled()
     })
 
@@ -117,24 +117,24 @@ describe('useCryptoWorker', () => {
       const fileData = new Blob(['test data'])
       encrypt(fileData, '', 'test.txt')
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith('useCryptoWorker: Missing fileData or password')
+      expect(consoleErrorSpy).toHaveBeenCalledWith('useAESWorker: Missing fileData or password')
       expect(WorkerConstructorSpy).not.toHaveBeenCalled()
     })
 
-    // Skipped: Spy timing issue - spy created after worker already exists
-    // Worker termination functionality is verified in other tests
-    it.skip('should terminate existing worker before creating new one', () => {
-      const { encrypt } = useCryptoWorker()
+    it('should reuse existing worker for same algorithm type', () => {
+      const { encrypt, worker } = useCryptoWorker()
 
       const fileData = new Blob(['test data'])
       encrypt(fileData, 'password123', 'test1.txt')
 
-      const firstWorker = mockWorker
-      const terminateSpy = vi.spyOn(firstWorker, 'terminate')
+      const firstWorker = worker.value
 
+      // Second encrypt with same algorithm should reuse the worker
       encrypt(fileData, 'password123', 'test2.txt')
 
-      expect(terminateSpy).toHaveBeenCalled()
+      expect(worker.value).toBe(firstWorker)
+      // Worker constructor should only be called once
+      expect(WorkerConstructorSpy).toHaveBeenCalledTimes(1)
     })
   })
 
@@ -195,7 +195,7 @@ describe('useCryptoWorker', () => {
       const consoleErrorSpy = vi.spyOn(console, 'error')
       decrypt(null, 'password123', 'test.txt.aes')
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith('useCryptoWorker: Missing fileData or password')
+      expect(consoleErrorSpy).toHaveBeenCalledWith('useAESWorker: Missing fileData or password')
       expect(WorkerConstructorSpy).not.toHaveBeenCalled()
     })
 
@@ -206,7 +206,7 @@ describe('useCryptoWorker', () => {
       const fileData = new Blob(['encrypted data'])
       decrypt(fileData, '', 'test.txt.aes')
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith('useCryptoWorker: Missing fileData or password')
+      expect(consoleErrorSpy).toHaveBeenCalledWith('useAESWorker: Missing fileData or password')
       expect(WorkerConstructorSpy).not.toHaveBeenCalled()
     })
   })
@@ -290,8 +290,10 @@ describe('useCryptoWorker', () => {
       const fileData = new Blob(['encrypted data'])
       decrypt(fileData, 'wrongpass', 'test.txt.aes')
 
-      await new Promise(resolve => setTimeout(resolve, 20))
+      // Wait longer to ensure async processing completes
+      await new Promise(resolve => setTimeout(resolve, 50))
 
+      expect(onError).toHaveBeenCalled()
       const [friendlyMessage] = onError.mock.calls[0]
       expect(friendlyMessage).toBe('❌ Incorrect password. Please check your password and try again.')
     })

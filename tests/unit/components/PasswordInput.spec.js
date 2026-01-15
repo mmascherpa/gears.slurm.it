@@ -271,11 +271,21 @@ describe('PasswordInput.vue', () => {
       expect(strengthIndicator.props('password')).toBe('test123')
     })
 
-    it('should pass showRequirements prop to PasswordStrengthIndicator', () => {
+    it('should pass showRequirements prop to PasswordStrengthIndicator based on focus state', async () => {
       const wrapper = createWrapper({
         showRequirements: true,
+        password: 'test', // Need password for indicator to render
       })
       const strengthIndicator = wrapper.findComponent(PasswordStrengthIndicator)
+
+      // Initially false because password field is not focused (showRequirementsComputed)
+      expect(strengthIndicator.props('showRequirements')).toBe(false)
+
+      // Simulate focus on password field container
+      wrapper.vm.handlePasswordFocus()
+      await wrapper.vm.$nextTick()
+
+      // Should now be true because field is focused and showRequirements prop is true
       expect(strengthIndicator.props('showRequirements')).toBe(true)
     })
 

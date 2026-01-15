@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import {
   IMAGE_FORMATS,
   detectImageFormat,
@@ -14,123 +14,148 @@ import {
 
 describe('metadataManager.js', () => {
   describe('detectImageFormat', () => {
+    // Helper to create a File with actual PNG magic bytes
+    function createPngFile(name) {
+      // PNG signature: 89 50 4E 47 0D 0A 1A 0A
+      const pngBytes = new Uint8Array([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])
+      return new File([pngBytes], name, { type: 'image/png' })
+    }
+
+    // Helper to create a File with actual JPEG magic bytes
+    function createJpegFile(name) {
+      // JPEG signature: FF D8 FF
+      const jpegBytes = new Uint8Array([0xFF, 0xD8, 0xFF, 0xE0])
+      return new File([jpegBytes], name, { type: 'image/jpeg' })
+    }
+
     describe('File input', () => {
-      it('should detect PNG from file extension', () => {
-        const file = new File(['test'], 'test.png', { type: 'image/png' })
-        const format = detectImageFormat(file)
+      it('should detect PNG from magic bytes', async () => {
+        const file = createPngFile('test.png')
+        const format = await detectImageFormat(file)
         expect(format).toBe(IMAGE_FORMATS.PNG)
       })
 
-      it('should detect JPEG from .jpg extension', () => {
-        const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' })
-        const format = detectImageFormat(file)
+      it('should detect JPEG from .jpg file', async () => {
+        const file = createJpegFile('test.jpg')
+        const format = await detectImageFormat(file)
         expect(format).toBe(IMAGE_FORMATS.JPEG)
       })
 
-      it('should detect JPEG from .jpeg extension', () => {
-        const file = new File(['test'], 'test.jpeg', { type: 'image/jpeg' })
-        const format = detectImageFormat(file)
+      it('should detect JPEG from .jpeg file', async () => {
+        const file = createJpegFile('test.jpeg')
+        const format = await detectImageFormat(file)
         expect(format).toBe(IMAGE_FORMATS.JPEG)
       })
 
-      it('should detect PNG from MIME type even with wrong extension', () => {
-        const file = new File(['test'], 'test.jpg', { type: 'image/png' })
-        const format = detectImageFormat(file)
+      it('should detect PNG from magic bytes even with wrong extension', async () => {
+        // PNG magic bytes in a file with .jpg extension
+        const pngBytes = new Uint8Array([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])
+        const file = new File([pngBytes], 'test.jpg', { type: 'image/png' })
+        const format = await detectImageFormat(file)
         expect(format).toBe(IMAGE_FORMATS.PNG)
       })
 
-      it('should detect PNG from extension first (extension takes priority)', () => {
-        // Note: detectImageFormat checks extension before MIME type
-        const file = new File(['test'], 'test.png', { type: 'image/jpeg' })
-        const format = detectImageFormat(file)
-        expect(format).toBe(IMAGE_FORMATS.PNG)
+      it('should detect format from magic bytes (magic bytes take priority)', async () => {
+        // JPEG magic bytes in a file with .png extension - magic bytes win
+        const jpegBytes = new Uint8Array([0xFF, 0xD8, 0xFF, 0xE0])
+        const file = new File([jpegBytes], 'test.png', { type: 'image/jpeg' })
+        const format = await detectImageFormat(file)
+        expect(format).toBe(IMAGE_FORMATS.JPEG)
       })
 
-      it('should return UNKNOWN for unsupported file types', () => {
-        const file = new File(['test'], 'test.gif', { type: 'image/gif' })
-        const format = detectImageFormat(file)
+      it('should return UNKNOWN for unsupported file types', async () => {
+        // GIF magic bytes
+        const gifBytes = new Uint8Array([0x47, 0x49, 0x46, 0x38, 0x39, 0x61])
+        const file = new File([gifBytes], 'test.gif', { type: 'image/gif' })
+        const format = await detectImageFormat(file)
         expect(format).toBe(IMAGE_FORMATS.UNKNOWN)
       })
 
-      it('should handle case-insensitive extensions', () => {
-        const file1 = new File(['test'], 'test.PNG', { type: 'image/png' })
-        const file2 = new File(['test'], 'test.JPG', { type: 'image/jpeg' })
-        expect(detectImageFormat(file1)).toBe(IMAGE_FORMATS.PNG)
-        expect(detectImageFormat(file2)).toBe(IMAGE_FORMATS.JPEG)
+      it('should handle case-insensitive extensions with correct magic bytes', async () => {
+        const file1 = createPngFile('test.PNG')
+        const file2 = createJpegFile('test.JPG')
+        expect(await detectImageFormat(file1)).toBe(IMAGE_FORMATS.PNG)
+        expect(await detectImageFormat(file2)).toBe(IMAGE_FORMATS.JPEG)
       })
     })
 
     describe('Base64 string input', () => {
-      it('should detect PNG from data URI prefix', () => {
+      it('should detect PNG from data URI with PNG magic bytes', async () => {
+        // This is a real 1x1 PNG with valid magic bytes
         const base64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
-        const format = detectImageFormat(base64)
+        const format = await detectImageFormat(base64)
         expect(format).toBe(IMAGE_FORMATS.PNG)
       })
 
-      it('should detect JPEG from data URI prefix', () => {
+      it('should detect JPEG from data URI with JPEG magic bytes', async () => {
+        // /9j/ decodes to FF D8 FF (JPEG magic bytes)
         const base64 = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD'
-        const format = detectImageFormat(base64)
+        const format = await detectImageFormat(base64)
         expect(format).toBe(IMAGE_FORMATS.JPEG)
       })
 
-      it('should detect PNG from magic bytes', () => {
+      it('should detect PNG from magic bytes in raw base64', async () => {
         // PNG signature: 89 50 4E 47 0D 0A 1A 0A
         const pngSignature = btoa('\x89PNG\r\n\x1a\n')
-        const format = detectImageFormat(pngSignature)
+        const format = await detectImageFormat(pngSignature)
         expect(format).toBe(IMAGE_FORMATS.PNG)
       })
 
-      it('should detect JPEG from magic bytes', () => {
+      it('should detect JPEG from magic bytes in raw base64', async () => {
         // JPEG signature: FF D8 FF
         const jpegSignature = btoa('\xFF\xD8\xFF')
-        const format = detectImageFormat(jpegSignature)
+        const format = await detectImageFormat(jpegSignature)
         expect(format).toBe(IMAGE_FORMATS.JPEG)
       })
 
-      it('should return UNKNOWN for invalid base64', () => {
-        const format = detectImageFormat('invalid-base64')
+      it('should return UNKNOWN for invalid base64', async () => {
+        const format = await detectImageFormat('invalid-base64')
         expect(format).toBe(IMAGE_FORMATS.UNKNOWN)
       })
 
-      it('should return UNKNOWN for unsupported format', () => {
+      it('should return UNKNOWN for unsupported format', async () => {
         const gifSignature = btoa('GIF89a')
-        const format = detectImageFormat(gifSignature)
+        const format = await detectImageFormat(gifSignature)
         expect(format).toBe(IMAGE_FORMATS.UNKNOWN)
       })
 
-      it('should handle data:image/jpg prefix', () => {
+      it('should handle data:image/jpg prefix with JPEG magic bytes', async () => {
+        // /9j/ decodes to FF D8 FF (JPEG magic bytes)
         const base64 = 'data:image/jpg;base64,/9j/4AAQSkZJRgABAQEASABIAAD'
-        const format = detectImageFormat(base64)
+        const format = await detectImageFormat(base64)
         expect(format).toBe(IMAGE_FORMATS.JPEG)
       })
     })
 
     describe('Edge cases', () => {
-      it('should handle empty filename', () => {
-        const file = new File(['test'], '', { type: 'image/png' })
-        const format = detectImageFormat(file)
+      it('should handle empty filename with PNG magic bytes', async () => {
+        const pngBytes = new Uint8Array([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])
+        const file = new File([pngBytes], '', { type: 'image/png' })
+        const format = await detectImageFormat(file)
         expect(format).toBe(IMAGE_FORMATS.PNG)
       })
 
-      it('should handle filename without extension', () => {
-        const file = new File(['test'], 'image', { type: 'image/jpeg' })
-        const format = detectImageFormat(file)
+      it('should handle filename without extension with JPEG magic bytes', async () => {
+        const jpegBytes = new Uint8Array([0xFF, 0xD8, 0xFF, 0xE0])
+        const file = new File([jpegBytes], 'image', { type: 'image/jpeg' })
+        const format = await detectImageFormat(file)
         expect(format).toBe(IMAGE_FORMATS.JPEG)
       })
 
-      it('should handle multiple dots in filename', () => {
-        const file = new File(['test'], 'my.photo.final.png', { type: 'image/png' })
-        const format = detectImageFormat(file)
+      it('should handle multiple dots in filename with PNG magic bytes', async () => {
+        const pngBytes = new Uint8Array([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])
+        const file = new File([pngBytes], 'my.photo.final.png', { type: 'image/png' })
+        const format = await detectImageFormat(file)
         expect(format).toBe(IMAGE_FORMATS.PNG)
       })
 
-      it('should return UNKNOWN for null input', () => {
-        const format = detectImageFormat(null)
+      it('should return UNKNOWN for null input', async () => {
+        const format = await detectImageFormat(null)
         expect(format).toBe(IMAGE_FORMATS.UNKNOWN)
       })
 
-      it('should return UNKNOWN for undefined input', () => {
-        const format = detectImageFormat(undefined)
+      it('should return UNKNOWN for undefined input', async () => {
+        const format = await detectImageFormat(undefined)
         expect(format).toBe(IMAGE_FORMATS.UNKNOWN)
       })
     })
@@ -331,10 +356,11 @@ describe('metadataManager.js', () => {
   })
 
   describe('Integration scenarios', () => {
-    it('should handle workflow: detect > load > edit > save', () => {
-      // Test the expected workflow pattern
-      const file = new File(['test'], 'photo.jpg', { type: 'image/jpeg' })
-      const format = detectImageFormat(file)
+    it('should handle workflow: detect > load > edit > save', async () => {
+      // Test the expected workflow pattern with JPEG magic bytes
+      const jpegBytes = new Uint8Array([0xFF, 0xD8, 0xFF, 0xE0])
+      const file = new File([jpegBytes], 'photo.jpg', { type: 'image/jpeg' })
+      const format = await detectImageFormat(file)
 
       expect(format).toBe(IMAGE_FORMATS.JPEG)
 
@@ -345,9 +371,10 @@ describe('metadataManager.js', () => {
       expect(mimeType).toBe('image/jpeg')
     })
 
-    it('should handle PNG workflow', () => {
-      const file = new File(['test'], 'graphic.png', { type: 'image/png' })
-      const format = detectImageFormat(file)
+    it('should handle PNG workflow', async () => {
+      const pngBytes = new Uint8Array([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])
+      const file = new File([pngBytes], 'graphic.png', { type: 'image/png' })
+      const format = await detectImageFormat(file)
 
       expect(format).toBe(IMAGE_FORMATS.PNG)
 
@@ -358,9 +385,11 @@ describe('metadataManager.js', () => {
       expect(mimeType).toBe('image/png')
     })
 
-    it('should handle unsupported format gracefully', () => {
-      const file = new File(['test'], 'image.gif', { type: 'image/gif' })
-      const format = detectImageFormat(file)
+    it('should handle unsupported format gracefully', async () => {
+      // GIF magic bytes
+      const gifBytes = new Uint8Array([0x47, 0x49, 0x46, 0x38, 0x39, 0x61])
+      const file = new File([gifBytes], 'image.gif', { type: 'image/gif' })
+      const format = await detectImageFormat(file)
 
       expect(format).toBe(IMAGE_FORMATS.UNKNOWN)
 
@@ -371,13 +400,15 @@ describe('metadataManager.js', () => {
       expect(mimeType).toBe('application/octet-stream')
     })
 
-    it('should maintain format consistency through operations', () => {
+    it('should maintain format consistency through operations', async () => {
       // Ensure format detection is consistent
-      const jpegFile = new File(['test'], 'test.jpg', { type: 'image/jpeg' })
-      const pngFile = new File(['test'], 'test.png', { type: 'image/png' })
+      const jpegBytes = new Uint8Array([0xFF, 0xD8, 0xFF, 0xE0])
+      const pngBytes = new Uint8Array([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])
+      const jpegFile = new File([jpegBytes], 'test.jpg', { type: 'image/jpeg' })
+      const pngFile = new File([pngBytes], 'test.png', { type: 'image/png' })
 
-      const jpegFormat = detectImageFormat(jpegFile)
-      const pngFormat = detectImageFormat(pngFile)
+      const jpegFormat = await detectImageFormat(jpegFile)
+      const pngFormat = await detectImageFormat(pngFile)
 
       expect(jpegFormat).toBe(IMAGE_FORMATS.JPEG)
       expect(pngFormat).toBe(IMAGE_FORMATS.PNG)

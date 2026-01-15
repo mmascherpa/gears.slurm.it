@@ -183,8 +183,8 @@ describe('pngMetadataEditor.js', () => {
       expect(metadata.Description).toBeDefined()
       expect(metadata.Author).toBeDefined()
 
-      // Check section structure (uses "label" not "name")
-      expect(metadata.Description.label).toBe('Description')
+      // Check section structure (uses "name" property from PNG_SECTIONS)
+      expect(metadata.Description.name).toBe('Description')
       expect(metadata.Description.icon).toBeDefined()
       expect(metadata.Description.fields).toBeInstanceOf(Array)
     })

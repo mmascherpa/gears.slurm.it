@@ -132,18 +132,21 @@ export function calculatePasswordStrength(password) {
  * @returns {Array} Array of requirement objects with met status
  */
 function getRequirements(password, charChecks) {
+  // Handle null/undefined password
+  const pwd = password || '';
+
   // If charChecks not provided, compute them
   if (!charChecks) {
     charChecks = {
-      hasLowercase: /[a-z]/.test(password),
-      hasUppercase: /[A-Z]/.test(password),
-      hasNumbers: /\d/.test(password),
-      hasSpecialChars: /[^A-Za-z0-9]/.test(password)
+      hasLowercase: /[a-z]/.test(pwd),
+      hasUppercase: /[A-Z]/.test(pwd),
+      hasNumbers: /\d/.test(pwd),
+      hasSpecialChars: /[^A-Za-z0-9]/.test(pwd)
     };
   }
 
   const hasBothCases = charChecks.hasLowercase && charChecks.hasUppercase;
-  const lengthMet = password.length >= 12;
+  const lengthMet = pwd.length >= 12;
 
   return [
     {

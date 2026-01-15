@@ -165,9 +165,10 @@ describe('PasswordStrengthIndicator.vue', () => {
 
     it('should show requirement items in list', () => {
       const wrapper = createWrapper({ password: 'test' })
-      const listItems = wrapper.findAllComponents({ name: 'VListItem' })
-      // Should have at least 3 requirement items
-      expect(listItems.length).toBeGreaterThanOrEqual(3)
+      // Component uses custom div elements with requirement-item class, not VListItem
+      const requirementItems = wrapper.findAll('.requirement-item')
+      // Should have 4 requirement items (length, case, number, special char)
+      expect(requirementItems.length).toBe(4)
     })
 
     it('should mark length requirement as met when satisfied', () => {

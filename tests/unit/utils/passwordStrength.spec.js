@@ -17,15 +17,13 @@ describe('passwordStrength', () => {
         expect(result.requirements.every(req => !req.met)).toBe(true);
       });
 
-      // Note: Implementation currently doesn't handle null/undefined gracefully
-      // This would require a code fix in password Strength.js
-      it.skip('returns empty level for null password', () => {
+      it('returns empty level for null password', () => {
         const result = calculatePasswordStrength(null);
         expect(result.level).toBe('empty');
         expect(result.score).toBe(0);
       });
 
-      it.skip('returns empty level for undefined password', () => {
+      it('returns empty level for undefined password', () => {
         const result = calculatePasswordStrength(undefined);
         expect(result.level).toBe('empty');
         expect(result.score).toBe(0);
