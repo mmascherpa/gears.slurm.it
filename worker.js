@@ -30,6 +30,30 @@ self.importScripts(
 // Load provider abstractions
 self.importScripts("/providers/JsAesCryptWorkerProvider.js");
 self.importScripts("/providers/WebCryptoWorkerProvider.js");
+self.importScripts("/providers/AgeWorkerProvider.js");
+
+// Initialize rage-wasm (async loading)
+let rageWasm = null;
+let rageWasmReady = false;
+
+// Load rage-wasm dynamically
+(async () => {
+  try {
+    const startTime = performance.now();
+    console.log('[Worker] Starting to load rage-wasm...');
+
+    // Import the module (this works in module-type workers in modern browsers)
+    const module = await import('@kanru/rage-wasm');
+    rageWasm = module;
+    rageWasmReady = true;
+
+    const loadTime = performance.now() - startTime;
+    console.log(`[Worker] rage-wasm loaded successfully in ${loadTime.toFixed(2)}ms`);
+  } catch (err) {
+    console.error('[Worker] Failed to load rage-wasm:', err);
+    // Age encryption will not be available, but AES encryption still works
+  }
+})();
 
 // Initialize default provider (jsAesCrypt)
 let provider = new JsAesCryptWorkerProvider(aesCrypt);
@@ -37,7 +61,7 @@ let currentProviderType = 'jsAesCrypt';
 
 /**
  * Sets the encryption provider
- * @param {string} providerType - Provider type ('jsAesCrypt' or 'webCrypto')
+ * @param {string} providerType - Provider type ('jsAesCrypt', 'webCrypto', or 'age')
  */
 function setProvider(providerType) {
   if (providerType === currentProviderType) {
@@ -50,6 +74,12 @@ function setProvider(providerType) {
   } else if (providerType === 'webCrypto') {
     provider = new WebCryptoWorkerProvider();
     currentProviderType = 'webCrypto';
+  } else if (providerType === 'age') {
+    if (!rageWasmReady || !rageWasm) {
+      throw new Error('Age encryption library not loaded yet. Please wait a moment and try again.');
+    }
+    provider = new AgeWorkerProvider(rageWasm);
+    currentProviderType = 'age';
   } else {
     throw new Error(`Unknown provider type: ${providerType}`);
   }
@@ -81,7 +111,7 @@ onmessage = function(e) {
 		const providerType = data[1] || 'jsAesCrypt';
 
 		// SECURITY: Validate provider type
-		if (typeof providerType !== 'string' || !['jsAesCrypt', 'webCrypto'].includes(providerType)) {
+		if (typeof providerType !== 'string' || !['jsAesCrypt', 'webCrypto', 'age'].includes(providerType)) {
 			postMessage(["INIT_ERROR", "Invalid provider type"]);
 			return;
 		}
@@ -121,7 +151,7 @@ onmessage = function(e) {
 		}
 
 		// SECURITY: Validate optional provider type
-		if (providerType !== undefined && (typeof providerType !== 'string' || !['jsAesCrypt', 'webCrypto'].includes(providerType))) {
+		if (providerType !== undefined && (typeof providerType !== 'string' || !['jsAesCrypt', 'webCrypto', 'age'].includes(providerType))) {
 			postMessage(["ERROR", "Invalid provider type", action]);
 			return;
 		}
