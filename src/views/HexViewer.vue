@@ -61,6 +61,28 @@
               prepend-icon="mdi-paperclip"
               hint="Any file type supported (up to 200 MB)"
               :disabled="isLoading" />
+
+            <!-- Detected File Type Display -->
+            <v-alert
+              v-if="detectedFileType"
+              type="info"
+              variant="tonal"
+              density="compact"
+              class="mt-3">
+              <div class="d-flex align-center justify-space-between flex-wrap ga-2">
+                <div>
+                  <strong>{{ detectedFileType.description }}</strong>
+                  <span class="text-medium-emphasis ml-2">({{ detectedSignatureHex }})</span>
+                </div>
+                <v-btn
+                  size="small"
+                  variant="text"
+                  @click="handleJumpToSignature">
+                  <v-icon start size="small">mdi-target</v-icon>
+                  Jump to Signature
+                </v-btn>
+              </div>
+            </v-alert>
           </v-card-text>
         </v-card>
       </v-col>
@@ -74,6 +96,19 @@
         </v-card-title>
       <v-card-text class="pa-4">
         <v-row class="mb-2">
+          <!-- Bytes Per Row Selector -->
+          <v-col cols="6" sm="auto">
+            <v-btn-toggle v-model="bytesPerRow" mandatory density="comfortable">
+              <v-btn
+                v-for="opt in BYTES_PER_ROW_OPTIONS"
+                :key="opt"
+                :value="opt">
+                {{ opt }}
+              </v-btn>
+            </v-btn-toggle>
+            <div class="text-caption text-medium-emphasis mt-1">Bytes/row</div>
+          </v-col>
+
           <!-- Offset Format Toggle -->
           <v-col cols="6" sm="auto">
             <v-btn-toggle v-model="offsetFormat" mandatory density="comfortable" class="w-100">
@@ -185,6 +220,45 @@
             </v-btn>
           </v-col>
         </v-row>
+
+        <!-- Bookmarks Section -->
+        <v-row class="mt-4" align="center">
+          <v-col cols="auto">
+            <v-btn
+              color="primary"
+              variant="tonal"
+              size="small"
+              :disabled="!hasSelection"
+              @click="handleAddBookmark">
+              <v-icon start>mdi-bookmark-plus</v-icon>
+              Add Bookmark
+            </v-btn>
+          </v-col>
+          <v-col v-if="sortedBookmarks.length > 0" cols="auto">
+            <span class="text-caption text-medium-emphasis">
+              {{ sortedBookmarks.length }} bookmark{{ sortedBookmarks.length > 1 ? 's' : '' }}
+            </span>
+          </v-col>
+        </v-row>
+
+        <!-- Bookmarks List -->
+        <v-row v-if="sortedBookmarks.length > 0" class="mt-2">
+          <v-col cols="12">
+            <div class="d-flex flex-wrap ga-2">
+              <v-chip
+                v-for="bookmark in sortedBookmarks"
+                :key="bookmark.id"
+                :color="bookmark.color"
+                closable
+                size="small"
+                @click="handleJumpToBookmark(bookmark)"
+                @click:close="handleRemoveBookmark(bookmark)">
+                <v-icon start size="small">mdi-bookmark</v-icon>
+                0x{{ bookmark.offset.toString(16).toUpperCase() }}
+              </v-chip>
+            </div>
+          </v-col>
+        </v-row>
       </v-card-text>
     </v-card>
 
@@ -206,14 +280,41 @@
                 v-for="rowIndex in visibleRowIndices"
                 :key="rowIndex"
                 class="hex-row">
-                <template v-if="getRow(rowIndex)">
-                  <span class="hex-offset">{{ getRow(rowIndex).offset }}</span>
+                <template v-if="getRowData(rowIndex)">
+                  <span class="hex-offset">{{ getRowData(rowIndex).offset }}</span>
                   <span class="hex-separator">│</span>
-                  <span class="hex-data">{{ getRow(rowIndex).hexPart1 }}</span>
+                  <!-- First half hex bytes - clickable -->
+                  <span class="hex-data">
+                    <span
+                      v-for="(byte, i) in getRowData(rowIndex).hexBytes.slice(0, bytesPerRow / 2)"
+                      :key="'h1-' + i"
+                      class="hex-byte"
+                      :class="getByteClasses(getRowData(rowIndex).byteOffset + i)"
+                      @click="handleByteClick(getRowData(rowIndex).byteOffset + i, $event)"
+                      @mousedown="handleByteMouseDown(getRowData(rowIndex).byteOffset + i, $event)">{{ byte }}</span>
+                  </span>
                   <span class="hex-group-separator">  </span>
-                  <span class="hex-data">{{ getRow(rowIndex).hexPart2 }}</span>
+                  <!-- Second half hex bytes - clickable -->
+                  <span class="hex-data">
+                    <span
+                      v-for="(byte, i) in getRowData(rowIndex).hexBytes.slice(bytesPerRow / 2, bytesPerRow)"
+                      :key="'h2-' + i"
+                      class="hex-byte"
+                      :class="getByteClasses(getRowData(rowIndex).byteOffset + bytesPerRow / 2 + i)"
+                      @click="handleByteClick(getRowData(rowIndex).byteOffset + bytesPerRow / 2 + i, $event)"
+                      @mousedown="handleByteMouseDown(getRowData(rowIndex).byteOffset + bytesPerRow / 2 + i, $event)">{{ byte }}</span>
+                  </span>
                   <span class="hex-separator">│</span>
-                  <span class="hex-ascii">{{ getRow(rowIndex).ascii }}</span>
+                  <!-- ASCII characters - clickable -->
+                  <span class="hex-ascii">
+                    <span
+                      v-for="(char, i) in getRowData(rowIndex).asciiChars"
+                      :key="'a-' + i"
+                      class="ascii-char"
+                      :class="getByteClasses(getRowData(rowIndex).byteOffset + i)"
+                      @click="handleByteClick(getRowData(rowIndex).byteOffset + i, $event)"
+                      @mousedown="handleByteMouseDown(getRowData(rowIndex).byteOffset + i, $event)">{{ char }}</span>
+                  </span>
                 </template>
               </div>
             </div>
@@ -329,6 +430,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { parseDecimalOffset, parseHexOffset } from '@/utils/hexFormatter';
 import { formatFileSize } from '@/utils/fileSizeValidator';
+import { detectFileType, signatureToHex } from '@/utils/fileSignatures';
 import { useClipboard } from '@/composables/useClipboard';
 import { useHexViewer } from '@/composables/useHexViewer';
 import { useSnackbar } from '@/composables/useSnackbar';
@@ -351,39 +453,54 @@ export default {
   },
 
   setup() {
-    const BYTES_PER_ROW = 16;
     const ROW_HEIGHT = 24; // pixels
+    const BYTES_PER_ROW_OPTIONS = [8, 16, 32];
 
     // Composables
     const { snackbar, snackbarColor, snackbarText, showSnackbar } = useSnackbar();
     const { copyToClipboard } = useClipboard();
 
+    // Initialize hex viewer - bytesPerRow is managed inside the composable
     const {
+      addBookmark,
+      BOOKMARK_COLORS,
+      bookmarks,
+      bytesPerRow,
       byteInterpretation,
+      clearBookmarks,
       clearFile,
       clearSearch,
       clearSelection,
       fileData,
       fileName,
       fileSize,
+      getBookmarkAt,
       getRow,
+      hasBookmarkAt,
       hasSearchMatches,
       hasSelection,
+      isByteInCurrentMatch,
+      isByteInSearchMatch,
+      isByteSelected,
       isLoading,
       loadFile,
       nextMatch,
       previousMatch,
+      removeBookmark,
       searchHexPattern,
       searchMatchInfo,
       searchText,
+      selectByte,
+      selectByteRange,
       selectedByteEnd,
       selectedBytes,
       selectedByteStart,
+      sortedBookmarks,
       toggleOffsetFormat,
       totalRows,
       useHexOffset,
       exportSelection
-    } = useHexViewer(BYTES_PER_ROW);
+    } = useHexViewer(16); // default 16 bytes per row
 
     const {
       endIndex,
@@ -405,6 +522,7 @@ export default {
     const jumpOffsetInput = ref('');
     const hexSearchInput = ref('');
     const textSearchInput = ref('');
+    const detectedFileType = ref(null);
 
     // Computed Properties
 
@@ -434,14 +552,22 @@ export default {
         try {
           await loadFile(newFile);
           updateTotalRows(totalRows.value);
-          showSnackbar(`✅ Loaded ${fileName.value} (${formattedFileSize.value})`, 'success');
+
+          // Detect file type from magic numbers
+          detectedFileType.value = detectFileType(fileData.value);
+
+          const typeInfo = detectedFileType.value
+            ? ` - Detected: ${detectedFileType.value.description}`
+            : '';
+          showSnackbar(`Loaded ${fileName.value} (${formattedFileSize.value})${typeInfo}`, 'success');
         } catch (error) {
-          showSnackbar(`❌ Failed to load file: ${error.message}`, 'error');
+          showSnackbar(`Failed to load file: ${error.message}`, 'error');
           console.error('File load error:', error);
         }
       } else {
         // Clear all state when file is removed
         clearFile();
+        detectedFileType.value = null;
         jumpOffsetInput.value = '';
         hexSearchInput.value = '';
         textSearchInput.value = '';
@@ -486,7 +612,7 @@ export default {
         return;
       }
 
-      scrollToOffset(offset, BYTES_PER_ROW);
+      scrollToOffset(offset, bytesPerRow.value);
       showSnackbar(`✅ Jumped to offset 0x${offset.toString(16).toUpperCase()}`, 'success');
       jumpOffsetInput.value = '';
     };
@@ -501,7 +627,7 @@ export default {
 
       if (hasSearchMatches.value) {
         const firstMatch = searchMatchInfo.value.offset;
-        scrollToOffset(firstMatch, BYTES_PER_ROW);
+        scrollToOffset(firstMatch, bytesPerRow.value);
         showSnackbar(`✅ Found ${searchMatchInfo.value.total} matches`, 'success');
       } else {
         showSnackbar('❌ No matches found', 'warning');
@@ -518,7 +644,7 @@ export default {
 
       if (hasSearchMatches.value) {
         const firstMatch = searchMatchInfo.value.offset;
-        scrollToOffset(firstMatch, BYTES_PER_ROW);
+        scrollToOffset(firstMatch, bytesPerRow.value);
         showSnackbar(`✅ Found ${searchMatchInfo.value.total} matches`, 'success');
       } else {
         showSnackbar('❌ No matches found', 'warning');
@@ -531,7 +657,7 @@ export default {
     const handleNextMatch = () => {
       const offset = nextMatch();
       if (offset !== undefined) {
-        scrollToOffset(offset, BYTES_PER_ROW);
+        scrollToOffset(offset, bytesPerRow.value);
       }
     };
 
@@ -541,7 +667,7 @@ export default {
     const handlePreviousMatch = () => {
       const offset = previousMatch();
       if (offset !== undefined) {
-        scrollToOffset(offset, BYTES_PER_ROW);
+        scrollToOffset(offset, bytesPerRow.value);
       }
     };
 
@@ -570,6 +696,124 @@ export default {
       showSnackbar(`✅ Exported ${selectedBytes.value.length} bytes`, 'success');
     };
 
+    // Selection state for shift-click range selection
+    const selectionAnchor = ref(null);
+
+    /**
+     * Gets row data with memoization to avoid recalculation
+     * @param {number} rowIndex - Row index
+     * @returns {Object|null} Row data object
+     */
+    const getRowData = (rowIndex) => {
+      return getRow(rowIndex);
+    };
+
+    /**
+     * Handles byte click for selection
+     * @param {number} byteOffset - Byte offset clicked
+     * @param {Event} event - Click event
+     */
+    const handleByteClick = (byteOffset, event) => {
+      if (byteOffset >= fileSize.value) return;
+
+      if (event.shiftKey && selectionAnchor.value !== null) {
+        // Shift-click: select range from anchor to current
+        selectByteRange(selectionAnchor.value, byteOffset);
+      } else {
+        // Normal click: select single byte and set as anchor
+        selectByte(byteOffset);
+        selectionAnchor.value = byteOffset;
+      }
+    };
+
+    /**
+     * Handles byte mousedown for drag selection start
+     * @param {number} byteOffset - Byte offset
+     * @param {Event} event - Mouse event
+     */
+    const handleByteMouseDown = (byteOffset, event) => {
+      if (event.shiftKey) return; // Let click handler deal with shift-click
+
+      // Set anchor for potential drag selection
+      selectionAnchor.value = byteOffset;
+    };
+
+    /**
+     * Gets CSS classes for a byte based on selection and search state
+     * @param {number} byteOffset - Byte offset
+     * @returns {Object} CSS class object
+     */
+    const getByteClasses = (byteOffset) => {
+      if (byteOffset >= fileSize.value) {
+        return { 'byte-empty': true };
+      }
+
+      return {
+        'byte-selected': isByteSelected(byteOffset),
+        'byte-current-match': isByteInCurrentMatch(byteOffset),
+        'byte-search-match': isByteInSearchMatch(byteOffset) && !isByteInCurrentMatch(byteOffset)
+      };
+    };
+
+    /**
+     * Jumps to and selects the file signature bytes
+     */
+    const handleJumpToSignature = () => {
+      if (!detectedFileType.value) return;
+
+      const { signatureOffset, signatureLength } = detectedFileType.value;
+      const endOffset = signatureOffset + signatureLength - 1;
+
+      scrollToOffset(signatureOffset, bytesPerRow.value);
+      selectByteRange(signatureOffset, endOffset);
+      showSnackbar(`Jumped to signature at offset 0x${signatureOffset.toString(16).toUpperCase()}`, 'info');
+    };
+
+    /**
+     * Adds a bookmark at the current selection or specified offset
+     */
+    const handleAddBookmark = () => {
+      const offset = selectedByteStart.value;
+      if (offset === null) {
+        showSnackbar('Select a byte first to bookmark', 'warning');
+        return;
+      }
+
+      if (hasBookmarkAt(offset)) {
+        showSnackbar('Bookmark already exists at this offset', 'info');
+        return;
+      }
+
+      addBookmark(offset);
+      showSnackbar(`Bookmark added at 0x${offset.toString(16).toUpperCase()}`, 'success');
+    };
+
+    /**
+     * Jumps to a specific bookmark
+     * @param {Object} bookmark - Bookmark to jump to
+     */
+    const handleJumpToBookmark = (bookmark) => {
+      scrollToOffset(bookmark.offset, bytesPerRow.value);
+      selectByte(bookmark.offset);
+      showSnackbar(`Jumped to ${bookmark.label}`, 'info');
+    };
+
+    /**
+     * Removes a specific bookmark
+     * @param {Object} bookmark - Bookmark to remove
+     */
+    const handleRemoveBookmark = (bookmark) => {
+      removeBookmark(bookmark.id);
+      showSnackbar('Bookmark removed', 'info');
+    };
+
+    /**
+     * Gets hex representation of the detected signature
+     */
+    const detectedSignatureHex = computed(() => {
+      if (!detectedFileType.value) return '';
+      return signatureToHex(detectedFileType.value.signatureBytes);
+    });
 
     // Lifecycle Hooks
 
@@ -584,9 +828,15 @@ export default {
 
     // Return
     return {
+      // Constants
+      BYTES_PER_ROW_OPTIONS,
+
       // State - File
+      bytesPerRow,
+      detectedFileType,
       fileData,
       fileName,
+      fileSize,
       selectedFile,
 
       // State - Loading
@@ -616,24 +866,36 @@ export default {
       hasSearchMatches,
       searchMatchInfo,
 
+      // State - Bookmarks
+      bookmarks,
+      sortedBookmarks,
+
       // Snackbar
       snackbar,
       snackbarColor,
       snackbarText,
 
       // Computed
+      detectedSignatureHex,
       formattedFileSize,
       getScrollPercentage,
       visibleRowIndices,
 
       // Methods
       clearSearch,
-      getRow,
+      getByteClasses,
+      getRowData,
+      handleAddBookmark,
+      handleByteClick,
+      handleByteMouseDown,
       handleCopyHex,
       handleExportSelection,
+      handleJumpToBookmark,
       handleJumpToOffset,
+      handleJumpToSignature,
       handleNextMatch,
       handlePreviousMatch,
+      handleRemoveBookmark,
       handleScroll,
       handleSearchHex,
       handleSearchText
@@ -708,7 +970,17 @@ export default {
 
 .hex-data {
   color: #4ec9b0;
-  letter-spacing: 1px;
+}
+
+.hex-byte {
+  cursor: pointer;
+  padding: 0 2px;
+  border-radius: 2px;
+  transition: background-color 0.1s;
+}
+
+.hex-byte:hover {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .hex-group-separator {
@@ -719,7 +991,40 @@ export default {
 .hex-ascii {
   color: #ce9178;
   margin-left: 16px;
-  letter-spacing: 2px;
+}
+
+.ascii-char {
+  cursor: pointer;
+  padding: 0 1px;
+  border-radius: 2px;
+  transition: background-color 0.1s;
+}
+
+.ascii-char:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Selection highlighting */
+.byte-selected {
+  background: rgba(33, 150, 243, 0.4) !important;
+  color: #fff;
+}
+
+/* Search match highlighting */
+.byte-search-match {
+  background: rgba(255, 193, 7, 0.3) !important;
+}
+
+/* Current (active) search match highlighting */
+.byte-current-match {
+  background: rgba(255, 152, 0, 0.6) !important;
+  color: #fff;
+}
+
+/* Empty bytes (padding) */
+.byte-empty {
+  cursor: default;
+  opacity: 0.3;
 }
 
 .interpretation-section {

@@ -4,16 +4,19 @@
  * Manages hex viewer state, file handling, and byte operations.
  */
 
-import { computed, onBeforeUnmount, ref } from 'vue';
+import { computed, isRef, onBeforeUnmount, ref, unref } from 'vue';
 import { formatHexRow } from '@/utils/hexFormatter';
 import { interpretBytes } from '@/utils/byteConverter';
 
 /**
  * Hex viewer composable
- * @param {number} bytesPerRow - Number of bytes to display per row (default 16)
+ * @param {number|Ref<number>} bytesPerRowInput - Number of bytes to display per row (default 16), can be a ref
  * @returns {Object} Hex viewer state and methods
  */
-export function useHexViewer(bytesPerRow = 16) {
+export function useHexViewer(bytesPerRowInput = 16) {
+  // Handle both ref and plain value for bytesPerRow
+  const bytesPerRow = isRef(bytesPerRowInput) ? bytesPerRowInput : ref(bytesPerRowInput);
+
   // Reactive State
   const fileData = ref(null); // Uint8Array of file data
   const fileName = ref('');
@@ -26,6 +29,9 @@ export function useHexViewer(bytesPerRow = 16) {
   const searchMatches = ref([]);
   const currentMatchIndex = ref(0);
 
+  // Bookmarks: Array of { offset, label, color }
+  const bookmarks = ref([]);
+
   // Computed Properties
 
   /**
@@ -33,7 +39,7 @@ export function useHexViewer(bytesPerRow = 16) {
    */
   const totalRows = computed(() => {
     if (!fileData.value) return 0;
-    return Math.ceil(fileData.value.length / bytesPerRow);
+    return Math.ceil(fileData.value.length / unref(bytesPerRow));
   });
 
   /**
@@ -123,6 +129,7 @@ export function useHexViewer(bytesPerRow = 16) {
     fileSize.value = 0;
     clearSelection();
     clearSearch();
+    bookmarks.value = [];
   };
 
   /**
@@ -131,12 +138,13 @@ export function useHexViewer(bytesPerRow = 16) {
    * @returns {Object|null} Formatted row object or null
    */
   const getRow = (rowIndex) => {
+    const bpr = unref(bytesPerRow);
     if (!fileData.value || rowIndex >= totalRows.value) return null;
 
-    const offset = rowIndex * bytesPerRow;
-    const rowBytes = fileData.value.slice(offset, offset + bytesPerRow);
+    const offset = rowIndex * bpr;
+    const rowBytes = fileData.value.slice(offset, offset + bpr);
 
-    return formatHexRow(rowBytes, offset, bytesPerRow, useHexOffset.value);
+    return formatHexRow(rowBytes, offset, bpr, useHexOffset.value);
   };
 
   /**
@@ -286,6 +294,101 @@ export function useHexViewer(bytesPerRow = 16) {
     currentMatchIndex.value = 0;
   };
 
+  // Bookmark Functions
+
+  /**
+   * Available bookmark colors
+   */
+  const BOOKMARK_COLORS = ['primary', 'success', 'warning', 'error', 'info'];
+
+  /**
+   * Adds a bookmark at the specified offset
+   * @param {number} offset - Byte offset to bookmark
+   * @param {string} [label] - Optional label for the bookmark
+   * @param {string} [color] - Optional color (primary, success, warning, error, info)
+   * @returns {Object} The created bookmark
+   */
+  const addBookmark = (offset, label = '', color = 'primary') => {
+    if (offset < 0 || !fileData.value || offset >= fileData.value.length) {
+      return null;
+    }
+
+    // Don't add duplicate bookmarks at the same offset
+    const existing = bookmarks.value.find(b => b.offset === offset);
+    if (existing) {
+      return existing;
+    }
+
+    const bookmark = {
+      id: Date.now(),
+      offset,
+      label: label || `Bookmark at 0x${offset.toString(16).toUpperCase()}`,
+      color: BOOKMARK_COLORS.includes(color) ? color : 'primary'
+    };
+
+    bookmarks.value.push(bookmark);
+    return bookmark;
+  };
+
+  /**
+   * Removes a bookmark by its ID
+   * @param {number} bookmarkId - ID of the bookmark to remove
+   */
+  const removeBookmark = (bookmarkId) => {
+    const index = bookmarks.value.findIndex(b => b.id === bookmarkId);
+    if (index !== -1) {
+      bookmarks.value.splice(index, 1);
+    }
+  };
+
+  /**
+   * Updates a bookmark's label or color
+   * @param {number} bookmarkId - ID of the bookmark to update
+   * @param {Object} updates - Properties to update { label?, color? }
+   */
+  const updateBookmark = (bookmarkId, updates) => {
+    const bookmark = bookmarks.value.find(b => b.id === bookmarkId);
+    if (bookmark) {
+      if (updates.label !== undefined) bookmark.label = updates.label;
+      if (updates.color !== undefined && BOOKMARK_COLORS.includes(updates.color)) {
+        bookmark.color = updates.color;
+      }
+    }
+  };
+
+  /**
+   * Clears all bookmarks
+   */
+  const clearBookmarks = () => {
+    bookmarks.value = [];
+  };
+
+  /**
+   * Gets bookmarks sorted by offset
+   * @returns {Array} Sorted bookmarks
+   */
+  const sortedBookmarks = computed(() => {
+    return [...bookmarks.value].sort((a, b) => a.offset - b.offset);
+  });
+
+  /**
+   * Checks if an offset has a bookmark
+   * @param {number} offset - Byte offset to check
+   * @returns {boolean} True if bookmarked
+   */
+  const hasBookmarkAt = (offset) => {
+    return bookmarks.value.some(b => b.offset === offset);
+  };
+
+  /**
+   * Gets bookmark at a specific offset
+   * @param {number} offset - Byte offset
+   * @returns {Object|null} Bookmark or null
+   */
+  const getBookmarkAt = (offset) => {
+    return bookmarks.value.find(b => b.offset === offset) || null;
+  };
+
   /**
    * Exports selected bytes to a new file
    * @param {string} outputFileName - Name for the exported file
@@ -314,9 +417,75 @@ export function useHexViewer(bytesPerRow = 16) {
     clearFile();
   });
 
+  /**
+   * Checks if a byte offset is within the current selection
+   * @param {number} byteOffset - Byte offset to check
+   * @returns {boolean} True if selected
+   */
+  const isByteSelected = (byteOffset) => {
+    if (!hasSelection.value) return false;
+    const start = Math.min(selectedByteStart.value, selectedByteEnd.value);
+    const end = Math.max(selectedByteStart.value, selectedByteEnd.value);
+    return byteOffset >= start && byteOffset <= end;
+  };
+
+  /**
+   * Checks if a byte offset is within any search match
+   * @param {number} byteOffset - Byte offset to check
+   * @returns {boolean} True if part of a search match
+   */
+  const isByteInSearchMatch = (byteOffset) => {
+    if (!hasSearchMatches.value || !searchQuery.value) return false;
+
+    // Get the length of the search pattern
+    const patternLength = getSearchPatternLength();
+
+    for (const matchOffset of searchMatches.value) {
+      if (byteOffset >= matchOffset && byteOffset < matchOffset + patternLength) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  /**
+   * Checks if a byte offset is within the current (active) search match
+   * @param {number} byteOffset - Byte offset to check
+   * @returns {boolean} True if part of the current match
+   */
+  const isByteInCurrentMatch = (byteOffset) => {
+    if (!hasSearchMatches.value) return false;
+
+    const currentMatchOffset = searchMatches.value[currentMatchIndex.value];
+    const patternLength = getSearchPatternLength();
+
+    return byteOffset >= currentMatchOffset && byteOffset < currentMatchOffset + patternLength;
+  };
+
+  /**
+   * Gets the length of the current search pattern
+   * @returns {number} Pattern length in bytes
+   */
+  const getSearchPatternLength = () => {
+    if (!searchQuery.value) return 0;
+
+    // Check if it's a hex pattern (contains only hex chars and spaces)
+    const cleanPattern = searchQuery.value.trim().replace(/\s+/g, ' ').toUpperCase();
+    const isHexPattern = /^[0-9A-F ]+$/.test(cleanPattern);
+
+    if (isHexPattern) {
+      return cleanPattern.split(' ').filter(h => h.length > 0).length;
+    } else {
+      // Text pattern
+      return new TextEncoder().encode(searchQuery.value).length;
+    }
+  };
+
   // Return
   return {
     // State
+    bookmarks,
+    bytesPerRow,
     fileData,
     fileName,
     fileSize,
@@ -325,8 +494,11 @@ export function useHexViewer(bytesPerRow = 16) {
     selectedByteStart,
     selectedByteEnd,
     searchQuery,
+    searchMatches,
+    currentMatchIndex,
 
     // Computed
+    sortedBookmarks,
     totalRows,
     hasSelection,
     selectedBytes,
@@ -347,6 +519,16 @@ export function useHexViewer(bytesPerRow = 16) {
     nextMatch,
     previousMatch,
     clearSearch,
-    exportSelection
+    exportSelection,
+    isByteSelected,
+    isByteInSearchMatch,
+    isByteInCurrentMatch,
+    addBookmark,
+    removeBookmark,
+    updateBookmark,
+    clearBookmarks,
+    hasBookmarkAt,
+    getBookmarkAt,
+    BOOKMARK_COLORS
   };
 }

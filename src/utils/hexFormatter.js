@@ -92,7 +92,7 @@ export function formatHexRow(bytes, offset, bytesPerRow = 16, useHexOffset = tru
     }
   }
 
-  // Group hex bytes by 8 for readability
+  // Group hex bytes by 8 for readability (legacy format)
   const hexPart1 = hexBytes.slice(0, 8).join(' ');
   const hexPart2 = hexBytes.slice(8, 16).join(' ');
 
@@ -100,6 +100,8 @@ export function formatHexRow(bytes, offset, bytesPerRow = 16, useHexOffset = tru
     offset: useHexOffset ? offsetToHex(offset) : offsetToDecimal(offset),
     hexPart1,
     hexPart2,
+    hexBytes,        // Individual hex strings for clickable rendering
+    asciiChars,      // Individual ASCII chars for clickable rendering
     ascii: asciiChars.join(''),
     bytes: bytes,
     categories: byteCategories,
