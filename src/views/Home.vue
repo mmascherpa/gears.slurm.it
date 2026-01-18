@@ -218,6 +218,16 @@ export default {
                     category: 'Security Tool',
                     color: 'primary',
                     description: 'Generate strong random passwords with customizable length and character types.'
+                },
+                {
+                    title: 'Password Manager',
+                    shortName: 'Passwords',
+                    icon: 'mdi-key',
+                    route: '/password-manager',
+                    category: 'Security Tool',
+                    color: 'primary',
+                    featured: true,
+                    description: 'Securely store and manage passwords with Age encryption. Import from CSV/JSON.'
                 }
             ],
             encodingTools: [
@@ -299,7 +309,12 @@ export default {
     margin: 0 auto;
 }
 
-/* Mobile: 2-3 columns */
+/* Security tools grid - allow 4 columns on desktop */
+.tool-category:first-child .tool-grid {
+    max-width: 700px;
+}
+
+/* Mobile: 3 columns */
 @media (max-width: 599px) {
     .tool-grid {
         grid-template-columns: repeat(3, 1fr);
@@ -313,13 +328,23 @@ export default {
         grid-template-columns: repeat(3, 1fr);
         gap: 1.5rem;
     }
+
+    /* Security tools: 4 columns on tablet */
+    .tool-category:first-child .tool-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
 }
 
-/* Desktop: 3-4 columns (max) */
+/* Desktop: 3-4 columns */
 @media (min-width: 960px) {
     .tool-grid {
         grid-template-columns: repeat(3, 1fr);
         gap: 2rem;
+    }
+
+    /* Security tools: 4 columns on desktop */
+    .tool-category:first-child .tool-grid {
+        grid-template-columns: repeat(4, 1fr);
     }
 }
 

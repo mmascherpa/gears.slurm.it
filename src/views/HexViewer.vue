@@ -291,7 +291,8 @@
                       class="hex-byte"
                       :class="getByteClasses(getRowData(rowIndex).byteOffset + i)"
                       @click="handleByteClick(getRowData(rowIndex).byteOffset + i, $event)"
-                      @mousedown="handleByteMouseDown(getRowData(rowIndex).byteOffset + i, $event)">{{ byte }}</span>
+                      @mousedown="handleByteMouseDown(getRowData(rowIndex).byteOffset + i, $event)"
+                      @mouseenter="handleByteMouseEnter(getRowData(rowIndex).byteOffset + i, $event)">{{ byte }}</span>
                   </span>
                   <span class="hex-group-separator">  </span>
                   <!-- Second half hex bytes - clickable -->
@@ -302,7 +303,8 @@
                       class="hex-byte"
                       :class="getByteClasses(getRowData(rowIndex).byteOffset + bytesPerRow / 2 + i)"
                       @click="handleByteClick(getRowData(rowIndex).byteOffset + bytesPerRow / 2 + i, $event)"
-                      @mousedown="handleByteMouseDown(getRowData(rowIndex).byteOffset + bytesPerRow / 2 + i, $event)">{{ byte }}</span>
+                      @mousedown="handleByteMouseDown(getRowData(rowIndex).byteOffset + bytesPerRow / 2 + i, $event)"
+                      @mouseenter="handleByteMouseEnter(getRowData(rowIndex).byteOffset + bytesPerRow / 2 + i, $event)">{{ byte }}</span>
                   </span>
                   <span class="hex-separator">│</span>
                   <!-- ASCII characters - clickable -->
@@ -313,7 +315,8 @@
                       class="ascii-char"
                       :class="getByteClasses(getRowData(rowIndex).byteOffset + i)"
                       @click="handleByteClick(getRowData(rowIndex).byteOffset + i, $event)"
-                      @mousedown="handleByteMouseDown(getRowData(rowIndex).byteOffset + i, $event)">{{ char }}</span>
+                      @mousedown="handleByteMouseDown(getRowData(rowIndex).byteOffset + i, $event)"
+                      @mouseenter="handleByteMouseEnter(getRowData(rowIndex).byteOffset + i, $event)">{{ char }}</span>
                   </span>
                 </template>
               </div>
@@ -338,10 +341,20 @@
 
     <!-- Data Interpretation Panel -->
     <v-card v-if="hasSelection" class="mt-4">
-      <v-toolbar flat color="primary">
-        <v-toolbar-title>
-          <v-icon start>mdi-information</v-icon>
+      <v-toolbar flat color="primary" density="compact">
+        <v-btn
+          icon
+          variant="text"
+          size="small"
+          @click="interpretationExpanded = !interpretationExpanded">
+          <v-icon>{{ interpretationExpanded ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+        </v-btn>
+        <v-toolbar-title class="text-body-1">
+          <v-icon start size="small">mdi-information</v-icon>
           Data Interpretation
+          <span class="text-caption text-medium-emphasis ml-2">
+            ({{ selectedBytes?.length || 0 }} byte{{ (selectedBytes?.length || 0) === 1 ? '' : 's' }})
+          </span>
         </v-toolbar-title>
         <v-spacer />
         <v-btn icon size="small" @click="handleCopyHex">
@@ -354,68 +367,70 @@
         </v-btn>
       </v-toolbar>
 
-      <v-card-text>
-        <v-row dense>
-          <!-- Hex and Text -->
-          <v-col cols="12" md="6">
-            <div class="interpretation-section">
-              <div class="interpretation-label">Hex String</div>
-              <div class="interpretation-value monospace">{{ byteInterpretation.hexString }}</div>
-            </div>
-          </v-col>
-          <v-col cols="12" md="6">
-            <div class="interpretation-section">
-              <div class="interpretation-label">UTF-8 Text</div>
-              <div class="interpretation-value monospace">{{ byteInterpretation.utf8 }}</div>
-            </div>
-          </v-col>
+      <v-expand-transition>
+        <v-card-text v-show="interpretationExpanded">
+          <v-row dense>
+            <!-- Hex and Text -->
+            <v-col cols="12" md="6">
+              <div class="interpretation-section">
+                <div class="interpretation-label">Hex String</div>
+                <div class="interpretation-value monospace">{{ byteInterpretation.hexString || '—' }}</div>
+              </div>
+            </v-col>
+            <v-col cols="12" md="6">
+              <div class="interpretation-section">
+                <div class="interpretation-label">UTF-8 Text</div>
+                <div class="interpretation-value monospace">{{ byteInterpretation.utf8 || '—' }}</div>
+              </div>
+            </v-col>
 
-          <!-- Integers -->
-          <v-col cols="12" md="3">
-            <div class="interpretation-section">
-              <div class="interpretation-label">Int8</div>
-              <div class="interpretation-value">{{ byteInterpretation.int8 }}</div>
-            </div>
-          </v-col>
-          <v-col cols="12" md="3">
-            <div class="interpretation-section">
-              <div class="interpretation-label">UInt8</div>
-              <div class="interpretation-value">{{ byteInterpretation.uint8 }}</div>
-            </div>
-          </v-col>
-          <v-col cols="12" md="3">
-            <div class="interpretation-section">
-              <div class="interpretation-label">Int16 LE</div>
-              <div class="interpretation-value">{{ byteInterpretation.int16LE }}</div>
-            </div>
-          </v-col>
-          <v-col cols="12" md="3">
-            <div class="interpretation-section">
-              <div class="interpretation-label">UInt16 LE</div>
-              <div class="interpretation-value">{{ byteInterpretation.uint16LE }}</div>
-            </div>
-          </v-col>
+            <!-- Integers - only show if relevant -->
+            <v-col cols="12" md="3">
+              <div class="interpretation-section">
+                <div class="interpretation-label">Int8</div>
+                <div class="interpretation-value">{{ byteInterpretation.int8 }}</div>
+              </div>
+            </v-col>
+            <v-col cols="12" md="3">
+              <div class="interpretation-section">
+                <div class="interpretation-label">UInt8</div>
+                <div class="interpretation-value">{{ byteInterpretation.uint8 }}</div>
+              </div>
+            </v-col>
+            <v-col v-if="selectedBytes?.length >= 2" cols="12" md="3">
+              <div class="interpretation-section">
+                <div class="interpretation-label">Int16 LE</div>
+                <div class="interpretation-value">{{ byteInterpretation.int16LE }}</div>
+              </div>
+            </v-col>
+            <v-col v-if="selectedBytes?.length >= 2" cols="12" md="3">
+              <div class="interpretation-section">
+                <div class="interpretation-label">UInt16 LE</div>
+                <div class="interpretation-value">{{ byteInterpretation.uint16LE }}</div>
+              </div>
+            </v-col>
 
-          <v-col cols="12" md="3">
-            <div class="interpretation-section">
-              <div class="interpretation-label">Int32 LE</div>
-              <div class="interpretation-value">{{ byteInterpretation.int32LE }}</div>
-            </div>
-          </v-col>
-          <v-col cols="12" md="3">
-            <div class="interpretation-section">
-              <div class="interpretation-label">UInt32 LE</div>
-              <div class="interpretation-value">{{ byteInterpretation.uint32LE }}</div>
-            </div>
-          </v-col>
-          <v-col cols="12" md="6">
-            <div class="interpretation-section">
-              <div class="interpretation-label">Unix Timestamp (LE)</div>
-              <div class="interpretation-value">{{ byteInterpretation.timestampLE }}</div>
-            </div>
-          </v-col>
-        </v-row>
-      </v-card-text>
+            <v-col v-if="selectedBytes?.length >= 4" cols="12" md="3">
+              <div class="interpretation-section">
+                <div class="interpretation-label">Int32 LE</div>
+                <div class="interpretation-value">{{ byteInterpretation.int32LE }}</div>
+              </div>
+            </v-col>
+            <v-col v-if="selectedBytes?.length >= 4" cols="12" md="3">
+              <div class="interpretation-section">
+                <div class="interpretation-label">UInt32 LE</div>
+                <div class="interpretation-value">{{ byteInterpretation.uint32LE }}</div>
+              </div>
+            </v-col>
+            <v-col v-if="selectedBytes?.length >= 4" cols="12" md="6">
+              <div class="interpretation-section">
+                <div class="interpretation-label">Unix Timestamp (LE)</div>
+                <div class="interpretation-value">{{ byteInterpretation.timestampLE }}</div>
+              </div>
+            </v-col>
+          </v-row>
+        </v-card-text>
+      </v-expand-transition>
     </v-card>
 
     <!-- Snackbar -->
@@ -523,6 +538,7 @@ export default {
     const hexSearchInput = ref('');
     const textSearchInput = ref('');
     const detectedFileType = ref(null);
+    const interpretationExpanded = ref(true); // Data interpretation panel expanded state
 
     // Computed Properties
 
@@ -696,8 +712,9 @@ export default {
       showSnackbar(`✅ Exported ${selectedBytes.value.length} bytes`, 'success');
     };
 
-    // Selection state for shift-click range selection
+    // Selection state for shift-click and drag range selection
     const selectionAnchor = ref(null);
+    const isDragging = ref(false);
 
     /**
      * Gets row data with memoization to avoid recalculation
@@ -716,6 +733,12 @@ export default {
     const handleByteClick = (byteOffset, event) => {
       if (byteOffset >= fileSize.value) return;
 
+      // If we just finished dragging, don't process click
+      if (isDragging.value) {
+        isDragging.value = false;
+        return;
+      }
+
       if (event.shiftKey && selectionAnchor.value !== null) {
         // Shift-click: select range from anchor to current
         selectByteRange(selectionAnchor.value, byteOffset);
@@ -733,9 +756,46 @@ export default {
      */
     const handleByteMouseDown = (byteOffset, event) => {
       if (event.shiftKey) return; // Let click handler deal with shift-click
+      if (event.button !== 0) return; // Only left mouse button
 
       // Set anchor for potential drag selection
       selectionAnchor.value = byteOffset;
+      selectByte(byteOffset);
+
+      // Start listening for mouse movement
+      const handleMouseMove = (moveEvent) => {
+        // Find the byte under the cursor
+        const target = moveEvent.target;
+        if (target.classList.contains('hex-byte') || target.classList.contains('ascii-char')) {
+          // Get byte offset from the parent row context
+          // This is a simplified approach - we mark dragging as active
+          isDragging.value = true;
+        }
+      };
+
+      const handleMouseUp = () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+        // isDragging will be reset in handleByteClick
+      };
+
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    };
+
+    /**
+     * Handles byte mouse enter for drag selection extension
+     * @param {number} byteOffset - Byte offset
+     * @param {Event} event - Mouse event
+     */
+    const handleByteMouseEnter = (byteOffset, event) => {
+      // Only extend selection if left mouse button is pressed (dragging)
+      if (event.buttons !== 1) return;
+      if (selectionAnchor.value === null) return;
+      if (byteOffset >= fileSize.value) return;
+
+      isDragging.value = true;
+      selectByteRange(selectionAnchor.value, byteOffset);
     };
 
     /**
@@ -844,6 +904,7 @@ export default {
 
       // State - Controls
       hexSearchInput,
+      interpretationExpanded,
       jumpOffsetInput,
       offsetFormat,
       textSearchInput,
@@ -888,6 +949,7 @@ export default {
       handleAddBookmark,
       handleByteClick,
       handleByteMouseDown,
+      handleByteMouseEnter,
       handleCopyHex,
       handleExportSelection,
       handleJumpToBookmark,
@@ -1034,14 +1096,16 @@ export default {
 .interpretation-label {
   font-size: 12px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgb(var(--v-theme-on-surface));
+  opacity: 0.7;
   margin-bottom: 4px;
 }
 
 .interpretation-value {
   font-size: 14px;
   padding: 8px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgb(var(--v-theme-surface-variant));
+  color: rgb(var(--v-theme-on-surface-variant));
   border-radius: 4px;
   word-break: break-all;
 }
