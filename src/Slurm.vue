@@ -180,6 +180,12 @@ theme.global.name.value = getSavedTheme();
                     title="Password Generator"
                     value="password-generator">
                 </v-list-item>
+                <v-list-item
+                    to="/password-manager"
+                    prepend-icon="mdi-key"
+                    title="Password Manager"
+                    value="password-manager">
+                </v-list-item>
 
                 <v-divider class="my-2"></v-divider>
 

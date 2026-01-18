@@ -5,6 +5,15 @@ vi.mock('*.css', () => ({}))
 vi.mock('*.scss', () => ({}))
 vi.mock('*.sass', () => ({}))
 
+// Mock navigator.userAgent for Vuetify display detection
+if (!navigator.userAgent) {
+  Object.defineProperty(navigator, 'userAgent', {
+    value: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    writable: true,
+    configurable: true
+  })
+}
+
 // Mock console methods to reduce noise in test output
 global.console = {
   ...console,

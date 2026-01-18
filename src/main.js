@@ -18,6 +18,7 @@ const routes = [
   { path: '/encrypt', component: () => import('./views/Encrypt.vue') },
   { path: '/decrypt', component: () => import('./views/Decrypt.vue') },
   { path: '/password-generator', component: () => import('./views/PasswordGenerator.vue') },
+  { path: '/password-manager', component: () => import('./views/PasswordManager.vue') },
   { path: '/metadata-editor', component: () => import('./views/MetadataEditor.vue') },
   { path: '/hex-viewer', component: () => import('./views/HexViewer.vue') },
   { path: '/about', component: () => import('./views/About.vue') },
