@@ -3,9 +3,9 @@
 ## Purpose
 This file documents the file organization, component responsibilities, and architectural layers of the Slurm Tools codebase.
 
-**Last Updated**: 2026-01-12
-**Total Files**: 98 (+5 from Age encryption integration)
-**Total Lines of Code**: ~5,065 lines (+250 from dual-worker architecture)
+**Last Updated**: 2026-01-20
+**Total Files**: 102 (+4 from TOTP support)
+**Total Lines of Code**: ~5,400 lines (+335 from TOTP implementation)
 **Tool Components**: 5 (Base64Encode, Base64Decode, Encrypt, Decrypt, PasswordGenerator)
 **Encryption Algorithms**: 3 (jsAesCrypt AES-256-CBC, WebCrypto AES-256-GCM, Age encryption)
 
@@ -48,7 +48,8 @@ src/
 │   ├── AddPngFieldDialog.vue          # PNG metadata field dialog
 │   ├── MetadataFieldEditor.vue        # Metadata field editor component
 │   ├── MetadataViewer.vue             # Metadata viewer component
-│   └── PasswordInput.vue              # Password input component
+│   ├── PasswordInput.vue              # Password input component
+│   └── TotpDisplay.vue                # TOTP code display with countdown timer (110 lines, NEW)
 ├── composables/            # Reusable composition functions
 │   ├── useAESWorker.js          # Dual-worker management with auto-switching (200 lines)
 │   ├── useClipboard.js          # Clipboard operations (74 lines)
@@ -58,6 +59,7 @@ src/
 │   ├── usePasswordSession.js    # Password session storage management (132 lines)
 │   ├── useServiceWorkerUpdate.js # Service worker update detection
 │   ├── useSnackbar.js           # Snackbar state management (41 lines)
+│   ├── useTotp.js               # TOTP code generation with countdown timer (180 lines, NEW)
 │   └── useVirtualScroll.js      # Virtual scrolling for large datasets
 ├── crypto/                 # Encryption provider abstraction layer (Phase 2)
 │   ├── CryptoProvider.js   # Base provider interface and factory (157 lines)
@@ -77,7 +79,8 @@ src/
 │   ├── passwordGenerator.js # Cryptographic password generator (127 lines)
 │   ├── passwordStrength.js  # Password strength calculator (160 lines)
 │   ├── pngMetadataEditor.js # PNG metadata utilities
-│   └── pngTags.js           # PNG metadata tag definitions
+│   ├── pngTags.js           # PNG metadata tag definitions
+│   └── totp.js              # TOTP code generation utilities (185 lines, NEW)
 ├── views/                  # Tool page components (ALL PAGES MOVED HERE)
 │   ├── About.vue            # About page (178 lines)
 │   ├── Decrypt.vue          # Multi-algorithm decryption (jsAesCrypt/WebCrypto/Age) (750 lines)

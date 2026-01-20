@@ -47,6 +47,19 @@
           <div v-if="entry.url" class="text-caption text-medium-emphasis text-truncate mt-1">
             {{ displayUrl }}
           </div>
+
+          <!-- TOTP Display (if present) -->
+          <div v-if="entry.totp" class="mt-2">
+            <div class="d-flex align-center mb-1">
+              <v-icon icon="mdi-two-factor-authentication" size="14" class="mr-1 text-medium-emphasis"></v-icon>
+              <span class="text-caption text-medium-emphasis">2FA Code</span>
+            </div>
+            <TotpDisplay
+              :secret="entry.totp"
+              @copy-success="(msg) => $emit('copy-success', msg)"
+              @copy-error="(msg) => $emit('copy-error', msg)"
+            />
+          </div>
         </div>
       </div>
 
@@ -167,6 +180,7 @@
 <script setup>
 import { ref, computed, onBeforeUnmount } from 'vue';
 import { useClipboard } from '@/composables/useClipboard';
+import TotpDisplay from '@/components/TotpDisplay.vue';
 
 const props = defineProps({
   entry: {

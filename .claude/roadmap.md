@@ -1298,4 +1298,23 @@ This file tracks feature planning, completed work, and future development priori
 - [Code Structure](.claude/structure.md) - Current codebase organization
 - [Main Application Files](../) - Link to main code files
 
-Last Updated: 2025-11-09 (Comprehensive rationalization: Fixed all counts, added missing features, restructured phases 8-13, corrected time estimates, reprioritized for production quality)
+Last Updated: 2026-01-20 (Added TOTP support to Password Manager)
+
+- **2026-01-20**: Password Manager TOTP Support Enhancement
+  - **Added TOTP code generation** to Password Manager entries:
+    - Created `src/utils/totp.js` (185 lines) - RFC 6238 compliant TOTP using native Web Crypto API
+    - Created `src/composables/useTotp.js` (180 lines) - Reactive TOTP state with auto-refresh
+    - Created `src/components/TotpDisplay.vue` (110 lines) - 6-digit code display with countdown
+    - Created `tests/unit/utils/totp.spec.js` (300 lines) - 55 tests including RFC 6238 test vectors
+  - **Enhanced existing components**:
+    - PasswordEntryCard.vue: Shows TOTP code inline when entry has a secret
+    - PasswordEntryDialog.vue: Added validation, hints, and live TOTP preview
+  - **Key features**:
+    - Zero external dependencies (uses native Web Crypto API)
+    - RFC 6238 compliant - passes all standard test vectors
+    - Real-time countdown timer (30 seconds)
+    - Copy TOTP code to clipboard with one click
+    - Input validation for Base32 secrets
+    - Live preview while editing entries
+  - **Total changes**: +475 lines across 7 files (4 new, 3 modified)
+  - **Use case**: "View 2FA codes directly in Password Manager without switching apps"

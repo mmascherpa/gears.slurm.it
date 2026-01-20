@@ -151,15 +151,24 @@
             class="mb-3"
           />
 
-          <!-- TOTP Secret -->
+          <!-- TOTP Secret with Validation -->
           <v-text-field
             v-model="form.totp"
             label="TOTP Secret (optional)"
-            placeholder="2FA secret key"
-            hint="Stored for reference only - no code generation"
+            placeholder="Base32 secret (e.g., JBSWY3DPEHPK3PXP)"
+            :error-messages="totpError"
+            :hint="totpHint"
             persistent-hint
             class="mb-2"
           ></v-text-field>
+
+          <!-- TOTP Preview (when valid) -->
+          <v-expand-transition>
+            <div v-if="form.totp && isTotpValid" class="mb-3">
+              <div class="text-caption text-medium-emphasis mb-1">Preview</div>
+              <TotpDisplay :secret="form.totp" />
+            </div>
+          </v-expand-transition>
 
           <!-- Notes -->
           <v-textarea
@@ -199,7 +208,9 @@
 <script setup>
 import { ref, computed, watch, reactive, onMounted, onBeforeUnmount } from 'vue';
 import { generatePassword as generateSecurePassword } from '@/utils/passwordGenerator';
+import { validateTotpSecret } from '@/utils/totp';
 import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator.vue';
+import TotpDisplay from '@/components/TotpDisplay.vue';
 
 const props = defineProps({
   modelValue: {
@@ -278,6 +289,33 @@ const hasGeneratorOption = computed(() => {
     generatorOptions.lowercase ||
     generatorOptions.numbers ||
     generatorOptions.special;
+});
+
+// TOTP validation
+const totpValidation = computed(() => {
+  if (!form.totp) {
+    return { isValid: true, error: null, normalized: '' };
+  }
+  return validateTotpSecret(form.totp);
+});
+
+const isTotpValid = computed(() => totpValidation.value.isValid);
+
+const totpError = computed(() => {
+  if (!form.totp || totpValidation.value.isValid) {
+    return '';
+  }
+  return totpValidation.value.error;
+});
+
+const totpHint = computed(() => {
+  if (!form.totp) {
+    return 'Enter Base32 secret key from your 2FA setup';
+  }
+  if (totpValidation.value.isValid) {
+    return 'Valid - 2FA code will be generated';
+  }
+  return '';
 });
 
 // Reset form when dialog opens/entry changes
