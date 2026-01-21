@@ -357,6 +357,7 @@ import { parseCSV } from '@/utils/csvParser';
 import { useCryptoWorker } from '@/composables/useCryptoWorker';
 import { useClipboard } from '@/composables/useClipboard';
 import { useDebounce } from '@/composables/useDebounce';
+import { useFocusManagement } from '@/composables/useFocusManagement';
 import { usePasswordSession } from '@/composables/usePasswordSession';
 import { useSnackbar } from '@/composables/useSnackbar';
 import CsvPreviewTable from '@/components/CsvPreviewTable.vue';
@@ -397,6 +398,7 @@ export default {
     // Composables
     const { snackbar, snackbarColor, snackbarText, showSnackbar } = useSnackbar();
     const { copyToClipboard, pasteFromClipboard } = useClipboard();
+    const { announceToScreenReader } = useFocusManagement();
     const {
       rememberPassword,
       isPasswordRemembered,
@@ -419,10 +421,12 @@ export default {
         // Text encryption: convert to Base64 and display
         if (isPlaintextPopulated.value) {
           convertToBase64(data);
+          announceToScreenReader('Text encrypted successfully');
         } else {
           // File encryption: download as .aes file
           downloadFile(data, fileName);
           showSnackbar('✓ File encrypted successfully!', 'success');
+          announceToScreenReader('File encrypted and download started');
           clearInputs();
         }
       },
@@ -430,6 +434,7 @@ export default {
       (friendlyMessage, rawError) => {
         error.value = rawError;
         showSnackbar(friendlyMessage, 'error');
+        announceToScreenReader('Encryption failed: ' + friendlyMessage, 'assertive');
         encryptedText.value = '';
       }
     );

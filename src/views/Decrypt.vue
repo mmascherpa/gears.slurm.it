@@ -414,6 +414,7 @@ import { parseCSV } from '@/utils/csvParser';
 import { useCryptoWorker } from '@/composables/useCryptoWorker';
 import { useClipboard } from '@/composables/useClipboard';
 import { useDebounce } from '@/composables/useDebounce';
+import { useFocusManagement } from '@/composables/useFocusManagement';
 import { usePasswordSession } from '@/composables/usePasswordSession';
 import { useSnackbar } from '@/composables/useSnackbar';
 import CsvPreviewTable from '@/components/CsvPreviewTable.vue';
@@ -457,6 +458,7 @@ export default {
     // Composables
     const { snackbar, snackbarColor, snackbarText, showSnackbar } = useSnackbar();
     const { copyToClipboard, pasteFromClipboard } = useClipboard();
+    const { announceToScreenReader } = useFocusManagement();
     const {
       rememberPassword,
       isPasswordRemembered,
@@ -478,15 +480,18 @@ export default {
         // Text decryption: display inline
         if (isEncryptedTextPopulated.value) {
           handleTextDecryptionSuccess(data);
+          announceToScreenReader('Text decrypted successfully');
         } else {
           // File decryption: handle preview/download
           handleDecryptionSuccess(data, fileName);
+          announceToScreenReader('File decrypted successfully');
         }
       },
       // onError callback
       (friendlyMessage, rawError) => {
         error.value = rawError;
         showSnackbar(friendlyMessage, 'error');
+        announceToScreenReader('Decryption failed: ' + friendlyMessage, 'assertive');
         decryptedText.value = '';
       }
     );

@@ -3,9 +3,11 @@ import { ref } from 'vue';
 import { useTheme } from 'vuetify';
 import { THEME_MODES } from './theme.js';
 import { useServiceWorkerUpdate } from './composables/useServiceWorkerUpdate.js';
+import HelpDialog from './components/HelpDialog.vue';
 
 const drawer = ref(false);
 const theme = useTheme();
+const helpDialogRef = ref(null);
 
 // Service worker update detection
 const { updateAvailable, applyUpdate, dismissUpdate } = useServiceWorkerUpdate();
@@ -14,16 +16,27 @@ const { updateAvailable, applyUpdate, dismissUpdate } = useServiceWorkerUpdate()
 const STORAGE_KEY = 'slurm-theme-preference';
 
 /**
- * Get saved theme from localStorage or default to 'default'
- * Falls back to default theme if localStorage is unavailable
+ * Check if user prefers dark mode via system settings
+ */
+const prefersDarkMode = () => {
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+};
+
+/**
+ * Get saved theme from localStorage or auto-detect from system preference
+ * Falls back to system preference on first visit, then respects user choice
  */
 const getSavedTheme = () => {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    return saved && Object.values(THEME_MODES).includes(saved) ? saved : THEME_MODES.DEFAULT;
+    if (saved && Object.values(THEME_MODES).includes(saved)) {
+      return saved;
+    }
+    // First visit: respect system preference
+    return prefersDarkMode() ? THEME_MODES.DARK : THEME_MODES.DEFAULT;
   } catch (error) {
     console.warn('Failed to read theme preference from localStorage:', error);
-    return THEME_MODES.DEFAULT;
+    return prefersDarkMode() ? THEME_MODES.DARK : THEME_MODES.DEFAULT;
   }
 };
 
@@ -59,10 +72,13 @@ theme.global.name.value = getSavedTheme();
 
 <template>
     <v-app>
+        <!-- Skip to main content link for accessibility -->
+        <a href="#main-content" class="skip-link">Skip to main content</a>
+
         <v-app-bar app elevation="0" class="app-bar">
             <template v-slot:prepend>
-                <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
-                <v-icon icon="mdi-shield-key" size="32" class="ml-2"></v-icon>
+                <v-app-bar-nav-icon @click="drawer = !drawer" aria-label="Toggle navigation menu"></v-app-bar-nav-icon>
+                <v-icon icon="mdi-shield-key" size="32" class="ml-2" aria-hidden="true"></v-icon>
             </template>
 
             <v-app-bar-title class="font-weight-bold">Slurm Tools</v-app-bar-title>
@@ -81,8 +97,9 @@ theme.global.name.value = getSavedTheme();
                         size="small"
                         :variant="theme.global.name.value === THEME_MODES.DEFAULT ? 'flat' : 'text'"
                         class="square-btn"
+                        aria-label="Switch to default light theme"
                     >
-                        <v-icon>mdi-white-balance-sunny</v-icon>
+                        <v-icon aria-hidden="true">mdi-white-balance-sunny</v-icon>
                         <v-tooltip activator="parent" location="bottom">Default Theme</v-tooltip>
                     </v-btn>
 
@@ -91,8 +108,9 @@ theme.global.name.value = getSavedTheme();
                         size="small"
                         :variant="theme.global.name.value === THEME_MODES.DARK ? 'flat' : 'text'"
                         class="square-btn"
+                        aria-label="Switch to dark theme"
                     >
-                        <v-icon>mdi-moon-waning-crescent</v-icon>
+                        <v-icon aria-hidden="true">mdi-moon-waning-crescent</v-icon>
                         <v-tooltip activator="parent" location="bottom">Dark Mode</v-tooltip>
                     </v-btn>
 
@@ -101,8 +119,9 @@ theme.global.name.value = getSavedTheme();
                         size="small"
                         :variant="theme.global.name.value === THEME_MODES.CRAZY ? 'flat' : 'text'"
                         class="square-btn"
+                        aria-label="Switch to Slurm retro theme"
                     >
-                        <v-icon>mdi-auto-fix</v-icon>
+                        <v-icon aria-hidden="true">mdi-auto-fix</v-icon>
                         <v-tooltip activator="parent" location="bottom">Slurm Mode</v-tooltip>
                     </v-btn>
                 </v-btn-toggle>
@@ -113,18 +132,31 @@ theme.global.name.value = getSavedTheme();
                     size="small"
                     class="d-sm-none theme-toggle-mobile"
                     @click="toggleThemeOnMobile"
+                    aria-label="Cycle through themes"
                 >
-                    <v-icon>
+                    <v-icon aria-hidden="true">
                         {{ theme.global.name.value === THEME_MODES.DEFAULT ? 'mdi-white-balance-sunny' :
                            theme.global.name.value === THEME_MODES.DARK ? 'mdi-moon-waning-crescent' : 'mdi-auto-fix' }}
                     </v-icon>
                     <v-tooltip activator="parent" location="bottom">Change Theme</v-tooltip>
                 </v-btn>
 
-                <v-chip size="small" variant="tonal" color="success" class="d-none d-md-flex">
+                <v-chip size="small" variant="tonal" color="success" class="d-none d-md-flex mr-2">
                     <v-icon start icon="mdi-shield-check"></v-icon>
                     Private & Offline
                 </v-chip>
+
+                <!-- Help button -->
+                <v-btn
+                    icon
+                    size="small"
+                    variant="text"
+                    @click="helpDialogRef?.open()"
+                    aria-label="Help and keyboard shortcuts (press ? key)"
+                >
+                    <v-icon aria-hidden="true">mdi-help-circle-outline</v-icon>
+                    <v-tooltip activator="parent" location="bottom">Help (press ?)</v-tooltip>
+                </v-btn>
             </template>
         </v-app-bar>
 
@@ -218,7 +250,7 @@ theme.global.name.value = getSavedTheme();
             </v-list>
         </v-navigation-drawer>
 
-        <v-main app>
+        <v-main app id="main-content" tabindex="-1">
             <v-container fluid class="pa-4 pa-md-6 main-container">
                 <router-view v-slot="{ Component }">
                     <transition name="fade" mode="out-in">
@@ -265,10 +297,34 @@ theme.global.name.value = getSavedTheme();
                 </v-btn>
             </template>
         </v-snackbar>
+
+        <!-- Help Dialog -->
+        <HelpDialog ref="helpDialogRef" />
     </v-app>
 </template>
 
 <style scoped>
+/* Skip link - visually hidden until focused */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: rgb(var(--v-theme-primary));
+    color: rgb(var(--v-theme-on-primary));
+    padding: 8px 16px;
+    z-index: 9999;
+    text-decoration: none;
+    font-weight: 500;
+    border-radius: 0 0 4px 0;
+    transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+    top: 0;
+    outline: 2px solid rgb(var(--v-theme-on-primary));
+    outline-offset: 2px;
+}
+
 .app-bar {
     background: linear-gradient(135deg, rgb(var(--v-theme-primary)) 0%, rgb(var(--v-theme-primary-darken-1)) 100%) !important;
 }

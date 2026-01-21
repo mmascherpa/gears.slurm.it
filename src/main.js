@@ -11,26 +11,33 @@ import HomePage from './views/Home.vue'
 // Home is eagerly loaded since it's the landing page
 // All tool pages are lazy-loaded to reduce initial bundle size
 const routes = [
-  { path: '/', component: HomePage },
-  { path: '/base64-encode', component: () => import('./views/Base64Encode.vue') },
-  { path: '/base64-decode', component: () => import('./views/Base64Decode.vue') },
-  { path: '/qr-code-generator', component: () => import('./views/QrCodeGenerator.vue') },
-  { path: '/encrypt', component: () => import('./views/Encrypt.vue') },
-  { path: '/decrypt', component: () => import('./views/Decrypt.vue') },
-  { path: '/password-generator', component: () => import('./views/PasswordGenerator.vue') },
-  { path: '/password-manager', component: () => import('./views/PasswordManager.vue') },
-  { path: '/metadata-editor', component: () => import('./views/MetadataEditor.vue') },
-  { path: '/hex-viewer', component: () => import('./views/HexViewer.vue') },
-  { path: '/about', component: () => import('./views/About.vue') },
+  { path: '/', component: HomePage, meta: { title: 'Home' } },
+  { path: '/base64-encode', component: () => import('./views/Base64Encode.vue'), meta: { title: 'Base64 Encoder' } },
+  { path: '/base64-decode', component: () => import('./views/Base64Decode.vue'), meta: { title: 'Base64 Decoder' } },
+  { path: '/qr-code-generator', component: () => import('./views/QrCodeGenerator.vue'), meta: { title: 'QR Code Generator' } },
+  { path: '/encrypt', component: () => import('./views/Encrypt.vue'), meta: { title: 'File Encryption' } },
+  { path: '/decrypt', component: () => import('./views/Decrypt.vue'), meta: { title: 'File Decryption' } },
+  { path: '/password-generator', component: () => import('./views/PasswordGenerator.vue'), meta: { title: 'Password Generator' } },
+  { path: '/password-manager', component: () => import('./views/PasswordManager.vue'), meta: { title: 'Password Manager' } },
+  { path: '/metadata-editor', component: () => import('./views/MetadataEditor.vue'), meta: { title: 'Metadata Editor' } },
+  { path: '/hex-viewer', component: () => import('./views/HexViewer.vue'), meta: { title: 'Hex Viewer' } },
+  { path: '/about', component: () => import('./views/About.vue'), meta: { title: 'About' } },
+  { path: '/:pathMatch(.*)*', component: () => import('./views/NotFound.vue'), meta: { title: 'Page Not Found' } },
 ]
 
 // 3. Create the router instance and pass the `routes` option
-// You can pass in additional options here, but let's
-// keep it simple for now.
 const router = createRouter({
-  // 4. Provide the history implementation to use. We are using the hash history for simplicity here.
   history: createWebHashHistory(),
-  routes, // short for `routes: routes`
+  routes,
+})
+
+// 4. Update document title on navigation
+const APP_NAME = 'Slurm Tools'
+router.afterEach((to) => {
+  const pageTitle = to.meta?.title
+  document.title = pageTitle && pageTitle !== 'Home'
+    ? `${pageTitle} | ${APP_NAME}`
+    : APP_NAME
 })
 
 // Vuetify
