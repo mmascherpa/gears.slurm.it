@@ -45,7 +45,7 @@ import { themes } from './theme.js'
 import { h } from 'vue'
 import {
   AlertCircle, Archive, ArrowDownToLine, ArrowLeft, ArrowLeftRight, ArrowRight, ArrowRightCircle, ArrowUpDown, ArrowUpFromLine,
-  Barcode, Binary, Box, Calendar, CalendarClock, Camera, Check, CheckCircle, CheckSquare, ChevronDown, ChevronLeft, ChevronRight, ChevronUp,
+  Barcode, Binary, Bookmark, BookmarkPlus, Box, Calendar, CalendarClock, Camera, Check, CheckCircle, CheckSquare, ChevronDown, ChevronLeft, ChevronRight, ChevronUp,
   Circle, ClipboardPaste, Clock, Code, Code2, Cog, Compass, Contrast, Copy, Copyright, Cpu,
   Crop, DatabaseZap, Download, Droplet, Eraser, Eye, EyeOff, File, FileCode, FileLock, FileSearch,
   FileText, FileType, Fingerprint, Folder, Gauge, GitBranch, Grid2x2, Hash, Heading1, Heart, HelpCircle, Home, Image, ImageIcon, ImageOff, ImagePlus,
@@ -53,14 +53,14 @@ import {
   Map, MapPin, MapPinCheck, Menu, MessageSquare, MessageSquareText, MinusSquare, Moon, MoreVertical, Mountain, Palette,
   Paperclip, Pencil, PencilLine, Plus, PlusCircle, QrCode, RefreshCw, RotateCcw, Ruler, Satellite,
   Save, ScanLine, Search, ServerOff, Settings, Shield, ShieldCheck, Smartphone, Sparkles, Square, Sun,
-  SunDim, SunMedium, SunMoon, Table, TableProperties, Tag, Timer, Trash2, Undo, Upload, User, Wifi, WifiOff, Wrench,
+  SunDim, SunMedium, SunMoon, Table, TableProperties, Tag, Target, Timer, Trash2, Undo, Upload, User, Wifi, WifiOff, Wrench,
   X, XCircle, XOctagon, Zap, ZoomIn
 } from 'lucide-vue-next'
 
 // Create a lookup object for imported icons
 const LucideIcons = {
   AlertCircle, Archive, ArrowDownToLine, ArrowLeft, ArrowLeftRight, ArrowRight, ArrowRightCircle, ArrowUpDown, ArrowUpFromLine,
-  Barcode, Binary, Box, Calendar, CalendarClock, Camera, Check, CheckCircle, CheckSquare, ChevronDown, ChevronLeft, ChevronRight, ChevronUp,
+  Barcode, Binary, Bookmark, BookmarkPlus, Box, Calendar, CalendarClock, Camera, Check, CheckCircle, CheckSquare, ChevronDown, ChevronLeft, ChevronRight, ChevronUp,
   Circle, ClipboardPaste, Clock, Code, Code2, Cog, Compass, Contrast, Copy, Copyright, Cpu,
   Crop, DatabaseZap, Download, Droplet, Eraser, Eye, EyeOff, File, FileCode, FileLock, FileSearch,
   FileText, FileType, Fingerprint, Folder, Gauge, GitBranch, Grid2x2, Hash, Heading1, Heart, HelpCircle, Home, Image, ImageIcon, ImageOff, ImagePlus,
@@ -68,7 +68,7 @@ const LucideIcons = {
   Map, MapPin, MapPinCheck, Menu, MessageSquare, MessageSquareText, MinusSquare, Moon, MoreVertical, Mountain, Palette,
   Paperclip, Pencil, PencilLine, Plus, PlusCircle, QrCode, RefreshCw, RotateCcw, Ruler, Satellite,
   Save, ScanLine, Search, ServerOff, Settings, Shield, ShieldCheck, Smartphone, Sparkles, Square, Sun,
-  SunDim, SunMedium, SunMoon, Table, TableProperties, Tag, Timer, Trash2, Undo, Upload, User, Wifi, WifiOff, Wrench,
+  SunDim, SunMedium, SunMoon, Table, TableProperties, Tag, Target, Timer, Trash2, Undo, Upload, User, Wifi, WifiOff, Wrench,
   X, XCircle, XOctagon, Zap, ZoomIn
 }
 
@@ -244,6 +244,8 @@ const iconMap = {
   'mdi-selection': 'Square',
   'mdi-chevron-left': 'ChevronLeft',
   'mdi-chevron-right': 'ChevronRight',
+  'mdi-bookmark-plus': 'BookmarkPlus',
+  'mdi-target': 'Target',
 
   // About page icons
   'mdi-numeric-1-circle': 'Circle',  // Note: Lucide doesn't have numbered circles, using plain circle

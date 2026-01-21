@@ -77,28 +77,28 @@
           <v-col cols="12" md="6">
             <label class="text-body-2 font-weight-medium d-block mb-1">Character Types</label>
             <v-row dense>
-              <v-col cols="6">
+              <v-col cols="12" sm="6">
                 <v-checkbox
                   v-model="includeUppercase"
                   label="Uppercase (A-Z)"
                   color="primary"
                   hide-details></v-checkbox>
               </v-col>
-              <v-col cols="6">
+              <v-col cols="12" sm="6">
                 <v-checkbox
                   v-model="includeLowercase"
                   label="Lowercase (a-z)"
                   color="primary"
                   hide-details></v-checkbox>
               </v-col>
-              <v-col cols="6">
+              <v-col cols="12" sm="6">
                 <v-checkbox
                   v-model="includeNumbers"
                   label="Numbers (0-9)"
                   color="primary"
                   hide-details></v-checkbox>
               </v-col>
-              <v-col cols="6">
+              <v-col cols="12" sm="6">
                 <v-checkbox
                   v-model="includeSpecial"
                   label="Special (!@#$%)"

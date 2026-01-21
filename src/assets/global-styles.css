@@ -51,6 +51,15 @@
   border-radius: 50% !important;
 }
 
+/* Ensure icons in buttons are vertically centered with text */
+.v-btn .v-icon {
+  vertical-align: middle;
+}
+
+.v-btn .v-icon--start {
+  margin-inline-end: 6px;
+}
+
 /* ============================================================================
    CARDS - Elevation and Hover Effects
    ============================================================================ */
@@ -340,34 +349,44 @@
 }
 
 /* ============================================================================
-   CHECKBOX AND SELECTION CONTROLS FIX
+   CHECKBOX STYLING FIX
    ============================================================================ */
 
-/* Ensure checkbox labels are visible and properly styled */
-.v-checkbox .v-label,
-.v-selection-control .v-label {
+/* Ensure checkbox labels are visible */
+.v-checkbox .v-label {
   opacity: 1 !important;
   color: inherit !important;
 }
 
-/* Display checkbox with label inline, but hints below */
-.v-checkbox,
-.v-selection-control {
+/* Checkbox container - block display for hint placement */
+.v-checkbox {
   display: block !important;
 }
 
-/* Keep input and label on same line */
-.v-checkbox .v-selection-control__wrapper,
-.v-selection-control .v-selection-control__wrapper {
+/* Keep checkbox input and label inline */
+.v-checkbox .v-selection-control {
   display: inline-flex !important;
   align-items: center !important;
+  flex-wrap: nowrap;
 }
 
-/* Force hints to display below on new line */
-.v-checkbox .v-input__details,
-.v-selection-control .v-input__details {
+/* Force hints to display below checkbox on new line */
+.v-checkbox .v-input__details {
   display: block !important;
   padding-left: 0 !important;
+  padding-top: 4px;
+}
+
+/* On narrow screens, align checkbox to top when label wraps */
+@media (max-width: 599px) {
+  .v-checkbox .v-selection-control {
+    align-items: flex-start;
+  }
+
+  .v-checkbox .v-selection-control .v-label {
+    white-space: normal;
+    padding-top: 2px;
+  }
 }
 
 /* ============================================================================

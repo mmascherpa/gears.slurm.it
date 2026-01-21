@@ -67,21 +67,20 @@
               v-if="detectedFileType"
               type="info"
               variant="tonal"
-              density="compact"
               class="mt-3">
-              <div class="d-flex align-center justify-space-between flex-wrap ga-2">
-                <div>
-                  <strong>{{ detectedFileType.description }}</strong>
-                  <span class="text-medium-emphasis ml-2">({{ detectedSignatureHex }})</span>
-                </div>
+              <template #default>
+                <div><strong>{{ detectedFileType.description }}</strong></div>
+                <div class="text-medium-emphasis text-caption">({{ detectedSignatureHex }})</div>
+              </template>
+              <template #append>
                 <v-btn
                   size="small"
                   variant="text"
                   @click="handleJumpToSignature">
-                  <v-icon start size="small">mdi-target</v-icon>
+                  <v-icon start>mdi-target</v-icon>
                   Jump to Signature
                 </v-btn>
-              </div>
+              </template>
             </v-alert>
           </v-card-text>
         </v-card>
