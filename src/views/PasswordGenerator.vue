@@ -61,10 +61,10 @@
             <div class="mb-3">
               <div class="d-flex justify-space-between align-center mb-1">
                 <label class="text-body-2 font-weight-medium">Password Length</label>
-                <v-chip color="primary" size="x-small">{{ length }} chars</v-chip>
+                <v-chip color="primary" size="x-small">{{ preferences.length }} chars</v-chip>
               </div>
               <v-slider
-                v-model="length"
+                v-model="preferences.length"
                 :min="8"
                 :max="64"
                 :step="1"
@@ -79,28 +79,28 @@
             <v-row dense>
               <v-col cols="12" sm="6">
                 <v-checkbox
-                  v-model="includeUppercase"
+                  v-model="preferences.includeUppercase"
                   label="Uppercase (A-Z)"
                   color="primary"
                   hide-details></v-checkbox>
               </v-col>
               <v-col cols="12" sm="6">
                 <v-checkbox
-                  v-model="includeLowercase"
+                  v-model="preferences.includeLowercase"
                   label="Lowercase (a-z)"
                   color="primary"
                   hide-details></v-checkbox>
               </v-col>
               <v-col cols="12" sm="6">
                 <v-checkbox
-                  v-model="includeNumbers"
+                  v-model="preferences.includeNumbers"
                   label="Numbers (0-9)"
                   color="primary"
                   hide-details></v-checkbox>
               </v-col>
               <v-col cols="12" sm="6">
                 <v-checkbox
-                  v-model="includeSpecial"
+                  v-model="preferences.includeSpecial"
                   label="Special (!@#$%)"
                   color="primary"
                   hide-details></v-checkbox>
@@ -195,6 +195,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { generatePassword } from '@/utils/passwordGenerator';
 import { useClipboard } from '@/composables/useClipboard';
+import { usePreferences } from '@/composables/usePreferences';
 import { useSnackbar } from '@/composables/useSnackbar';
 import EducationalAlert from '@/components/EducationalAlert.vue';
 import LearnMorePanel from '@/components/LearnMorePanel.vue';
@@ -214,25 +215,27 @@ export default {
   setup() {
     // Reactive State
     const generatedPassword = ref('');
-    const includeLowercase = ref(true);
-    const includeNumbers = ref(true);
-    const includeSpecial = ref(true);
-    const includeUppercase = ref(true);
-    const length = ref(16);
 
     // Composables
     const { snackbar, snackbarText, snackbarColor, showSnackbar } = useSnackbar();
     const { copyToClipboard } = useClipboard();
+    const { preferences } = usePreferences('password-generator', {
+      length: 16,
+      includeUppercase: true,
+      includeLowercase: true,
+      includeNumbers: true,
+      includeSpecial: true
+    });
 
     // Computed Properties
     /**
      * Checks if at least one character type is selected
      */
     const hasCharacterTypeSelected = computed(() => {
-      return includeUppercase.value ||
-             includeLowercase.value ||
-             includeNumbers.value ||
-             includeSpecial.value;
+      return preferences.includeUppercase ||
+             preferences.includeLowercase ||
+             preferences.includeNumbers ||
+             preferences.includeSpecial;
     });
 
     // Functions
@@ -247,11 +250,11 @@ export default {
 
       try {
         const options = {
-          length: length.value,
-          includeUppercase: includeUppercase.value,
-          includeLowercase: includeLowercase.value,
-          includeNumbers: includeNumbers.value,
-          includeSpecial: includeSpecial.value
+          length: preferences.length,
+          includeUppercase: preferences.includeUppercase,
+          includeLowercase: preferences.includeLowercase,
+          includeNumbers: preferences.includeNumbers,
+          includeSpecial: preferences.includeSpecial
         };
 
         generatedPassword.value = generatePassword(options);
@@ -275,11 +278,16 @@ export default {
     };
 
     // Watchers
-    watch(includeLowercase, generateNewPassword);
-    watch(includeNumbers, generateNewPassword);
-    watch(includeSpecial, generateNewPassword);
-    watch(includeUppercase, generateNewPassword);
-    watch(length, generateNewPassword);
+    watch(
+      () => [
+        preferences.length,
+        preferences.includeUppercase,
+        preferences.includeLowercase,
+        preferences.includeNumbers,
+        preferences.includeSpecial
+      ],
+      generateNewPassword
+    );
 
     // Lifecycle Hooks
     onMounted(() => {
@@ -289,11 +297,9 @@ export default {
     return {
       // State
       generatedPassword,
-      includeLowercase,
-      includeNumbers,
-      includeSpecial,
-      includeUppercase,
-      length,
+
+      // Preferences (persistent)
+      preferences,
 
       // Snackbar
       snackbar,

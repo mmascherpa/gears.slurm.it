@@ -57,6 +57,7 @@ src/
 │   ├── useFileSizeValidation.js # File size validation logic (99 lines)
 │   ├── useHexViewer.js          # Hex viewer state management
 │   ├── usePasswordSession.js    # Password session storage management (132 lines)
+│   ├── usePreferences.js        # Persistent user preferences with localStorage (126 lines, NEW)
 │   ├── useServiceWorkerUpdate.js # Service worker update detection
 │   ├── useSnackbar.js           # Snackbar state management (41 lines)
 │   ├── useTotp.js               # TOTP code generation with countdown timer (180 lines, NEW)
@@ -771,6 +772,45 @@ encryptFile(
 **Used By**: AesEncrypt, AesDecrypt
 
 **Impact**: Fixed critical memory leak affecting all AES components
+
+---
+
+### usePreferences.js
+**File**: [src/composables/usePreferences.js](src/composables/usePreferences.js)
+**Lines**: 126
+**Purpose**: Persistent user preferences with localStorage auto-save
+
+**Exports**:
+- `preferences` (Reactive Object) - User preferences with auto-save on change
+- `resetPreferences()` - Reset all preferences to defaults
+
+**Key Features**:
+- **Namespaced storage**: `slurm-pref-{toolName}` keys prevent conflicts
+- **Type validation**: Stored values validated against default types
+- **Auto-save**: Vue watcher persists changes immediately
+- **Graceful degradation**: Works in private browsing (falls back to defaults)
+- **Privacy-first**: Only persists UI preferences, never sensitive data
+
+**Usage Pattern**:
+```javascript
+const { preferences, resetPreferences } = usePreferences('password-generator', {
+  length: 16,
+  includeUppercase: true,
+  includeLowercase: true,
+  includeNumbers: true,
+  includeSpecial: true
+});
+
+// Use directly with v-model
+// <v-slider v-model="preferences.length" />
+
+// Reset to defaults
+resetPreferences();
+```
+
+**Used By**: PasswordGenerator, Encrypt, Decrypt, HexViewer, QrCodeGenerator
+
+**Impact**: Remembers user preferences across sessions for better UX
 
 ---
 

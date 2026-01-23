@@ -14,7 +14,7 @@
       storage-key="slurm-help-decrypt"
     >
       <!-- jsAesCrypt Content -->
-      <template v-if="selectedAlgorithm === 'jsAesCrypt'">
+      <template v-if="preferences.selectedAlgorithm === 'jsAesCrypt'">
         <p class="mb-2">
           <strong>AES decryption</strong> reverses the AES-256 encryption process, converting encrypted data back
           to its original form using the same password that was used for encryption.
@@ -58,7 +58,7 @@
       </template>
 
       <!-- WebCrypto Content -->
-      <template v-else-if="selectedAlgorithm === 'webCrypto'">
+      <template v-else-if="preferences.selectedAlgorithm === 'webCrypto'">
         <p class="mb-2">
           <strong>WebCrypto decryption</strong> uses the browser's native Web Cryptography API to decrypt AES-256-GCM
           encrypted data back to its original form using the password.
@@ -98,7 +98,7 @@
       </template>
 
       <!-- Age Content -->
-      <template v-else-if="selectedAlgorithm === 'age'">
+      <template v-else-if="preferences.selectedAlgorithm === 'age'">
         <p class="mb-2">
           <strong>Age decryption</strong> reverses age encryption, converting encrypted .age files back to their
           original form using the passphrase.
@@ -154,7 +154,7 @@
           Encryption Algorithm
         </v-card-title>
         <v-card-text class="pa-4">
-          <v-radio-group v-model="selectedAlgorithm" inline>
+          <v-radio-group v-model="preferences.selectedAlgorithm" inline>
             <v-radio
               value="jsAesCrypt"
             >
@@ -188,7 +188,7 @@
           </v-radio-group>
 
           <v-alert
-            v-if="selectedAlgorithm === 'age'"
+            v-if="preferences.selectedAlgorithm === 'age'"
             type="info"
             variant="tonal"
             density="compact"
@@ -411,11 +411,12 @@
 import { computed, ref, watch } from 'vue';
 import { downloadFile } from '@/utils/fileDownload';
 import { parseCSV } from '@/utils/csvParser';
-import { useCryptoWorker } from '@/composables/useCryptoWorker';
 import { useClipboard } from '@/composables/useClipboard';
+import { useCryptoWorker } from '@/composables/useCryptoWorker';
 import { useDebounce } from '@/composables/useDebounce';
 import { useFocusManagement } from '@/composables/useFocusManagement';
 import { usePasswordSession } from '@/composables/usePasswordSession';
+import { usePreferences } from '@/composables/usePreferences';
 import { useSnackbar } from '@/composables/useSnackbar';
 import CsvPreviewTable from '@/components/CsvPreviewTable.vue';
 import EducationalAlert from '@/components/EducationalAlert.vue';
@@ -451,7 +452,6 @@ export default {
     const error = ref('');
     const password = ref('');
     const plainText = ref('');
-    const selectedAlgorithm = ref('jsAesCrypt'); // Default to jsAesCrypt for backwards compatibility
     const tableData = ref([]);
     const tableHeaders = ref([]);
 
@@ -459,6 +459,9 @@ export default {
     const { snackbar, snackbarColor, snackbarText, showSnackbar } = useSnackbar();
     const { copyToClipboard, pasteFromClipboard } = useClipboard();
     const { announceToScreenReader } = useFocusManagement();
+    const { preferences } = usePreferences('decrypt', {
+      selectedAlgorithm: 'jsAesCrypt'
+    });
     const {
       rememberPassword,
       isPasswordRemembered,
@@ -507,7 +510,7 @@ export default {
         webCrypto: 'How Does WebCrypto Decryption Work?',
         age: 'How Does Age Decryption Work?'
       };
-      return titles[selectedAlgorithm.value] || 'How Does Decryption Work?';
+      return titles[preferences.selectedAlgorithm] || 'How Does Decryption Work?';
     });
 
     /**
@@ -616,7 +619,7 @@ export default {
       const encryptedBlob = convertFromBase64();
       if (!encryptedBlob) return;
 
-      decrypt(encryptedBlob, password.value, 'encrypted.aes', selectedAlgorithm.value);
+      decrypt(encryptedBlob, password.value, 'encrypted.aes', preferences.selectedAlgorithm);
     };
 
     /**
@@ -629,7 +632,7 @@ export default {
       }
 
       error.value = '';
-      decrypt(encryptedFile.value, password.value, encryptedFile.value.name, selectedAlgorithm.value);
+      decrypt(encryptedFile.value, password.value, encryptedFile.value.name, preferences.selectedAlgorithm);
     };
 
     /**
@@ -780,11 +783,11 @@ export default {
       // Auto-detect algorithm from file extension
       if (newVal) {
         if (newVal.name.endsWith('.age')) {
-          selectedAlgorithm.value = 'age';
+          preferences.selectedAlgorithm = 'age';
         } else if (newVal.name.endsWith('.aes')) {
-          selectedAlgorithm.value = 'jsAesCrypt';
+          preferences.selectedAlgorithm = 'jsAesCrypt';
         } else if (newVal.name.endsWith('.enc')) {
-          selectedAlgorithm.value = 'webCrypto';
+          preferences.selectedAlgorithm = 'webCrypto';
         }
       }
 
@@ -831,9 +834,11 @@ export default {
       isLoading,
       password,
       plainText,
-      selectedAlgorithm,
       tableData,
       tableHeaders,
+
+      // Preferences (persistent)
+      preferences,
 
       // Password Session
       rememberPassword,

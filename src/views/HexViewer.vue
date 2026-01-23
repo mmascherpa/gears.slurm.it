@@ -110,7 +110,7 @@
 
           <!-- Offset Format Toggle -->
           <v-col cols="6" sm="auto">
-            <v-btn-toggle v-model="offsetFormat" mandatory density="comfortable" class="w-100">
+            <v-btn-toggle v-model="preferences.offsetFormat" mandatory density="comfortable" class="w-100">
               <v-btn value="hex">
                 <v-icon start>mdi-hexadecimal</v-icon>
                 Hex
@@ -128,7 +128,7 @@
               v-model="jumpOffsetInput"
               density="comfortable"
               variant="outlined"
-              :placeholder="offsetFormat === 'hex' ? 'Jump to hex offset (e.g., FF)' : 'Jump to decimal offset'"
+              :placeholder="preferences.offsetFormat === 'hex' ? 'Jump to hex offset (e.g., FF)' : 'Jump to decimal offset'"
               hide-details
               @keyup.enter="handleJumpToOffset">
               <template #append-inner>
@@ -447,6 +447,7 @@ import { formatFileSize } from '@/utils/fileSizeValidator';
 import { detectFileType, signatureToHex } from '@/utils/fileSignatures';
 import { useClipboard } from '@/composables/useClipboard';
 import { useHexViewer } from '@/composables/useHexViewer';
+import { usePreferences } from '@/composables/usePreferences';
 import { useSnackbar } from '@/composables/useSnackbar';
 import { useVirtualScroll } from '@/composables/useVirtualScroll';
 import CardSectionHeader from '@/components/CardSectionHeader.vue';
@@ -473,8 +474,12 @@ export default {
     // Composables
     const { snackbar, snackbarColor, snackbarText, showSnackbar } = useSnackbar();
     const { copyToClipboard } = useClipboard();
+    const { preferences } = usePreferences('hex-viewer', {
+      bytesPerRow: 16,
+      offsetFormat: 'hex'
+    });
 
-    // Initialize hex viewer - bytesPerRow is managed inside the composable
+    // Initialize hex viewer - pass saved bytesPerRow preference
     const {
       addBookmark,
       BOOKMARK_COLORS,
@@ -514,7 +519,7 @@ export default {
       totalRows,
       useHexOffset,
       exportSelection
-    } = useHexViewer(16); // default 16 bytes per row
+    } = useHexViewer(preferences.bytesPerRow);
 
     const {
       endIndex,
@@ -532,7 +537,6 @@ export default {
 
     // Reactive State
     const selectedFile = ref(null);
-    const offsetFormat = ref('hex');
     const jumpOffsetInput = ref('');
     const hexSearchInput = ref('');
     const textSearchInput = ref('');
@@ -590,14 +594,21 @@ export default {
     });
 
     /**
-     * Watch offset format toggle
+     * Watch offset format toggle and sync with composable
      */
-    watch(offsetFormat, (newFormat) => {
+    watch(() => preferences.offsetFormat, (newFormat) => {
       if (newFormat === 'hex') {
         toggleOffsetFormat(); // Switch to hex if currently decimal
       } else {
         if (useHexOffset.value) toggleOffsetFormat(); // Switch to decimal if currently hex
       }
+    });
+
+    /**
+     * Watch bytesPerRow changes and sync with preferences
+     */
+    watch(bytesPerRow, (newVal) => {
+      preferences.bytesPerRow = newVal;
     });
 
     /**
@@ -616,7 +627,7 @@ export default {
       if (!jumpOffsetInput.value.trim()) return;
 
       let offset;
-      if (offsetFormat.value === 'hex') {
+      if (preferences.offsetFormat === 'hex') {
         offset = parseHexOffset(jumpOffsetInput.value);
       } else {
         offset = parseDecimalOffset(jumpOffsetInput.value);
@@ -905,8 +916,10 @@ export default {
       hexSearchInput,
       interpretationExpanded,
       jumpOffsetInput,
-      offsetFormat,
       textSearchInput,
+
+      // Preferences (persistent)
+      preferences,
 
       // State - Virtual Scroll
       offsetY,

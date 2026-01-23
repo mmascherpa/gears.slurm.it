@@ -299,9 +299,31 @@ tests/
   - `useDebounce()` - Debounced functions with auto-cleanup
   - `useFileSizeValidation()` - File size validation (50MB warning, 200MB max)
   - `useAESWorker()` - Web Worker lifecycle with memory leak fix
+  - `usePreferences(toolName, defaults)` - Persistent user preferences with localStorage
 - **Critical**: `useAESWorker` automatically terminates workers on unmount (fixes memory leak)
+- **Preferences**: `usePreferences` provides reactive state with auto-save to localStorage
 - All composables use `onBeforeUnmount` for cleanup
 - See [structure.md](structure.md) for usage patterns
+
+### User Preferences Pattern (2026-01-22)
+**WHY THIS MATTERS**: Users expect their settings to persist across sessions without re-configuration.
+
+- **Use `usePreferences(toolName, defaults)`** for any tool-specific settings
+- **Privacy-first**: Only persist UI preferences, never sensitive data (passwords, text, file contents)
+- **Type-safe**: Stored values are validated against default types
+- **Graceful degradation**: Works in private browsing (falls back to defaults)
+- Storage key format: `slurm-pref-{toolName}`
+
+```javascript
+const { preferences, resetPreferences } = usePreferences('password-generator', {
+  length: 16,
+  includeUppercase: true,
+  includeLowercase: true
+});
+
+// Use directly with v-model: <v-slider v-model="preferences.length" />
+// Reset to defaults: resetPreferences();
+```
 
 ### Shared Components Pattern (2025-11-01)
 **WHY THIS MATTERS**: DRY principle, consistent UX, reduced maintenance burden.
@@ -334,4 +356,4 @@ tests/
 
 ---
 
-**Last Updated**: 2025-11-03 (Component testing infrastructure: 246 passing tests, 96.08% coverage)
+**Last Updated**: 2026-01-22 (Added usePreferences composable for persistent user preferences)

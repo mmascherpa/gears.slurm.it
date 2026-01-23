@@ -65,7 +65,7 @@
             <v-row>
               <v-col cols="12" md="4">
                 <v-select
-                  v-model="qrType"
+                  v-model="preferences.qrType"
                   :items="qrTypes"
                   label="QR Code Type"
                   variant="outlined"
@@ -95,7 +95,7 @@
             <v-divider class="my-4"></v-divider>
 
         <!-- Plain Text Form -->
-        <div v-if="qrType === 'text'">
+        <div v-if="preferences.qrType ==='text'">
           <v-textarea
             v-model="textData"
             label="Text or URL"
@@ -107,7 +107,7 @@
         </div>
 
         <!-- WiFi Form -->
-        <div v-if="qrType === 'wifi'">
+        <div v-if="preferences.qrType ==='wifi'">
           <v-text-field
             v-model="wifiData.ssid"
             label="Network Name (SSID)"
@@ -146,7 +146,7 @@
         </div>
 
         <!-- vCard Form -->
-        <div v-if="qrType === 'vcard'">
+        <div v-if="preferences.qrType ==='vcard'">
           <v-text-field
             v-model="vcardData.name"
             label="Full Name"
@@ -193,7 +193,7 @@
         </div>
 
         <!-- Email Form -->
-        <div v-if="qrType === 'email'">
+        <div v-if="preferences.qrType ==='email'">
           <v-text-field
             v-model="emailData.to"
             label="Recipient Email"
@@ -223,7 +223,7 @@
         </div>
 
         <!-- SMS Form -->
-        <div v-if="qrType === 'sms'">
+        <div v-if="preferences.qrType ==='sms'">
           <v-text-field
             v-model="smsData.phone"
             label="Phone Number"
@@ -304,6 +304,7 @@
 <script>
 import { computed, ref, watch } from 'vue';
 import { useDebounce } from '@/composables/useDebounce';
+import { usePreferences } from '@/composables/usePreferences';
 import { useSnackbar } from '@/composables/useSnackbar';
 import EducationalAlert from '@/components/EducationalAlert.vue';
 import LearnMorePanel from '@/components/LearnMorePanel.vue';
@@ -350,19 +351,28 @@ export default {
       { value: 'H', title: 'High (30%)' },
     ];
 
+    // Composables
+    const { snackbar, snackbarText, snackbarColor, showSnackbar } = useSnackbar();
+    const { preferences } = usePreferences('qr-code-generator', {
+      qrType: 'text',
+      width: 256,
+      errorCorrectionLevel: 'M',
+      wifiSecurity: 'WPA',
+      wifiHidden: false
+    });
+
     // Reactive State
-    const qrType = ref('text');
     const qrCodeDataUrl = ref('');
     const errorMessage = ref('');
     const showPassword = ref(false);
 
-    // Form Data
+    // Form Data (not persisted for privacy)
     const textData = ref('');
     const wifiData = ref({
       ssid: '',
       password: '',
-      security: 'WPA',
-      hidden: false,
+      security: preferences.wifiSecurity,
+      hidden: preferences.wifiHidden,
     });
     const vcardData = ref({
       name: '',
@@ -381,20 +391,17 @@ export default {
       message: '',
     });
 
-    // QR Options
+    // QR Options (partially from preferences)
     const qrOptions = ref({
-      width: 256,
-      errorCorrectionLevel: 'M',
+      width: preferences.width,
+      errorCorrectionLevel: preferences.errorCorrectionLevel,
       color: '#000000',
       backgroundColor: '#FFFFFF',
     });
 
-    // Composables
-    const { snackbar, snackbarText, snackbarColor, showSnackbar } = useSnackbar();
-
     // Computed Properties
     const currentFormData = computed(() => {
-      switch (qrType.value) {
+      switch (preferences.qrType) {
         case 'text':
           return textData.value;
         case 'wifi':
@@ -423,7 +430,7 @@ export default {
       try {
         let dataToEncode = '';
 
-        switch (qrType.value) {
+        switch (preferences.qrType) {
           case 'text':
             dataToEncode = formatPlainText(textData.value);
             break;
@@ -456,7 +463,7 @@ export default {
       try {
         let filename = 'qrcode.png';
 
-        switch (qrType.value) {
+        switch (preferences.qrType) {
           case 'text':
             filename = 'qrcode-text.png';
             break;
@@ -506,15 +513,26 @@ export default {
       debouncedGenerate();
     }, { deep: true });
 
-    watch(qrType, () => {
+    watch(() => preferences.qrType, () => {
       qrCodeDataUrl.value = '';
       errorMessage.value = '';
     });
 
+    // Sync QR options back to preferences when they change
+    watch(qrOptions, (newVal) => {
+      preferences.width = newVal.width;
+      preferences.errorCorrectionLevel = newVal.errorCorrectionLevel;
+    }, { deep: true });
+
+    // Sync WiFi settings back to preferences when they change
+    watch(wifiData, (newVal) => {
+      preferences.wifiSecurity = newVal.security;
+      preferences.wifiHidden = newVal.hidden;
+    }, { deep: true });
+
     // Return
     return {
       // State
-      qrType,
       qrCodeDataUrl,
       errorMessage,
       showPassword,
@@ -524,6 +542,9 @@ export default {
       emailData,
       smsData,
       qrOptions,
+
+      // Preferences (persistent)
+      preferences,
 
       // Snackbar
       snackbar,

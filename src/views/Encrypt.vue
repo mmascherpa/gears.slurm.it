@@ -14,7 +14,7 @@
       storage-key="slurm-help-encrypt"
     >
       <!-- jsAesCrypt Content -->
-      <template v-if="selectedAlgorithm === 'jsAesCrypt'">
+      <template v-if="preferences.selectedAlgorithm === 'jsAesCrypt'">
         <p class="mb-2">
           <strong>AES (Advanced Encryption Standard)</strong> is a military-grade encryption algorithm
           trusted by governments and organizations worldwide to protect sensitive data.
@@ -58,7 +58,7 @@
       </template>
 
       <!-- WebCrypto Content -->
-      <template v-else-if="selectedAlgorithm === 'webCrypto'">
+      <template v-else-if="preferences.selectedAlgorithm === 'webCrypto'">
         <p class="mb-2">
           <strong>Web Cryptography API</strong> provides browser-native AES-256 encryption with hardware acceleration,
           offering fast, secure encryption without external libraries.
@@ -98,7 +98,7 @@
       </template>
 
       <!-- Age Content -->
-      <template v-else-if="selectedAlgorithm === 'age'">
+      <template v-else-if="preferences.selectedAlgorithm === 'age'">
         <p class="mb-2">
           <strong>Age encryption</strong> is a modern, simple file encryption tool designed as a replacement for GPG.
           Created by Filippo Valsorda, it focuses on simplicity and ease of use.
@@ -160,7 +160,7 @@
         Encryption Algorithm
       </v-card-title>
       <v-card-text class="pa-4">
-        <v-radio-group v-model="selectedAlgorithm" inline>
+        <v-radio-group v-model="preferences.selectedAlgorithm" inline>
           <v-radio
             value="jsAesCrypt"
           >
@@ -194,7 +194,7 @@
         </v-radio-group>
 
         <v-alert
-          v-if="selectedAlgorithm === 'age'"
+          v-if="preferences.selectedAlgorithm === 'age'"
           type="info"
           variant="tonal"
           density="compact"
@@ -354,11 +354,12 @@
 import { computed, ref, watch } from 'vue';
 import { downloadFile } from '@/utils/fileDownload';
 import { parseCSV } from '@/utils/csvParser';
-import { useCryptoWorker } from '@/composables/useCryptoWorker';
 import { useClipboard } from '@/composables/useClipboard';
+import { useCryptoWorker } from '@/composables/useCryptoWorker';
 import { useDebounce } from '@/composables/useDebounce';
 import { useFocusManagement } from '@/composables/useFocusManagement';
 import { usePasswordSession } from '@/composables/usePasswordSession';
+import { usePreferences } from '@/composables/usePreferences';
 import { useSnackbar } from '@/composables/useSnackbar';
 import CsvPreviewTable from '@/components/CsvPreviewTable.vue';
 import EducationalAlert from '@/components/EducationalAlert.vue';
@@ -391,7 +392,6 @@ export default {
     const passwordConfirm = ref('');
     const plainFile = ref(null);
     const plainText = ref('');
-    const selectedAlgorithm = ref('jsAesCrypt'); // Default to jsAesCrypt for backwards compatibility
     const tableData = ref([]);
     const tableHeaders = ref([]);
 
@@ -399,6 +399,9 @@ export default {
     const { snackbar, snackbarColor, snackbarText, showSnackbar } = useSnackbar();
     const { copyToClipboard, pasteFromClipboard } = useClipboard();
     const { announceToScreenReader } = useFocusManagement();
+    const { preferences } = usePreferences('encrypt', {
+      selectedAlgorithm: 'jsAesCrypt'
+    });
     const {
       rememberPassword,
       isPasswordRemembered,
@@ -450,7 +453,7 @@ export default {
         webCrypto: 'What is WebCrypto AES Encryption?',
         age: 'What is Age Encryption?'
       };
-      return titles[selectedAlgorithm.value] || 'What is Encryption?';
+      return titles[preferences.selectedAlgorithm] || 'What is Encryption?';
     });
 
     /**
@@ -576,7 +579,7 @@ export default {
       }
 
       if (fileData && fileName) {
-        encrypt(fileData, password.value, fileName, selectedAlgorithm.value);
+        encrypt(fileData, password.value, fileName, preferences.selectedAlgorithm);
       }
     };
 
@@ -617,7 +620,7 @@ export default {
 
       try {
         const textBlob = new Blob([plainText.value], { type: 'text/plain' });
-        encrypt(textBlob, password.value, 'plaintext.txt', selectedAlgorithm.value);
+        encrypt(textBlob, password.value, 'plaintext.txt', preferences.selectedAlgorithm);
       } catch (err) {
         console.error('Encryption error:', err);
         error.value = 'Failed to initiate encryption';
@@ -698,9 +701,11 @@ export default {
       passwordConfirm,
       plainFile,
       plainText,
-      selectedAlgorithm,
       tableData,
       tableHeaders,
+
+      // Preferences (persistent)
+      preferences,
 
       // Password Session
       rememberPassword,

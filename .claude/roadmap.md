@@ -309,9 +309,9 @@ This file tracks feature planning, completed work, and future development priori
 
 ## Phase 6: Additional UX Features (Priority: MEDIUM)
 
-**Status**: 🔄 In Progress (2/6 features completed)
+**Status**: 🔄 In Progress (3/7 features completed)
 **Estimated Effort**: 11-14 hours
-**Actual Effort**: 5 hours (Theme Toggle + Password Session)
+**Actual Effort**: 7 hours (Theme Toggle + Password Session + User Preferences Persistence)
 
 ### Features
 
@@ -355,6 +355,23 @@ This file tracks feature planning, completed work, and future development priori
   - **Use Case**: "Encrypting 10 company documents with same password - no re-typing"
   - **Privacy**: Memory-only, auto-clears on tab close
   - **Completed**: 2025-11-08
+
+- [x] **User Preferences Persistence** (2 hours) - Priority 1 ✅ COMPLETED 🔥
+  - Remember user preferences across sessions (algorithm, password length, QR options, etc.)
+  - Created `usePreferences` composable for reactive localStorage persistence
+  - Type validation ensures stored values match expected types
+  - Graceful degradation in private browsing mode
+  - Privacy-first: Only persists UI preferences, never sensitive data (passwords, text content)
+  - **Tools updated**: PasswordGenerator, Encrypt, Decrypt, HexViewer, QrCodeGenerator
+  - **Preferences persisted**:
+    - Password Generator: length, character type options (5 settings)
+    - Encryption/Decryption: selected algorithm
+    - Hex Viewer: bytes per row, offset format
+    - QR Code: type, size, error correction, WiFi security/hidden defaults
+  - **Benefit**: Users don't need to reconfigure tools on each visit
+  - **Use Case**: "I always generate 24-char passwords with numbers only"
+  - **Test Coverage**: 29 unit tests for composable
+  - **Completed**: 2026-01-22
 
 ---
 
@@ -909,15 +926,15 @@ This file tracks feature planning, completed work, and future development priori
 
 ## Progress Summary
 
-**Total Planned Features**: 69
+**Total Planned Features**: 70
 - Phase 1: 5, Phase 2: 3, Phase 3: 3, Phase 3.5: 4
-- Phase 4: 7 (was 4, +3 discovered), Phase 5: 4, Phase 6: 6 (was 5), Phase 7: 12 (was 13)
+- Phase 4: 7 (was 4, +3 discovered), Phase 5: 4, Phase 6: 7 (was 6, +1 preferences), Phase 7: 12 (was 13)
 - Phase 8: 4 (NEW), Phase 9: 5 (NEW), Phase 10: 9 (was Phase 11), Phase 11-13: 7
 
-**Completed**: 30 ✅ (43% of total)
+**Completed**: 31 ✅ (44% of total)
 - Phases 1-4: 22 features (100% complete)
 - Phase 5: 3 features (75% complete)
-- Phase 6-7: 4 features (partial)
+- Phase 6-7: 5 features (partial)
 - Phase 10: 1 feature (Hex Viewer)
 
 **In Progress**: 4 🔄 (Phases 5, 6, 7, 10)
@@ -931,7 +948,7 @@ This file tracks feature planning, completed work, and future development priori
 - Phase 3.5 (Offline & Code Quality): ✅ 100% (4/4)
 - Phase 4 (Security & Validation): ✅ 100% (7/7) **+3 features discovered**
 - Phase 5 (Testing): 🔄 75% (3/4) **423 passing tests**
-- Phase 6 (Additional UX): 🔄 33% (2/6)
+- Phase 6 (Additional UX): 🔄 43% (3/7)
 - Phase 7 (New Tool Features): 🔄 17% (2/12)
 - Phase 8 (DevOps & QA): ✅ 100% (4/4) **COMPLETED**
 - Phase 9 (Modern UX Polish): 0% (0/5)
@@ -1298,7 +1315,7 @@ This file tracks feature planning, completed work, and future development priori
 - [Code Structure](.claude/structure.md) - Current codebase organization
 - [Main Application Files](../) - Link to main code files
 
-Last Updated: 2026-01-20 (Added TOTP support to Password Manager)
+Last Updated: 2026-01-22 (Added User Preferences Persistence feature)
 
 - **2026-01-20**: Password Manager TOTP Support Enhancement
   - **Added TOTP code generation** to Password Manager entries:
@@ -1318,3 +1335,31 @@ Last Updated: 2026-01-20 (Added TOTP support to Password Manager)
     - Live preview while editing entries
   - **Total changes**: +475 lines across 7 files (4 new, 3 modified)
   - **Use case**: "View 2FA codes directly in Password Manager without switching apps"
+
+- **2026-01-22**: User Preferences Persistence (Phase 6) ✅ COMPLETED
+  - **Created `usePreferences` composable** (126 lines):
+    - Namespaced localStorage keys (`slurm-pref-{toolName}`) prevent conflicts
+    - Type validation ensures stored values match expected defaults
+    - Auto-save via Vue watcher on any preference change
+    - Graceful degradation for private browsing mode
+    - `resetPreferences()` function to restore defaults
+  - **Updated 5 tool components**:
+    - PasswordGenerator.vue: 5 preferences (length, character types)
+    - Encrypt.vue: 1 preference (algorithm)
+    - Decrypt.vue: 1 preference (algorithm, preserves auto-detection from file extension)
+    - HexViewer.vue: 2 preferences (bytesPerRow, offsetFormat)
+    - QrCodeGenerator.vue: 5 preferences (type, size, errorCorrectionLevel, wifiSecurity, wifiHidden)
+  - **Privacy-first design**:
+    - Only persists UI preferences (never passwords, text content, file data)
+    - Analyzed all options to determine what should/shouldn't persist
+    - Sensitive data explicitly excluded (passwords, WiFi credentials, vCard info)
+  - **Test coverage**: 29 unit tests for composable covering:
+    - Initialization with defaults
+    - Loading from localStorage
+    - Persisting changes
+    - Type validation
+    - Tool isolation
+    - Reset functionality
+    - Error handling
+  - **Total changes**: +500 lines across 8 files (2 new, 6 modified)
+  - **Use case**: "My password generator always remembers I prefer 24-char passwords"
