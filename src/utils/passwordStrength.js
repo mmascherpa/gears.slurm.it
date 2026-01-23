@@ -1,18 +1,148 @@
 /**
  * Password Strength Utility
- * Calculates password strength based on length, complexity, and character variety
+ * Calculates password strength based on entropy (bits of randomness)
+ *
+ * Entropy thresholds based on current security best practices:
+ * - < 35 bits: Weak (vulnerable to offline attacks)
+ * - 35-60 bits: Medium (adequate for low-value accounts)
+ * - 60-80 bits: Strong (good for most accounts)
+ * - 80+ bits: Very Strong (excellent for high-security use)
+ *
+ * Reference: https://en.wikipedia.org/wiki/Password_strength#Entropy_as_a_measure_of_password_strength
  */
 
+// Entropy thresholds (in bits) - calibrated to current best practices
+const ENTROPY_THRESHOLDS = {
+  WEAK: 35,      // Below this is weak
+  MEDIUM: 60,    // Below this is medium
+  STRONG: 80     // Below this is strong, above is very strong
+};
+
 /**
- * Evaluates password strength and returns detailed metrics
+ * Calculates the entropy of a password based on its character set
+ * @param {string} password - The password to analyze
+ * @returns {Object} Object with entropy value and character set info
+ */
+export function calculatePasswordEntropy(password) {
+  if (!password || password.length === 0) {
+    return { entropy: 0, charsetSize: 0, length: 0 };
+  }
+
+  // Determine character set size based on what's actually in the password
+  let charsetSize = 0;
+  const hasLowercase = /[a-z]/.test(password);
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasNumbers = /\d/.test(password);
+  const hasSpecialChars = /[^A-Za-z0-9]/.test(password);
+
+  if (hasLowercase) charsetSize += 26;
+  if (hasUppercase) charsetSize += 26;
+  if (hasNumbers) charsetSize += 10;
+  if (hasSpecialChars) charsetSize += 32; // Common special characters
+
+  // Entropy = length × log2(charset_size)
+  const entropy = charsetSize > 0 ? password.length * Math.log2(charsetSize) : 0;
+
+  return {
+    entropy,
+    charsetSize,
+    length: password.length,
+    hasLowercase,
+    hasUppercase,
+    hasNumbers,
+    hasSpecialChars
+  };
+}
+
+/**
+ * Converts entropy to strength level, color, and percentage
+ * @param {number} entropy - Entropy in bits
+ * @returns {Object} Strength metadata (level, color, label, percentage)
+ */
+function getStrengthFromEntropy(entropy) {
+  let level, color, label, percentage;
+
+  if (entropy < ENTROPY_THRESHOLDS.WEAK) {
+    level = 'weak';
+    color = 'error';
+    label = 'Weak';
+    percentage = (entropy / ENTROPY_THRESHOLDS.WEAK) * 33;
+  } else if (entropy < ENTROPY_THRESHOLDS.MEDIUM) {
+    level = 'medium';
+    color = 'warning';
+    label = 'Medium';
+    percentage = 33 + ((entropy - ENTROPY_THRESHOLDS.WEAK) / (ENTROPY_THRESHOLDS.MEDIUM - ENTROPY_THRESHOLDS.WEAK)) * 34;
+  } else if (entropy < ENTROPY_THRESHOLDS.STRONG) {
+    level = 'strong';
+    color = 'success';
+    label = 'Strong';
+    percentage = 67 + ((entropy - ENTROPY_THRESHOLDS.MEDIUM) / (ENTROPY_THRESHOLDS.STRONG - ENTROPY_THRESHOLDS.MEDIUM)) * 23;
+  } else {
+    level = 'very-strong';
+    color = 'success';
+    label = 'Very Strong';
+    percentage = 100;
+  }
+
+  return {
+    level,
+    color,
+    label,
+    percentage: Math.min(100, Math.round(percentage))
+  };
+}
+
+/**
+ * Generates improvement suggestions for a password
+ * @param {Object} entropyInfo - Result from calculatePasswordEntropy
+ * @param {number} entropy - Current entropy value
+ * @returns {Array} Array of suggestion strings
+ */
+function getPasswordSuggestions(entropyInfo, entropy) {
+  const suggestions = [];
+  const { length, hasLowercase, hasUppercase, hasNumbers, hasSpecialChars } = entropyInfo;
+
+  // Only show suggestions if password isn't already very strong
+  if (entropy >= ENTROPY_THRESHOLDS.STRONG) {
+    return suggestions;
+  }
+
+  // Length suggestions
+  if (length < 12) {
+    suggestions.push('Use at least 12 characters');
+  } else if (length < 16 && entropy < ENTROPY_THRESHOLDS.MEDIUM) {
+    suggestions.push('Consider using 16+ characters');
+  }
+
+  // Character variety suggestions
+  if (!hasUppercase && !hasLowercase) {
+    suggestions.push('Add letters to your password');
+  } else if (!hasUppercase || !hasLowercase) {
+    suggestions.push('Mix uppercase and lowercase letters');
+  }
+
+  if (!hasNumbers) {
+    suggestions.push('Add numbers for more entropy');
+  }
+
+  if (!hasSpecialChars) {
+    suggestions.push('Add special characters (!@#$%^&*)');
+  }
+
+  return suggestions;
+}
+
+/**
+ * Evaluates password strength using entropy-based calculation
  * @param {string} password - The password to evaluate
- * @returns {Object} Object containing strength level, score, feedback, and requirements
+ * @returns {Object} Object containing strength level, entropy, feedback, and requirements
  */
 export function calculatePasswordStrength(password) {
   if (!password || password.length === 0) {
     return {
       level: 'empty',
       score: 0,
+      entropy: 0,
       color: 'grey',
       label: 'Enter password',
       percentage: 0,
@@ -21,106 +151,38 @@ export function calculatePasswordStrength(password) {
     };
   }
 
-  let score = 0;
-  const feedback = [];
+  // Calculate entropy
+  const entropyInfo = calculatePasswordEntropy(password);
+  const { entropy, hasLowercase, hasUppercase, hasNumbers, hasSpecialChars } = entropyInfo;
 
-  // Length scoring (0-40 points) - Linear progression to ensure adding chars always increases score
-  // Give 2 points per character up to 20 characters
-  const lengthScore = Math.min(40, password.length * 2);
-  score += lengthScore;
+  // Get strength level from entropy
+  const strengthMeta = getStrengthFromEntropy(entropy);
 
-  // Character variety checks - compute once and reuse
-  const charChecks = {
-    hasLowercase: /[a-z]/.test(password),
-    hasUppercase: /[A-Z]/.test(password),
-    hasNumbers: /\d/.test(password),
-    hasSpecialChars: /[^A-Za-z0-9]/.test(password)
-  };
+  // Generate suggestions
+  const suggestions = getPasswordSuggestions(entropyInfo, entropy);
 
-  // Character variety scoring (0-60 points)
-  if (charChecks.hasLowercase) score += 10;
-  if (charChecks.hasUppercase) score += 15;
-  if (charChecks.hasNumbers) score += 15;
-  if (charChecks.hasSpecialChars) score += 20;
-
-  // Detect common patterns - these add feedback but DON'T reduce score
-  // This ensures adding any character never decreases the score
+  // Detect common patterns (add warnings but don't affect entropy)
   const hasSequential = /abc|bcd|cde|123|234|345|456|567|678|789/i.test(password);
   const hasRepeating = /(.)\1{2,}/.test(password);
 
   if (hasSequential) {
-    feedback.push('Avoid sequential characters (abc, 123)');
+    suggestions.unshift('Avoid sequential characters (abc, 123)');
   }
   if (hasRepeating) {
-    feedback.push('Avoid repeating characters (aaa, 111)');
+    suggestions.unshift('Avoid repeating characters (aaa, 111)');
   }
 
-  // Add specific feedback
-  if (password.length < 12) {
-    feedback.push('Use at least 12 characters for better security');
-  }
-  if (!charChecks.hasUppercase || !charChecks.hasLowercase) {
-    feedback.push('Include both uppercase and lowercase letters');
-  }
-  if (!charChecks.hasNumbers) {
-    feedback.push('Add numbers to strengthen your password');
-  }
-  if (!charChecks.hasSpecialChars) {
-    feedback.push('Include special characters (!@#$%^&*)');
-  }
-
-  // Determine strength level and color - AFTER penalties applied
-  let level, color, label, percentage;
-
-  // Check if all requirements are met for "Very Strong"
-  const hasAllRequirements = charChecks.hasLowercase &&
-                             charChecks.hasUppercase &&
-                             charChecks.hasNumbers &&
-                             charChecks.hasSpecialChars &&
-                             password.length >= 12;
-
-  // Always mark as weak if password is too short (less than 12 characters)
-  if (password.length < 12) {
-    level = 'weak';
-    color = 'error';
-    label = 'Weak';
-    percentage = (password.length / 12) * 33; // Scale 0-33% based on length progress to 12 chars
-    if (!feedback.includes('Password is too weak')) {
-      feedback.push('Password is too weak');
-    }
-  } else if (score < 30) {
-    level = 'weak';
-    color = 'error';
-    label = 'Weak';
-    percentage = (score / 30) * 33; // 0-33% for weak
-    feedback.push('Password is too weak');
-  } else if (score < 60) {
-    level = 'medium';
-    color = 'warning';
-    label = 'Medium';
-    percentage = 33 + ((score - 30) / 30) * 34; // 33-67% for medium
-    feedback.push('Consider making your password stronger');
-  } else if (score < 80 || !hasAllRequirements) {
-    // Even if score is high, without all requirements it's only "Strong"
-    level = 'strong';
-    color = 'success';
-    label = 'Strong';
-    percentage = Math.min(90, 67 + ((score - 60) / 40) * 23); // 67-90% for strong (capped at 90%)
-  } else {
-    // Very Strong requires: score >= 80 AND all character types AND length >= 12
-    level = 'very-strong';
-    color = 'success';
-    label = 'Very Strong';
-    percentage = 100; // Always 100% for very strong passwords
-  }
+  // Build character checks for requirements
+  const charChecks = { hasLowercase, hasUppercase, hasNumbers, hasSpecialChars };
 
   return {
-    level,
-    score,
-    color,
-    label,
-    percentage: Math.min(100, Math.round(percentage)),
-    feedback: level === 'very-strong' || level === 'strong' ? [] : feedback,
+    level: strengthMeta.level,
+    score: Math.round(entropy), // Keep score for backwards compatibility
+    entropy: Math.round(entropy * 10) / 10,
+    color: strengthMeta.color,
+    label: strengthMeta.label,
+    percentage: strengthMeta.percentage,
+    feedback: strengthMeta.level === 'very-strong' || strengthMeta.level === 'strong' ? [] : suggestions,
     requirements: getRequirements(password, charChecks)
   };
 }
@@ -132,10 +194,8 @@ export function calculatePasswordStrength(password) {
  * @returns {Array} Array of requirement objects with met status
  */
 function getRequirements(password, charChecks) {
-  // Handle null/undefined password
   const pwd = password || '';
 
-  // If charChecks not provided, compute them
   if (!charChecks) {
     charChecks = {
       hasLowercase: /[a-z]/.test(pwd),
@@ -175,9 +235,59 @@ function getRequirements(password, charChecks) {
 /**
  * Simple check if password meets minimum security requirements
  * @param {string} password - The password to check
- * @returns {boolean} True if password meets minimum requirements
+ * @returns {boolean} True if password meets minimum requirements (60+ bits entropy)
  */
 export function isPasswordSecure(password) {
-  const strength = calculatePasswordStrength(password);
-  return strength.score >= 60; // At least "strong"
+  const { entropy } = calculatePasswordEntropy(password);
+  return entropy >= ENTROPY_THRESHOLDS.MEDIUM;
+}
+
+/**
+ * Calculates strength based on entropy bits with optional suggestions
+ * Used for passphrases where entropy is pre-calculated
+ * @param {number} entropy - Entropy in bits
+ * @param {Array} suggestions - Optional array of improvement suggestions
+ * @returns {Object} Strength object with level, color, label, percentage, entropy
+ */
+export function calculateEntropyStrength(entropy, suggestions = []) {
+  const strengthMeta = getStrengthFromEntropy(entropy);
+
+  return {
+    level: strengthMeta.level,
+    color: strengthMeta.color,
+    label: strengthMeta.label,
+    percentage: strengthMeta.percentage,
+    entropy: Math.round(entropy * 10) / 10,
+    feedback: strengthMeta.level === 'very-strong' || strengthMeta.level === 'strong' ? [] : suggestions
+  };
+}
+
+/**
+ * Generates improvement suggestions for a passphrase configuration
+ * @param {Object} options - Passphrase options
+ * @param {number} entropy - Current entropy value
+ * @returns {Array} Array of suggestion strings
+ */
+export function getPassphraseSuggestions(options, entropy) {
+  const suggestions = [];
+  const { wordCount, appendNumber, specialPosition } = options;
+
+  // Only show suggestions if not already very strong
+  if (entropy >= ENTROPY_THRESHOLDS.STRONG) {
+    return suggestions;
+  }
+
+  if (wordCount < 5) {
+    suggestions.push('Add more words for stronger security');
+  }
+
+  if (!appendNumber) {
+    suggestions.push('Enable numbers for extra entropy');
+  }
+
+  if (specialPosition === 'none') {
+    suggestions.push('Add special characters for additional security');
+  }
+
+  return suggestions;
 }

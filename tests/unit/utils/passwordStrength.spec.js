@@ -31,34 +31,39 @@ describe('passwordStrength', () => {
     });
 
     describe('weak passwords', () => {
-      it('marks passwords shorter than 12 characters as weak', () => {
-        const result = calculatePasswordStrength('Pass1!');
+      it('marks passwords with low entropy as weak', () => {
+        // 'Pass1!' = 6 chars, 94 charset = 39.3 bits -> Medium, not weak
+        // 'abc' = 3 chars, 26 charset = 14.1 bits -> Weak
+        const result = calculatePasswordStrength('abc');
 
         expect(result.level).toBe('weak');
         expect(result.color).toBe('error');
         expect(result.label).toBe('Weak');
         expect(result.percentage).toBeLessThan(33);
-        expect(result.feedback).toContain('Use at least 12 characters for better security');
+        expect(result.feedback).toContain('Use at least 12 characters');
       });
 
-      it('marks short password with all character types as weak', () => {
+      it('marks short password with all character types as medium due to large charset', () => {
+        // 'Ab1!efgh' = 8 chars, 94 charset = 52.4 bits -> Medium (35-60)
         const result = calculatePasswordStrength('Ab1!efgh');
 
-        expect(result.level).toBe('weak');
-        expect(result.percentage).toBeLessThan(33);
+        expect(result.level).toBe('medium');
+        expect(result.percentage).toBeGreaterThanOrEqual(33);
       });
 
       it('provides feedback for missing character types', () => {
-        const result = calculatePasswordStrength('abcdefgh');
+        // 'abc' = weak password, should get feedback
+        const result = calculatePasswordStrength('abc');
 
-        expect(result.feedback).toContain('Include both uppercase and lowercase letters');
-        expect(result.feedback).toContain('Add numbers to strengthen your password');
-        expect(result.feedback).toContain('Include special characters (!@#$%^&*)');
+        expect(result.feedback).toContain('Mix uppercase and lowercase letters');
+        expect(result.feedback).toContain('Add numbers for more entropy');
+        expect(result.feedback).toContain('Add special characters (!@#$%^&*)');
       });
     });
 
     describe('medium passwords', () => {
-      it('marks 12+ char password missing some types as medium', () => {
+      it('marks 12 char password with only lowercase as medium', () => {
+        // 'abcdefghijkl' = 12 chars, 26 charset = 56.4 bits -> Medium (35-60)
         const result = calculatePasswordStrength('abcdefghijkl');
 
         expect(result.level).toBe('medium');
@@ -68,16 +73,18 @@ describe('passwordStrength', () => {
         expect(result.percentage).toBeLessThan(67);
       });
 
-      it('marks 12+ char with only lowercase as medium', () => {
+      it('marks 16 char with only lowercase as strong due to high entropy', () => {
+        // 'abcdefghijklmnop' = 16 chars, 26 charset = 75.2 bits -> Strong (60-80)
         const result = calculatePasswordStrength('abcdefghijklmnop');
 
-        expect(result.level).toBe('medium');
+        expect(result.level).toBe('strong');
       });
     });
 
     describe('strong passwords', () => {
-      it('marks password with good length and variety as strong', () => {
-        const result = calculatePasswordStrength('Password1234'); // 12 chars
+      it('marks password with good entropy as strong', () => {
+        // 'Password1234' = 12 chars, 62 charset = 71.4 bits -> Strong (60-80)
+        const result = calculatePasswordStrength('Password1234');
 
         expect(result.level).toBe('strong');
         expect(result.color).toBe('success');
@@ -93,8 +100,12 @@ describe('passwordStrength', () => {
         expect(result.level).toBe('strong');
       });
 
-      it('does not reach very-strong without all requirements', () => {
-        const result = calculatePasswordStrength('Passw0rdlong123');
+      it('does not reach very-strong without high enough entropy', () => {
+        // 'Passw0rdlong123' = 15 chars, 62 charset = 89.3 bits -> Very Strong (80+)
+        // Let's use a shorter password: 'Passw0rd12' = 10 chars, 62 charset = 59.5 bits -> Medium
+        // Or 'Password12' = 10 chars, 62 charset = 59.5 bits -> Medium
+        // We need 60-80 bits for Strong: 'Password123' = 11 chars, 62 charset = 65.5 bits -> Strong
+        const result = calculatePasswordStrength('Password123');
 
         expect(result.level).toBe('strong');
         expect(result.percentage).toBeLessThan(100);
@@ -133,32 +144,33 @@ describe('passwordStrength', () => {
       });
     });
 
-    describe('character variety scoring', () => {
-      it('increases score for lowercase letters', () => {
+    describe('entropy-based scoring', () => {
+      it('same length passwords with same charset have equal entropy', () => {
+        // Both 12 chars, 26 charset = 56.4 bits
         const withLower = calculatePasswordStrength('abcdefghijkl');
-        const withoutLower = calculatePasswordStrength('ABCDEFGHIJKL');
+        const withUpper = calculatePasswordStrength('ABCDEFGHIJKL');
 
-        // WithLower gets +10 for lowercase, withoutLower gets +15 for uppercase
-        // Both same length (24 points), so withLower should have lower score actually
-        // Let's test that uppercase gives more points than lowercase
-        expect(withoutLower.score).toBeGreaterThan(withLower.score);
+        expect(withLower.score).toBe(withUpper.score);
       });
 
-      it('increases score for uppercase letters', () => {
-        const withUpper = calculatePasswordStrength('ABCdefghijkl');
+      it('larger charset increases entropy', () => {
+        // 12 chars, 52 charset = 68.4 bits vs 12 chars, 26 charset = 56.4 bits
+        const withBothCases = calculatePasswordStrength('ABCdefghijkl');
         const withoutUpper = calculatePasswordStrength('abcdefghijkl');
 
-        expect(withUpper.score).toBeGreaterThan(withoutUpper.score);
+        expect(withBothCases.score).toBeGreaterThan(withoutUpper.score);
       });
 
-      it('increases score for numbers', () => {
+      it('adding numbers increases charset and entropy', () => {
+        // 12 chars, 36 charset vs 12 chars, 26 charset
         const withNumbers = calculatePasswordStrength('abc123defghi');
         const withoutNumbers = calculatePasswordStrength('abcdefghijkl');
 
         expect(withNumbers.score).toBeGreaterThan(withoutNumbers.score);
       });
 
-      it('increases score for special characters', () => {
+      it('adding special characters increases charset and entropy', () => {
+        // 12 chars, 58 charset vs 12 chars, 26 charset
         const withSpecial = calculatePasswordStrength('abc!@#defghi');
         const withoutSpecial = calculatePasswordStrength('abcdefghijkl');
 
@@ -167,20 +179,24 @@ describe('passwordStrength', () => {
     });
 
     describe('pattern detection', () => {
-      it('detects sequential characters', () => {
-        const result = calculatePasswordStrength('abcdefghijkl');
+      it('detects sequential characters for non-strong passwords', () => {
+        // Use a weak password with patterns so feedback is shown
+        // 'abc12' = 5 chars, 36 charset = 25.9 bits -> Weak
+        const result = calculatePasswordStrength('abc12');
 
         expect(result.feedback).toContain('Avoid sequential characters (abc, 123)');
       });
 
-      it('detects sequential numbers', () => {
-        const result = calculatePasswordStrength('pass123word12345');
+      it('detects sequential numbers for non-strong passwords', () => {
+        // 'pass123' = 7 chars, 36 charset = 36.3 bits -> Medium
+        const result = calculatePasswordStrength('pass123');
 
         expect(result.feedback).toContain('Avoid sequential characters (abc, 123)');
       });
 
-      it('detects repeating characters', () => {
-        const result = calculatePasswordStrength('passsssword1111');
+      it('detects repeating characters for non-strong passwords', () => {
+        // 'passs111' = 8 chars, 36 charset = 41.4 bits -> Medium
+        const result = calculatePasswordStrength('passs111');
 
         expect(result.feedback).toContain('Avoid repeating characters (aaa, 111)');
       });
@@ -245,8 +261,8 @@ describe('passwordStrength', () => {
       });
     });
 
-    describe('score progression', () => {
-      it('increases score as password gets longer', () => {
+    describe('entropy progression', () => {
+      it('increases entropy as password gets longer', () => {
         const short = calculatePasswordStrength('abc');
         const medium = calculatePasswordStrength('abcdefgh');
         const long = calculatePasswordStrength('abcdefghijklmnop');
@@ -255,7 +271,7 @@ describe('passwordStrength', () => {
         expect(long.score).toBeGreaterThan(medium.score);
       });
 
-      it('adding characters never decreases score', () => {
+      it('adding characters never decreases entropy', () => {
         let previousScore = 0;
 
         for (let i = 1; i <= 20; i++) {
@@ -266,35 +282,45 @@ describe('passwordStrength', () => {
         }
       });
 
-      it('caps length score at 40 points', () => {
-        const veryLong = calculatePasswordStrength('a'.repeat(50));
+      it('entropy scales linearly with length', () => {
+        // Entropy = length * log2(charset)
+        // With 26 chars charset, each char adds ~4.7 bits
+        const short = calculatePasswordStrength('a'.repeat(10));  // ~47 bits
+        const long = calculatePasswordStrength('a'.repeat(20));   // ~94 bits
 
-        // Length score should be capped, but could have other bonuses
-        expect(veryLong.score).toBeLessThanOrEqual(50); // 40 from length + 10 from lowercase
+        // Long should be roughly double the entropy of short
+        expect(long.entropy).toBeGreaterThan(short.entropy * 1.8);
+        expect(long.entropy).toBeLessThan(short.entropy * 2.2);
       });
     });
   });
 
   describe('isPasswordSecure', () => {
-    it('returns true for strong passwords', () => {
+    it('returns true for passwords with 60+ bits entropy', () => {
+      // 'MyP@ssw0rd123!' = 14 chars, 94 charset = 91.7 bits -> Secure
       expect(isPasswordSecure('MyP@ssw0rd123!')).toBe(true);
+      // 'Str0ng!Password' = 15 chars, 94 charset = 98.3 bits -> Secure
       expect(isPasswordSecure('Str0ng!Password')).toBe(true);
     });
 
-    it('returns false for weak passwords', () => {
+    it('returns false for passwords with low entropy', () => {
+      // 'weak' = 4 chars, 26 charset = 18.8 bits -> Not secure
       expect(isPasswordSecure('weak')).toBe(false);
+      // 'short1!' = 7 chars, 94 charset = 45.9 bits -> Not secure
       expect(isPasswordSecure('short1!')).toBe(false);
     });
 
-    it('returns false for medium passwords (score < 60)', () => {
-      expect(isPasswordSecure('mediumpassword')).toBe(false);
+    it('returns false for medium entropy passwords (< 60 bits)', () => {
+      // 'mediumpass' = 10 chars, 26 charset = 47 bits -> Not secure
+      expect(isPasswordSecure('mediumpass')).toBe(false);
     });
 
-    it('returns true for passwords with score >= 60', () => {
+    it('returns true for passwords with entropy >= 60 bits', () => {
+      // 'GoodPassword123!' = 16 chars, 94 charset = 104.8 bits -> Secure
       const password = 'GoodPassword123!';
       const strength = calculatePasswordStrength(password);
 
-      expect(strength.score).toBeGreaterThanOrEqual(60);
+      expect(strength.entropy).toBeGreaterThanOrEqual(60);
       expect(isPasswordSecure(password)).toBe(true);
     });
   });

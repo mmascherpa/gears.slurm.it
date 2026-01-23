@@ -3,9 +3,9 @@
 ## Purpose
 This file documents the file organization, component responsibilities, and architectural layers of the Slurm Tools codebase.
 
-**Last Updated**: 2026-01-20
-**Total Files**: 102 (+4 from TOTP support)
-**Total Lines of Code**: ~5,400 lines (+335 from TOTP implementation)
+**Last Updated**: 2026-01-23
+**Total Files**: 105 (+3 from passphrase generation)
+**Total Lines of Code**: ~6,600 lines (+1,200 from passphrase implementation)
 **Tool Components**: 5 (Base64Encode, Base64Decode, Encrypt, Decrypt, PasswordGenerator)
 **Encryption Algorithms**: 3 (jsAesCrypt AES-256-CBC, WebCrypto AES-256-GCM, Age encryption)
 
@@ -67,21 +67,24 @@ src/
 │   └── providers/          # Concrete provider implementations
 │       ├── JsAesCryptProvider.js   # jsAesCrypt wrapper (142 lines)
 │       └── WebCryptoProvider.js    # Web Crypto API implementation (232 lines)
+├── data/                   # Static data files
+│   └── effWordlist.js       # EFF Diceware word list (7,776 words, ~15KB, NEW)
 ├── utils/                  # Shared utility functions
-│   ├── byteConverter.js     # Byte interpretation utilities (223 lines, NEW)
+│   ├── byteConverter.js     # Byte interpretation utilities (223 lines)
 │   ├── csvParser.js         # CSV parsing utilities (67 lines)
 │   ├── debug.js             # Debug logging utilities
 │   ├── exifTags.js          # EXIF metadata tag definitions
 │   ├── fileDownload.js      # File download helper (19 lines)
 │   ├── fileSizeValidator.js # File size validation (104 lines)
-│   ├── hexFormatter.js      # Hex formatting utilities (131 lines, NEW)
+│   ├── hexFormatter.js      # Hex formatting utilities (131 lines)
 │   ├── metadataEditor.js    # Metadata editing utilities
 │   ├── metadataManager.js   # Metadata management utilities
+│   ├── passphraseGenerator.js # Diceware passphrase generator (216 lines, NEW)
 │   ├── passwordGenerator.js # Cryptographic password generator (127 lines)
-│   ├── passwordStrength.js  # Password strength calculator (160 lines)
+│   ├── passwordStrength.js  # Entropy-based password strength calculator (294 lines, REFACTORED)
 │   ├── pngMetadataEditor.js # PNG metadata utilities
 │   ├── pngTags.js           # PNG metadata tag definitions
-│   └── totp.js              # TOTP code generation utilities (185 lines, NEW)
+│   └── totp.js              # TOTP code generation utilities (185 lines)
 ├── views/                  # Tool page components (ALL PAGES MOVED HERE)
 │   ├── About.vue            # About page (178 lines)
 │   ├── Decrypt.vue          # Multi-algorithm decryption (jsAesCrypt/WebCrypto/Age) (750 lines)
@@ -91,7 +94,8 @@ src/
 │   ├── HexViewer.vue        # Binary file hex viewer (689 lines)
 │   ├── Home.vue             # Landing page with tool grid (121 lines)
 │   ├── MetadataEditor.vue   # Image metadata editor (947 lines)
-│   └── PasswordGenerator.vue # Password generator tool (257 lines)
+│   ├── PasswordGenerator.vue # Password/passphrase generator with dual mode (520 lines, ENHANCED)
+│   └── PasswordManager.vue   # Password vault manager (750 lines)
 ├── workers/                # ES Module Web Workers (NEW)
 │   ├── cryptoWorker.js     # Modern crypto worker with WASM support (175 lines)
 │   └── providers/          # ES module provider implementations
@@ -136,8 +140,9 @@ src/
 - **composables/useSnackbar.js** (41 lines) - Snackbar state management
 - **utils/fileDownload.js** (19 lines) - Shared file download utility
 - **utils/csvParser.js** (67 lines) - Shared CSV parsing with input validation
-- **utils/passwordStrength.js** (160 lines) - Password strength calculation algorithm
-- **utils/passwordGenerator.js** (127 lines) - Cryptographically secure password generation
+- **utils/passwordStrength.js** (294 lines) - Entropy-based password strength calculation with actionable suggestions
+- **utils/passwordGenerator.js** (127 lines) - Cryptographically secure random password generation
+- **utils/passphraseGenerator.js** (216 lines) - Diceware passphrase generation with EFF word list
 
 ### Public Directory (`/public/`)
 ```

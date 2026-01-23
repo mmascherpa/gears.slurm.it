@@ -55,24 +55,28 @@ describe('PasswordStrengthIndicator.vue', () => {
       expect(wrapper.html()).toContain('Weak')
     })
 
-    it('should show "Weak" for simple password', () => {
+    it('should show "Medium" for simple password', () => {
+      // 'password' = 8 chars, 26 charset = 37.6 bits entropy -> Medium (35-60)
       const wrapper = createWrapper({ password: 'password' })
-      expect(wrapper.html()).toContain('Weak')
+      expect(wrapper.html()).toContain('Medium')
     })
 
-    it('should show "Weak" for password without special chars', () => {
+    it('should show "Strong" for password without special chars', () => {
+      // 'Password123' = 11 chars, 62 charset = 65.5 bits entropy -> Strong (60-80)
       const wrapper = createWrapper({ password: 'Password123' })
-      expect(wrapper.html()).toContain('Weak')
-    })
-
-    it('should show "Very Strong" for password with all requirements met', () => {
-      const wrapper = createWrapper({ password: 'Password123!' })
-      expect(wrapper.html()).toContain('Very Strong')
-    })
-
-    it('should show "Strong" for long password missing one requirement', () => {
-      const wrapper = createWrapper({ password: 'LongPassword2024' })
       expect(wrapper.html()).toContain('Strong')
+    })
+
+    it('should show "Strong" for password with all requirements met', () => {
+      // 'Password123!' = 12 chars, 94 charset = 78.6 bits entropy -> Strong (60-80)
+      const wrapper = createWrapper({ password: 'Password123!' })
+      expect(wrapper.html()).toContain('Strong')
+    })
+
+    it('should show "Very Strong" for long password missing one requirement', () => {
+      // 'LongPassword2024' = 16 chars, 62 charset = 95.2 bits entropy -> Very Strong (80+)
+      const wrapper = createWrapper({ password: 'LongPassword2024' })
+      expect(wrapper.html()).toContain('Very Strong')
     })
 
     it('should show "Very Strong" for excellent password', () => {
@@ -85,19 +89,21 @@ describe('PasswordStrengthIndicator.vue', () => {
     it('should show low percentage for weak password', () => {
       const wrapper = createWrapper({ password: 'abc' })
       const progressBar = wrapper.findComponent({ name: 'VProgressLinear' })
-      expect(progressBar.props('modelValue')).toBeLessThan(50)
+      expect(progressBar.props('modelValue')).toBeLessThan(33)
     })
 
-    it('should show low percentage for password without special chars', () => {
+    it('should show medium percentage for password without special chars', () => {
+      // 'Password123' = 65.5 bits entropy -> Strong (67-90% range)
       const wrapper = createWrapper({ password: 'Password123' })
       const progressBar = wrapper.findComponent({ name: 'VProgressLinear' })
-      expect(progressBar.props('modelValue')).toBeLessThan(50)
+      expect(progressBar.props('modelValue')).toBeGreaterThan(65)
     })
 
-    it('should show 100% for password with all requirements met', () => {
+    it('should show high percentage for password with all requirements met', () => {
+      // 'Password123!' = 78.6 bits entropy -> Strong (67-90% range)
       const wrapper = createWrapper({ password: 'Password123!' })
       const progressBar = wrapper.findComponent({ name: 'VProgressLinear' })
-      expect(progressBar.props('modelValue')).toBe(100)
+      expect(progressBar.props('modelValue')).toBeGreaterThan(65)
     })
 
     it('should show high percentage for strong password', () => {
@@ -188,26 +194,22 @@ describe('PasswordStrengthIndicator.vue', () => {
     })
   })
 
-  describe('Score Display', () => {
-    it('should not show score by default', () => {
+  describe('Entropy Display', () => {
+    it('should always show entropy for passwords', () => {
       const wrapper = createWrapper({ password: 'test123' })
-      expect(wrapper.html()).not.toContain('Score:')
+      expect(wrapper.html()).toContain('bits of entropy')
     })
 
-    it('should show score when showScore is true', () => {
-      const wrapper = createWrapper({
-        password: 'test123',
-        showScore: true
-      })
-      expect(wrapper.html()).toContain('Score:')
+    it('should display entropy value with approximate symbol', () => {
+      const wrapper = createWrapper({ password: 'test123' })
+      // Should show ~XX bits format
+      expect(wrapper.html()).toMatch(/~\d+/)
     })
 
-    it('should display score out of 100', () => {
-      const wrapper = createWrapper({
-        password: 'test123',
-        showScore: true
-      })
-      expect(wrapper.html()).toMatch(/Score:\s*\d+\/100/)
+    it('should show link to Wikipedia entropy article', () => {
+      const wrapper = createWrapper({ password: 'test123' })
+      expect(wrapper.html()).toContain('wikipedia.org')
+      expect(wrapper.html()).toContain('Password_strength')
     })
   })
 
@@ -357,12 +359,21 @@ describe('PasswordStrengthIndicator.vue', () => {
       expect(wrapper.props('showFeedback')).toBe(false)
     })
 
-    it('should accept showScore as boolean', () => {
+    it('should accept entropyBits as number', () => {
       const wrapper = createWrapper({
         password: 'test',
-        showScore: true
+        entropyBits: 65
       })
-      expect(wrapper.props('showScore')).toBe(true)
+      expect(wrapper.props('entropyBits')).toBe(65)
+    })
+
+    it('should accept suggestions as array', () => {
+      const suggestions = ['Add more words']
+      const wrapper = createWrapper({
+        password: 'test',
+        suggestions
+      })
+      expect(wrapper.props('suggestions')).toEqual(suggestions)
     })
   })
 })

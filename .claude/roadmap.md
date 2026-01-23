@@ -392,6 +392,13 @@ This file tracks feature planning, completed work, and future development priori
   - **Benefit**: Natural pairing with encryption tools, fills workflow gap
   - **Use Case**: Users need strong passwords for AES encryption
   - **Completed**: 2025-10-28 (Commit: 7a3748d)
+  - **Enhanced 2026-01-23**: Added memorable passphrase generation mode
+    - EFF Diceware word list (7,776 words, ~12.9 bits/word)
+    - Mode toggle between "Random Characters" and "Memorable Passphrase"
+    - Options: word count (3-8), separator, capitalization, numbers (1-8 digits), special chars (1-8)
+    - Entropy-based strength calculation for both modes
+    - Default passphrase generates ~84 bits (Very Strong)
+    - Example: "Camel-Strawberry-Fantasy-River-Pencil-1234-!@"
 
 - [x] **Text Encryption (AES)** (3 hours) - Priority 1 ✅ COMPLETED
   - Created text-based AES encryption/decryption (TextAESEnc.vue and TextAESDec.vue)
@@ -1315,7 +1322,7 @@ This file tracks feature planning, completed work, and future development priori
 - [Code Structure](.claude/structure.md) - Current codebase organization
 - [Main Application Files](../) - Link to main code files
 
-Last Updated: 2026-01-22 (Added User Preferences Persistence feature)
+Last Updated: 2026-01-23 (Added Memorable Passphrase Generation feature)
 
 - **2026-01-20**: Password Manager TOTP Support Enhancement
   - **Added TOTP code generation** to Password Manager entries:
@@ -1363,3 +1370,31 @@ Last Updated: 2026-01-22 (Added User Preferences Persistence feature)
     - Error handling
   - **Total changes**: +500 lines across 8 files (2 new, 6 modified)
   - **Use case**: "My password generator always remembers I prefer 24-char passwords"
+
+- **2026-01-23**: Memorable Passphrase Generation (Phase 7 Enhancement) ✅ COMPLETED
+  - **Created EFF Word List data** (`src/data/effWordlist.js`, ~15KB):
+    - 7,776 words from EFF Long Word List
+    - ~12.925 bits of entropy per word
+    - Optimized for memorability and offline use
+  - **Created passphraseGenerator utility** (`src/utils/passphraseGenerator.js`, 216 lines):
+    - `generatePassphrase()` - cryptographically secure word selection
+    - `calculatePassphraseEntropy()` - accurate entropy calculation
+    - Options: word count (3-8), separator (hyphen/space/period/underscore/none), capitalization (title/lower/upper/random), numbers (1-8 digits), special chars (1-8)
+    - Default generates ~84 bits entropy (Very Strong)
+  - **Refactored passwordStrength utility** (`src/utils/passwordStrength.js`):
+    - Unified entropy-based strength calculation for both random and passphrase modes
+    - New thresholds calibrated to best practices: <35 bits (Weak), 35-60 (Medium), 60-80 (Strong), 80+ (Very Strong)
+    - Added `calculatePasswordEntropy()` and `getPassphraseSuggestions()` functions
+    - Actionable suggestions for both password types
+  - **Updated PasswordStrengthIndicator component**:
+    - Always displays entropy with Wikipedia link for education
+    - Accepts `suggestions` prop for passphrase-specific feedback
+    - Unified metric across both generation modes
+  - **Enhanced PasswordGenerator.vue** (+260 lines):
+    - Mode toggle: "Random Characters" vs "Memorable Passphrase"
+    - Full passphrase options UI with sliders and dropdowns
+    - Real-time entropy display and suggestions
+    - Preferences persistence for all passphrase options
+  - **Test coverage**: 50 new tests for passphraseGenerator.spec.js
+  - **Total changes**: +1,200 lines across 8 files (3 new, 5 modified)
+  - **Example output**: "Camel-Strawberry-Fantasy-River-Pencil-1234-!@"

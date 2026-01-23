@@ -30,6 +30,23 @@
         for each account. This tool generates cryptographically random passwords using your browser's secure random number generator.
       </p>
 
+      <!-- Memorable Passphrases Section -->
+      <v-divider class="my-3"></v-divider>
+      <p class="mb-2">
+        <strong>Memorable Passphrases</strong> use random words instead of random characters.
+        They are easier to remember while providing excellent security through entropy (randomness).
+      </p>
+      <ul class="ml-4 mb-2">
+        <li><strong>4 words</strong> = ~52 bits of entropy (adequate for most uses)</li>
+        <li><strong>5 words</strong> = ~65 bits of entropy (strong)</li>
+        <li><strong>Adding a 4-digit number</strong> = +13 bits of entropy</li>
+        <li><strong>Adding 2 special characters</strong> = +6 bits of entropy</li>
+        <li><strong>Default settings</strong> = ~84 bits of entropy (very strong)</li>
+      </ul>
+      <EducationalAlert title="Example" type="info" spacing="mt-2 mb-3">
+        "Camel-Strawberry-Fantasy-River-Pencil-1234-!@" is easier to remember than "kX9#mP2@nL5!qR7%" but provides comparable security.
+      </EducationalAlert>
+
       <!-- Reference Links -->
       <div class="text-caption text-medium-emphasis mt-3">
         <strong>Learn more:</strong>
@@ -39,6 +56,10 @@
         •
         <a href="https://pages.nist.gov/800-63-3/sp800-63b.html" target="_blank" rel="noopener noreferrer" class="text-info">
           NIST: Password Guidelines
+        </a>
+        •
+        <a href="https://www.eff.org/dice" target="_blank" rel="noopener noreferrer" class="text-info">
+          EFF Diceware
         </a>
       </div>
 
@@ -50,73 +71,199 @@
       </div>
     </LearnMorePanel>
 
+    <!-- Password Type Selection -->
     <v-card class="mb-4">
       <v-card-title class="bg-surface-variant">
-        <v-icon icon="mdi-cog" class="mr-2"></v-icon>
-        Password Options
+        <v-icon icon="mdi-form-textbox-password" class="mr-2"></v-icon>
+        Password Type
       </v-card-title>
       <v-card-text class="pa-3">
-        <v-row dense>
-          <v-col cols="12" md="6">
-            <div class="mb-3">
+        <v-btn-toggle v-model="preferences.mode" mandatory color="primary" density="comfortable">
+          <v-btn value="random">
+            <v-icon icon="mdi-dice-multiple" class="mr-2"></v-icon>
+            Random Characters
+          </v-btn>
+          <v-btn value="passphrase">
+            <v-icon icon="mdi-text" class="mr-2"></v-icon>
+            Memorable Passphrase
+          </v-btn>
+        </v-btn-toggle>
+      </v-card-text>
+    </v-card>
+
+    <!-- Options Card -->
+    <v-card class="mb-4">
+      <v-card-title class="bg-surface-variant">
+        <v-icon icon="mdi-tune" class="mr-2"></v-icon>
+        {{ isPassphraseMode ? 'Passphrase Options' : 'Password Options' }}
+      </v-card-title>
+      <v-card-text class="pa-3">
+        <!-- Random Password Options -->
+        <template v-if="!isPassphraseMode">
+          <v-row dense>
+            <v-col cols="12" md="6">
+              <div class="mb-3">
+                <div class="d-flex justify-space-between align-center mb-1">
+                  <label class="text-body-2 font-weight-medium">Password Length</label>
+                  <v-chip color="primary" size="x-small">{{ preferences.length }} chars</v-chip>
+                </div>
+                <v-slider
+                  v-model="preferences.length"
+                  :min="8"
+                  :max="64"
+                  :step="1"
+                  color="primary"
+                  track-color="grey-lighten-2"
+                  thumb-label
+                  hide-details></v-slider>
+              </div>
+            </v-col>
+            <v-col cols="12" md="6">
+              <label class="text-body-2 font-weight-medium d-block mb-1">Character Types</label>
+              <v-row dense>
+                <v-col cols="12" sm="6">
+                  <v-checkbox
+                    v-model="preferences.includeUppercase"
+                    label="Uppercase (A-Z)"
+                    color="primary"
+                    hide-details></v-checkbox>
+                </v-col>
+                <v-col cols="12" sm="6">
+                  <v-checkbox
+                    v-model="preferences.includeLowercase"
+                    label="Lowercase (a-z)"
+                    color="primary"
+                    hide-details></v-checkbox>
+                </v-col>
+                <v-col cols="12" sm="6">
+                  <v-checkbox
+                    v-model="preferences.includeNumbers"
+                    label="Numbers (0-9)"
+                    color="primary"
+                    hide-details></v-checkbox>
+                </v-col>
+                <v-col cols="12" sm="6">
+                  <v-checkbox
+                    v-model="preferences.includeSpecial"
+                    label="Special (!@#$%)"
+                    color="primary"
+                    hide-details></v-checkbox>
+                </v-col>
+              </v-row>
+            </v-col>
+          </v-row>
+
+          <v-alert
+            v-if="!hasCharacterTypeSelected"
+            type="warning"
+            variant="tonal"
+            density="compact"
+            class="mt-3">
+            Please select at least one character type
+          </v-alert>
+        </template>
+
+        <!-- Passphrase Options -->
+        <template v-else>
+          <v-row dense>
+            <!-- Word Count -->
+            <v-col cols="12" md="6">
+              <div class="mb-3">
+                <div class="d-flex justify-space-between align-center mb-1">
+                  <label class="text-body-2 font-weight-medium">Number of Words</label>
+                  <v-chip color="primary" size="x-small">{{ preferences.wordCount }} words</v-chip>
+                </div>
+                <v-slider
+                  v-model="preferences.wordCount"
+                  :min="3"
+                  :max="8"
+                  :step="1"
+                  color="primary"
+                  track-color="grey-lighten-2"
+                  thumb-label
+                  hide-details></v-slider>
+              </div>
+            </v-col>
+
+            <!-- Separator & Capitalization -->
+            <v-col cols="12" md="6">
+              <v-row dense>
+                <v-col cols="6">
+                  <v-select
+                    v-model="preferences.separator"
+                    :items="separatorOptions"
+                    label="Separator"
+                    variant="outlined"
+                    density="compact"
+                    hide-details></v-select>
+                </v-col>
+                <v-col cols="6">
+                  <v-select
+                    v-model="preferences.capitalization"
+                    :items="capitalizationOptions"
+                    label="Capitalization"
+                    variant="outlined"
+                    density="compact"
+                    hide-details></v-select>
+                </v-col>
+              </v-row>
+            </v-col>
+
+            <!-- Append Number -->
+            <v-col cols="12" md="6">
+              <v-checkbox
+                v-model="preferences.appendNumber"
+                label="Append number"
+                color="primary"
+                hide-details></v-checkbox>
+            </v-col>
+
+            <!-- Number Digits -->
+            <v-col cols="12" md="6" v-if="preferences.appendNumber">
               <div class="d-flex justify-space-between align-center mb-1">
-                <label class="text-body-2 font-weight-medium">Password Length</label>
-                <v-chip color="primary" size="x-small">{{ preferences.length }} chars</v-chip>
+                <label class="text-body-2 font-weight-medium">Number of Digits</label>
+                <v-chip color="primary" size="x-small">{{ preferences.numberDigits }} digits</v-chip>
               </div>
               <v-slider
-                v-model="preferences.length"
-                :min="8"
-                :max="64"
+                v-model="preferences.numberDigits"
+                :min="1"
+                :max="8"
                 :step="1"
                 color="primary"
                 track-color="grey-lighten-2"
                 thumb-label
                 hide-details></v-slider>
-            </div>
-          </v-col>
-          <v-col cols="12" md="6">
-            <label class="text-body-2 font-weight-medium d-block mb-1">Character Types</label>
-            <v-row dense>
-              <v-col cols="12" sm="6">
-                <v-checkbox
-                  v-model="preferences.includeUppercase"
-                  label="Uppercase (A-Z)"
-                  color="primary"
-                  hide-details></v-checkbox>
-              </v-col>
-              <v-col cols="12" sm="6">
-                <v-checkbox
-                  v-model="preferences.includeLowercase"
-                  label="Lowercase (a-z)"
-                  color="primary"
-                  hide-details></v-checkbox>
-              </v-col>
-              <v-col cols="12" sm="6">
-                <v-checkbox
-                  v-model="preferences.includeNumbers"
-                  label="Numbers (0-9)"
-                  color="primary"
-                  hide-details></v-checkbox>
-              </v-col>
-              <v-col cols="12" sm="6">
-                <v-checkbox
-                  v-model="preferences.includeSpecial"
-                  label="Special (!@#$%)"
-                  color="primary"
-                  hide-details></v-checkbox>
-              </v-col>
-            </v-row>
-          </v-col>
-        </v-row>
+            </v-col>
 
-        <v-alert
-          v-if="!hasCharacterTypeSelected"
-          type="warning"
-          variant="tonal"
-          density="compact"
-          class="mt-3">
-          Please select at least one character type
-        </v-alert>
+            <!-- Special Characters Position -->
+            <v-col cols="12" md="6">
+              <v-select
+                v-model="preferences.specialPosition"
+                :items="specialPositionOptions"
+                label="Special Characters"
+                variant="outlined"
+                density="compact"
+                hide-details></v-select>
+            </v-col>
+
+            <!-- Special Character Count -->
+            <v-col cols="12" md="6" v-if="preferences.specialPosition !== 'none'">
+              <div class="d-flex justify-space-between align-center mb-1">
+                <label class="text-body-2 font-weight-medium">Special Char Count</label>
+                <v-chip color="primary" size="x-small">{{ preferences.specialCount }} chars</v-chip>
+              </div>
+              <v-slider
+                v-model="preferences.specialCount"
+                :min="1"
+                :max="8"
+                :step="1"
+                color="primary"
+                track-color="grey-lighten-2"
+                thumb-label
+                hide-details></v-slider>
+            </v-col>
+          </v-row>
+        </template>
       </v-card-text>
     </v-card>
 
@@ -177,9 +324,10 @@
       <v-card-text class="pa-4">
         <PasswordStrengthIndicator
           :password="generatedPassword"
-          :show-requirements="true"
-          :show-feedback="false"
-          :show-score="true" />
+          :show-requirements="!isPassphraseMode"
+          :show-feedback="true"
+          :entropy-bits="passphraseEntropy"
+          :suggestions="passphraseSuggestions" />
       </v-card-text>
     </v-card>
 
@@ -194,6 +342,8 @@
 <script>
 import { computed, onMounted, ref, watch } from 'vue';
 import { generatePassword } from '@/utils/passwordGenerator';
+import { generatePassphrase, calculatePassphraseEntropy, SEPARATORS, CAPITALIZATION, SPECIAL_POSITION } from '@/utils/passphraseGenerator';
+import { getPassphraseSuggestions } from '@/utils/passwordStrength';
 import { useClipboard } from '@/composables/useClipboard';
 import { usePreferences } from '@/composables/usePreferences';
 import { useSnackbar } from '@/composables/useSnackbar';
@@ -220,16 +370,49 @@ export default {
     const { snackbar, snackbarText, snackbarColor, showSnackbar } = useSnackbar();
     const { copyToClipboard } = useClipboard();
     const { preferences } = usePreferences('password-generator', {
+      // Mode selection
+      mode: 'random',
+      // Random password options
       length: 16,
       includeUppercase: true,
       includeLowercase: true,
       includeNumbers: true,
-      includeSpecial: true
+      includeSpecial: true,
+      // Passphrase options
+      wordCount: 5,
+      separator: SEPARATORS.HYPHEN,
+      capitalization: CAPITALIZATION.TITLE_CASE,
+      appendNumber: true,
+      numberDigits: 4,
+      specialPosition: SPECIAL_POSITION.END,
+      specialCount: 2
     });
+
+    // Dropdown options for passphrase settings
+    const separatorOptions = [
+      { title: 'Hyphen (-)', value: SEPARATORS.HYPHEN },
+      { title: 'Space ( )', value: SEPARATORS.SPACE },
+      { title: 'Period (.)', value: SEPARATORS.PERIOD },
+      { title: 'Underscore (_)', value: SEPARATORS.UNDERSCORE },
+      { title: 'None', value: SEPARATORS.NONE }
+    ];
+
+    const capitalizationOptions = [
+      { title: 'Title Case', value: CAPITALIZATION.TITLE_CASE },
+      { title: 'lowercase', value: CAPITALIZATION.LOWERCASE },
+      { title: 'UPPERCASE', value: CAPITALIZATION.UPPERCASE },
+      { title: 'Random', value: CAPITALIZATION.RANDOM }
+    ];
+
+    const specialPositionOptions = [
+      { title: 'None', value: SPECIAL_POSITION.NONE },
+      { title: 'At Start', value: SPECIAL_POSITION.START },
+      { title: 'At End', value: SPECIAL_POSITION.END }
+    ];
 
     // Computed Properties
     /**
-     * Checks if at least one character type is selected
+     * Checks if at least one character type is selected (for random mode)
      */
     const hasCharacterTypeSelected = computed(() => {
       return preferences.includeUppercase ||
@@ -238,26 +421,70 @@ export default {
              preferences.includeSpecial;
     });
 
+    /**
+     * Calculates entropy for passphrase mode
+     */
+    const passphraseEntropy = computed(() => {
+      if (preferences.mode !== 'passphrase') return null;
+      return calculatePassphraseEntropy({
+        wordCount: preferences.wordCount,
+        appendNumber: preferences.appendNumber,
+        numberDigits: preferences.numberDigits,
+        capitalization: preferences.capitalization,
+        specialPosition: preferences.specialPosition,
+        specialCount: preferences.specialCount
+      });
+    });
+
+    /**
+     * Whether we're in passphrase mode
+     */
+    const isPassphraseMode = computed(() => preferences.mode === 'passphrase');
+
+    /**
+     * Generates suggestions for improving passphrase strength
+     */
+    const passphraseSuggestions = computed(() => {
+      if (preferences.mode !== 'passphrase' || !passphraseEntropy.value) return [];
+      return getPassphraseSuggestions({
+        wordCount: preferences.wordCount,
+        appendNumber: preferences.appendNumber,
+        specialPosition: preferences.specialPosition
+      }, passphraseEntropy.value);
+    });
+
     // Functions
     /**
-     * Generates a new password based on current options
+     * Generates a new password based on current options and mode
      */
     const generateNewPassword = () => {
-      if (!hasCharacterTypeSelected.value) {
-        generatedPassword.value = '';
-        return;
-      }
-
       try {
-        const options = {
-          length: preferences.length,
-          includeUppercase: preferences.includeUppercase,
-          includeLowercase: preferences.includeLowercase,
-          includeNumbers: preferences.includeNumbers,
-          includeSpecial: preferences.includeSpecial
-        };
+        if (preferences.mode === 'passphrase') {
+          // Generate memorable passphrase
+          generatedPassword.value = generatePassphrase({
+            wordCount: preferences.wordCount,
+            separator: preferences.separator,
+            capitalization: preferences.capitalization,
+            appendNumber: preferences.appendNumber,
+            numberDigits: preferences.numberDigits,
+            specialPosition: preferences.specialPosition,
+            specialCount: preferences.specialCount
+          });
+        } else {
+          // Generate random character password
+          if (!hasCharacterTypeSelected.value) {
+            generatedPassword.value = '';
+            return;
+          }
 
-        generatedPassword.value = generatePassword(options);
+          generatedPassword.value = generatePassword({
+            length: preferences.length,
+            includeUppercase: preferences.includeUppercase,
+            includeLowercase: preferences.includeLowercase,
+            includeNumbers: preferences.includeNumbers,
+            includeSpecial: preferences.includeSpecial
+          });
+        }
       } catch (error) {
         const errorMessage = typeof error === 'string' ? error : (error.message || 'Unknown error');
         generatedPassword.value = '';
@@ -280,11 +507,22 @@ export default {
     // Watchers
     watch(
       () => [
+        // Mode
+        preferences.mode,
+        // Random password options
         preferences.length,
         preferences.includeUppercase,
         preferences.includeLowercase,
         preferences.includeNumbers,
-        preferences.includeSpecial
+        preferences.includeSpecial,
+        // Passphrase options
+        preferences.wordCount,
+        preferences.separator,
+        preferences.capitalization,
+        preferences.appendNumber,
+        preferences.numberDigits,
+        preferences.specialPosition,
+        preferences.specialCount
       ],
       generateNewPassword
     );
@@ -301,6 +539,11 @@ export default {
       // Preferences (persistent)
       preferences,
 
+      // Dropdown options
+      separatorOptions,
+      capitalizationOptions,
+      specialPositionOptions,
+
       // Snackbar
       snackbar,
       snackbarColor,
@@ -308,6 +551,9 @@ export default {
 
       // Computed
       hasCharacterTypeSelected,
+      passphraseEntropy,
+      passphraseSuggestions,
+      isPassphraseMode,
 
       // Methods
       generateNewPassword,
