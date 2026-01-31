@@ -107,8 +107,14 @@
           <li><strong>Simple format</strong> - Compact, easy-to-use encryption format</li>
           <li><strong>CLI-compatible</strong> - Works with age and rage command-line tools</li>
           <li><strong>scrypt derivation</strong> - Secure against GPU-based password cracking</li>
-          <li><strong>Armor format</strong> - ASCII-armored output for text-safe transmission</li>
+          <li><strong>Work factor 18</strong> - This app uses work factor 18 (same as age CLI, ~1 second, 256MB memory)</li>
+          <li><strong>Meets security standards</strong> - Work factor 18 meets OWASP 2026 minimum recommendations</li>
         </ul>
+        <EducationalAlert title="What is Work Factor?" type="info" spacing="mt-3">
+          <strong>Work factor</strong> determines how much computational effort is required to decrypt your file.
+          Higher work factors provide better protection against brute-force attacks but require more memory.
+          This app uses work factor 18 (same as age CLI default), which meets current security standards.
+        </EducationalAlert>
         <EducationalAlert title="Important Limitation" type="warning" spacing="mt-3">
           If you forget your password, your encrypted data <strong>cannot be recovered</strong>.
           There is no "reset password" option - the password IS the key.
@@ -136,8 +142,8 @@
 
         <!-- Technical Details -->
         <div class="text-caption text-medium-emphasis mt-2">
-          <strong>Technical:</strong> Uses rage-wasm (Rust compiled to WebAssembly) with scrypt password derivation.
-          Produces .age files with optional armor encoding.
+          <strong>Technical:</strong> Uses rage-wasm (Rust compiled to WebAssembly) with scrypt password derivation (work factor 18).
+          Produces binary .age files. Fully compatible with age/rage CLI tools (both use work factor 18 default).
         </div>
       </template>
     </LearnMorePanel>
@@ -515,7 +521,6 @@ export default {
     const clearOutputs = () => {
       tableData.value = [];
       tableHeaders.value = [];
-      search.value = '';
       error.value = '';
     };
 

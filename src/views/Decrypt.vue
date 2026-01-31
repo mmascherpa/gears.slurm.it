@@ -106,9 +106,15 @@
         <ul class="ml-4 mb-2">
           <li><strong>Passphrase required</strong> - You must use the EXACT same passphrase that was used to encrypt the data</li>
           <li><strong>Case-sensitive</strong> - "Passphrase123" and "passphrase123" are different passphrases</li>
-          <li><strong>CLI-compatible</strong> - Works with age and rage command-line tools</li>
+          <li><strong>CLI-compatible</strong> - Works with age and rage command-line tools (both use work factor 18)</li>
           <li><strong>Armor format</strong> - Supports both binary and ASCII-armored .age files</li>
+          <li><strong>Work factor limit</strong> - Browser can decrypt files with work factor up to 18 (standard age CLI default)</li>
         </ul>
+        <EducationalAlert title="Work Factor Limitation" type="info" spacing="mt-3">
+          <strong>Work factor</strong> is a security parameter that determines memory requirements for decryption.
+          This app can decrypt files with work factor up to 18 (the age CLI default). Files encrypted with higher work factors
+          (19+) will fail to decrypt in the browser and require the age CLI tool.
+        </EducationalAlert>
         <EducationalAlert title="Passphrase Must Match Exactly" type="warning" spacing="mt-3">
           The decryption passphrase must be identical to the encryption passphrase. Even a single character
           difference will result in failed decryption. There is no "close enough" - it must be exact.
@@ -137,7 +143,7 @@
         <!-- Technical Details -->
         <div class="text-caption text-medium-emphasis mt-2">
           <strong>Technical:</strong> Uses rage-wasm (Rust compiled to WebAssembly) with scrypt password derivation.
-          Decrypts .age files with optional armor format.
+          Decrypts binary and ASCII-armored .age files. Maximum supported work factor: 18 (same as age CLI default).
         </div>
       </template>
     </LearnMorePanel>
