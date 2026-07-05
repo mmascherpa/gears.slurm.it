@@ -4,13 +4,25 @@
  *
  * ES Module version for Vite bundling
  *
- * File Format:
+ * File Format (v1, current):
+ * [magic "SLRM" (4 bytes)][version (1 byte)][iterations (4 bytes, big-endian)]
  * [salt(16 bytes)][iv(12 bytes)][encrypted data]
+ *
+ * Legacy File Format (no header):
+ * [salt(16 bytes)][iv(12 bytes)][encrypted data]
+ * Legacy files were always encrypted with 100000 PBKDF2 iterations and
+ * remain decryptable. A random legacy salt colliding with the magic bytes
+ * has probability 2^-32 and would only surface as a wrong-password error.
  */
+
+const FORMAT_MAGIC = new Uint8Array([0x53, 0x4C, 0x52, 0x4D]); // "SLRM"
+const FORMAT_VERSION = 1;
+const HEADER_LENGTH = FORMAT_MAGIC.length + 1 + 4; // magic + version + iterations
+const LEGACY_ITERATIONS = 100000;
 
 export class WebCryptoWorkerProvider {
   constructor(options = {}) {
-    this.iterations = options.iterations || 100000; // PBKDF2 iterations
+    this.iterations = options.iterations || 600000; // PBKDF2 iterations (OWASP 2023+ guidance)
     this.saltLength = 16; // 128 bits
     this.ivLength = 12; // 96 bits (recommended for GCM)
   }
@@ -22,7 +34,7 @@ export class WebCryptoWorkerProvider {
    * @returns {Promise<CryptoKey>} Derived key
    * @private
    */
-  async _deriveKey(password, salt) {
+  async _deriveKey(password, salt, iterations = this.iterations) {
     const encoder = new TextEncoder();
     const passwordBuffer = encoder.encode(password);
 
@@ -40,7 +52,7 @@ export class WebCryptoWorkerProvider {
       {
         name: 'PBKDF2',
         salt: salt,
-        iterations: this.iterations,
+        iterations: iterations,
         hash: 'SHA-256'
       },
       keyMaterial,
@@ -48,6 +60,37 @@ export class WebCryptoWorkerProvider {
       false,
       ['encrypt', 'decrypt']
     );
+  }
+
+  /**
+   * Parses the v1 header if present
+   * @param {Uint8Array} dataArray - Encrypted file contents
+   * @returns {Object} { iterations, offset } - KDF iterations and byte offset
+   *   where salt begins (0 for legacy files without a header)
+   * @private
+   */
+  _parseHeader(dataArray) {
+    const hasMagic = dataArray.length >= HEADER_LENGTH &&
+      FORMAT_MAGIC.every((byte, i) => dataArray[i] === byte);
+
+    if (!hasMagic) {
+      return { iterations: LEGACY_ITERATIONS, offset: 0 };
+    }
+
+    const version = dataArray[FORMAT_MAGIC.length];
+    if (version !== FORMAT_VERSION) {
+      throw new Error(`Unsupported file format version: ${version}`);
+    }
+
+    const view = new DataView(dataArray.buffer, dataArray.byteOffset + FORMAT_MAGIC.length + 1, 4);
+    const iterations = view.getUint32(0, false);
+
+    // Reject absurd iteration counts (corrupted header or DoS attempt)
+    if (iterations < 1 || iterations > 10000000) {
+      throw new Error('Invalid file format: bad iteration count');
+    }
+
+    return { iterations, offset: HEADER_LENGTH };
   }
 
   /**
@@ -105,11 +148,14 @@ export class WebCryptoWorkerProvider {
 
       const encryptedArray = new Uint8Array(encryptedBuffer);
 
-      // Combine: salt + iv + encrypted data
-      const result = new Uint8Array(salt.length + iv.length + encryptedArray.length);
-      result.set(salt, 0);
-      result.set(iv, salt.length);
-      result.set(encryptedArray, salt.length + iv.length);
+      // Combine: header + salt + iv + encrypted data
+      const result = new Uint8Array(HEADER_LENGTH + salt.length + iv.length + encryptedArray.length);
+      result.set(FORMAT_MAGIC, 0);
+      result[FORMAT_MAGIC.length] = FORMAT_VERSION;
+      new DataView(result.buffer).setUint32(FORMAT_MAGIC.length + 1, this.iterations, false);
+      result.set(salt, HEADER_LENGTH);
+      result.set(iv, HEADER_LENGTH + salt.length);
+      result.set(encryptedArray, HEADER_LENGTH + salt.length + iv.length);
 
       return result;
     } catch (error) {
@@ -128,19 +174,22 @@ export class WebCryptoWorkerProvider {
       // Ensure data is Uint8Array
       const dataArray = await this._ensureUint8Array(data);
 
+      // Detect versioned header (falls back to legacy layout/iterations)
+      const { iterations, offset } = this._parseHeader(dataArray);
+
       // Validate minimum length
-      const minLength = this.saltLength + this.ivLength;
+      const minLength = offset + this.saltLength + this.ivLength;
       if (dataArray.length < minLength) {
         throw new Error('Invalid file format: file too short');
       }
 
       // Extract salt, IV, and encrypted data
-      const salt = dataArray.slice(0, this.saltLength);
-      const iv = dataArray.slice(this.saltLength, this.saltLength + this.ivLength);
-      const encryptedData = dataArray.slice(this.saltLength + this.ivLength);
+      const salt = dataArray.slice(offset, offset + this.saltLength);
+      const iv = dataArray.slice(offset + this.saltLength, offset + this.saltLength + this.ivLength);
+      const encryptedData = dataArray.slice(offset + this.saltLength + this.ivLength);
 
       // Derive key from password
-      const key = await this._deriveKey(password, salt);
+      const key = await this._deriveKey(password, salt, iterations);
 
       // Decrypt data
       try {

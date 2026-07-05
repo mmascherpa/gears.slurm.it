@@ -180,6 +180,96 @@ describe('WebCryptoWorkerProvider', () => {
     })
   })
 
+  describe('file format versioning', () => {
+    const MAGIC = [0x53, 0x4C, 0x52, 0x4D] // "SLRM"
+    const HEADER_LENGTH = 9 // magic(4) + version(1) + iterations(4)
+
+    it('should write the v1 header with magic, version, and iteration count', async () => {
+      const encrypted = await provider.encrypt(new Uint8Array([1, 2, 3]), 'password')
+
+      expect(Array.from(encrypted.slice(0, 4))).toEqual(MAGIC)
+      expect(encrypted[4]).toBe(1)
+
+      const iterations = new DataView(encrypted.buffer).getUint32(5, false)
+      expect(iterations).toBe(600000)
+    })
+
+    it('should use different salt and IV for each encryption', async () => {
+      const data = new Uint8Array([1, 2, 3])
+      const password = 'password'
+
+      const encrypted1 = await provider.encrypt(data, password)
+      const encrypted2 = await provider.encrypt(data, password)
+
+      const salt1 = encrypted1.slice(HEADER_LENGTH, HEADER_LENGTH + 16)
+      const salt2 = encrypted2.slice(HEADER_LENGTH, HEADER_LENGTH + 16)
+      const iv1 = encrypted1.slice(HEADER_LENGTH + 16, HEADER_LENGTH + 28)
+      const iv2 = encrypted2.slice(HEADER_LENGTH + 16, HEADER_LENGTH + 28)
+
+      expect(salt1).not.toEqual(salt2)
+      expect(iv1).not.toEqual(iv2)
+    })
+
+    it('should decrypt legacy files without a header using 100000 iterations', async () => {
+      // Build a legacy-format file exactly as the pre-header code did
+      const originalData = new Uint8Array([10, 20, 30, 40])
+      const password = 'legacyPassword'
+      const salt = crypto.getRandomValues(new Uint8Array(16))
+      const iv = crypto.getRandomValues(new Uint8Array(12))
+
+      const keyMaterial = await crypto.subtle.importKey(
+        'raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']
+      )
+      const key = await crypto.subtle.deriveKey(
+        { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+        keyMaterial,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt']
+      )
+      const ciphertext = new Uint8Array(
+        await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, originalData)
+      )
+
+      const legacyFile = new Uint8Array(salt.length + iv.length + ciphertext.length)
+      legacyFile.set(salt, 0)
+      legacyFile.set(iv, salt.length)
+      legacyFile.set(ciphertext, salt.length + iv.length)
+
+      const decrypted = await provider.decrypt(legacyFile, password)
+      expect(decrypted).toEqual(originalData)
+    })
+
+    it('should reject unsupported format versions', async () => {
+      const encrypted = await provider.encrypt(new Uint8Array([1, 2, 3]), 'password')
+      encrypted[4] = 99 // corrupt the version byte
+
+      await expect(provider.decrypt(encrypted, 'password'))
+        .rejects.toThrow('Unsupported file format version')
+    })
+
+    it('should reject absurd iteration counts in the header', async () => {
+      const encrypted = await provider.encrypt(new Uint8Array([1, 2, 3]), 'password')
+      new DataView(encrypted.buffer).setUint32(5, 0xFFFFFFFF, false)
+
+      await expect(provider.decrypt(encrypted, 'password'))
+        .rejects.toThrow('bad iteration count')
+    })
+
+    it('should honor a custom iteration count option for new files', async () => {
+      const fastProvider = new WebCryptoWorkerProvider({ iterations: 1000 })
+      const data = new Uint8Array([5, 6, 7])
+
+      const encrypted = await fastProvider.encrypt(data, 'password')
+      const iterations = new DataView(encrypted.buffer).getUint32(5, false)
+      expect(iterations).toBe(1000)
+
+      // Default provider can still decrypt because iterations come from the header
+      const decrypted = await provider.decrypt(encrypted, 'password')
+      expect(decrypted).toEqual(data)
+    })
+  })
+
   describe('round-trip encryption', () => {
     it('should handle empty data', async () => {
       const data = new Uint8Array([])
