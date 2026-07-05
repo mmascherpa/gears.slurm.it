@@ -59,6 +59,8 @@ export class AgeWorkerProvider {
       throw new Error('rage-wasm library not loaded');
     }
 
+    let workFactor = null;
+
     try {
       // Convert Blob to Uint8Array if needed
       const dataArray = await this._ensureUint8Array(data);
@@ -95,7 +97,6 @@ export class AgeWorkerProvider {
       }
 
       // Extract scrypt work factor
-      let workFactor = null;
       const scryptLine = recipientInfo.find(line => line.includes('scrypt'));
       if (scryptLine) {
         const match = scryptLine.match(/-> scrypt\s+\S+\s+(\d+)/);
