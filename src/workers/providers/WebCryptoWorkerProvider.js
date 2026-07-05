@@ -199,7 +199,7 @@ export class WebCryptoWorkerProvider {
 
     if (lowerError.includes('password is required')) {
       return {
-        code: 'PASSWORD_TOO_LONG',
+        code: 'PASSWORD_REQUIRED',
         message: errorMessage,
         userMessage: '❌ Password is required'
       };
