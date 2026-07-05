@@ -21,9 +21,6 @@
 // Import rage-wasm as ES module (Vite will bundle this properly)
 import * as rageWasm from '@kanru/rage-wasm';
 
-// Import provider classes from public folder
-// Note: We'll need to convert these to ES modules as well
-import { JsAesCryptWorkerProvider } from './providers/JsAesCryptWorkerProvider.js';
 import { WebCryptoWorkerProvider } from './providers/WebCryptoWorkerProvider.js';
 import { AgeWorkerProvider } from './providers/AgeWorkerProvider.js';
 

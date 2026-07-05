@@ -1,6 +1,11 @@
 /**
- * Web Worker for AES Encryption/Decryption
+ * Web Worker for AES Crypt (jsAesCrypt) Encryption/Decryption
  * Runs crypto operations on background thread to avoid blocking main UI
+ *
+ * This classic worker handles only the jsAesCrypt provider (.aes files),
+ * which requires importScripts() for its non-module crypto libraries.
+ * WebCrypto (.enc) and Age (.age) operations are handled by the ES module
+ * worker in src/workers/cryptoWorker.js.
  *
  * Message Protocol:
  * - Incoming: [action, file, password, fileName, providerType?]
@@ -8,18 +13,17 @@
  *   - file: File/Blob object
  *   - password: Encryption/decryption password
  *   - fileName: Original filename
- *   - providerType: Optional provider type (defaults to 'jsAesCrypt')
+ *   - providerType: Optional, must be 'jsAesCrypt' if provided
  *
  * - Outgoing: [action, result, fileName]
  *   - action: "ENCRYPT" | "DECRYPT" | "ERROR"
- *   - result: Encrypted/decrypted blob or error message
+ *   - result: Encrypted/decrypted data or error message
  *   - fileName: Output filename (with provider-specific extension)
  */
 
 let libPath = "/libs/";
 
-// Load required crypto libraries (for jsAesCrypt provider)
-// All libraries are vendored locally - no CDN dependency
+// Load required crypto libraries (all vendored locally - no CDN dependency)
 self.importScripts(
 	libPath + "crypto-js-core.min.js",
 	libPath + "crypto-js-enc-utf16.min.js",
@@ -27,63 +31,9 @@ self.importScripts(
 	libPath + "aes_crypt.min.js"
 );
 
-// Load provider abstractions
 self.importScripts("/providers/JsAesCryptWorkerProvider.js");
-self.importScripts("/providers/WebCryptoWorkerProvider.js");
-self.importScripts("/providers/AgeWorkerProvider.js");
 
-// Initialize rage-wasm (async loading)
-let rageWasm = null;
-let rageWasmReady = false;
-
-// Load rage-wasm dynamically
-(async () => {
-  try {
-    const startTime = performance.now();
-    console.log('[Worker] Starting to load rage-wasm...');
-
-    // Import the module (this works in module-type workers in modern browsers)
-    const module = await import('@kanru/rage-wasm');
-    rageWasm = module;
-    rageWasmReady = true;
-
-    const loadTime = performance.now() - startTime;
-    console.log(`[Worker] rage-wasm loaded successfully in ${loadTime.toFixed(2)}ms`);
-  } catch (err) {
-    console.error('[Worker] Failed to load rage-wasm:', err);
-    // Age encryption will not be available, but AES encryption still works
-  }
-})();
-
-// Initialize default provider (jsAesCrypt)
-let provider = new JsAesCryptWorkerProvider(aesCrypt);
-let currentProviderType = 'jsAesCrypt';
-
-/**
- * Sets the encryption provider
- * @param {string} providerType - Provider type ('jsAesCrypt', 'webCrypto', or 'age')
- */
-function setProvider(providerType) {
-  if (providerType === currentProviderType) {
-    return; // Already using this provider
-  }
-
-  if (providerType === 'jsAesCrypt') {
-    provider = new JsAesCryptWorkerProvider(aesCrypt);
-    currentProviderType = 'jsAesCrypt';
-  } else if (providerType === 'webCrypto') {
-    provider = new WebCryptoWorkerProvider();
-    currentProviderType = 'webCrypto';
-  } else if (providerType === 'age') {
-    if (!rageWasmReady || !rageWasm) {
-      throw new Error('Age encryption library not loaded yet. Please wait a moment and try again.');
-    }
-    provider = new AgeWorkerProvider(rageWasm);
-    currentProviderType = 'age';
-  } else {
-    throw new Error(`Unknown provider type: ${providerType}`);
-  }
-}
+const provider = new JsAesCryptWorkerProvider(aesCrypt);
 
 /**
  * Handles incoming messages from main thread
@@ -106,22 +56,16 @@ onmessage = function(e) {
 		return;
 	}
 
-	// Handle provider initialization
+	// Handle provider initialization (kept for protocol compatibility)
 	if (action === "INIT") {
 		const providerType = data[1] || 'jsAesCrypt';
 
-		// SECURITY: Validate provider type
-		if (typeof providerType !== 'string' || !['jsAesCrypt', 'webCrypto', 'age'].includes(providerType)) {
-			postMessage(["INIT_ERROR", "Invalid provider type"]);
+		if (providerType !== 'jsAesCrypt') {
+			postMessage(["INIT_ERROR", "This worker only supports jsAesCrypt. Use the ES module worker for other providers."]);
 			return;
 		}
 
-		try {
-			setProvider(providerType);
-			postMessage(["INIT_SUCCESS", providerType]);
-		} catch (error) {
-			postMessage(["INIT_ERROR", error.message]);
-		}
+		postMessage(["INIT_SUCCESS", providerType]);
 		return;
 	}
 
@@ -150,20 +94,10 @@ onmessage = function(e) {
 			return;
 		}
 
-		// SECURITY: Validate optional provider type
-		if (providerType !== undefined && (typeof providerType !== 'string' || !['jsAesCrypt', 'webCrypto', 'age'].includes(providerType))) {
-			postMessage(["ERROR", "Invalid provider type", action]);
+		// SECURITY: This worker only handles jsAesCrypt
+		if (providerType !== undefined && providerType !== 'jsAesCrypt') {
+			postMessage(["ERROR", "This worker only supports jsAesCrypt. Use the ES module worker for other providers.", action]);
 			return;
-		}
-
-		// Switch provider if specified and different from current
-		if (providerType && providerType !== currentProviderType) {
-			try {
-				setProvider(providerType);
-			} catch (error) {
-				postMessage(["ERROR", `Failed to switch provider: ${error.message}`, action]);
-				return;
-			}
 		}
 
 		if( action === "ENCRYPT" ) {

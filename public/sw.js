@@ -20,7 +20,8 @@ const urlsToCache = [
     '/libs/crypto-js-core.min.js',
     '/libs/crypto-js-enc-utf16.min.js',
     '/libs/enc-uint8array.min.js',
-    '/libs/aes_crypt.min.js'
+    '/libs/aes_crypt.min.js',
+    '/providers/JsAesCryptWorkerProvider.js'
 ];
 
 self.addEventListener('install', event => {

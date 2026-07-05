@@ -37,12 +37,12 @@ npm run generate-icons     # Generate PNG icons from SVG
 **Component-Based**: Vue 3 SFCs, each tool is a standalone page component
 
 **Worker-Based Parallelism**:
-- **Classic Web Worker** (`public/worker.js`) - jsAesCrypt encryption/decryption (CDN-loaded libraries)
+- **Classic Web Worker** (`public/worker.js`) - jsAesCrypt encryption/decryption (locally vendored libraries)
 - **ES Module Web Worker** (`src/workers/cryptoWorker.js`) - WebCrypto/Age encryption (Vite-bundled with rage-wasm)
 - **Service Worker** (`public/sw.js`) - Offline caching with cache-first strategy
 
 **Note**: The application uses two different worker types because:
-- jsAesCrypt requires classic worker with `importScripts()` for CDN libraries
+- jsAesCrypt requires classic worker with `importScripts()` for its non-module libraries
 - Age encryption requires ES module worker for proper WASM bundling via Vite
 - The correct worker is automatically selected based on the chosen algorithm
 
@@ -69,15 +69,12 @@ Each provider implements: `encrypt()`, `decrypt()`, `getInfo()`, `normalizeError
 1. **Main App**: `index.html` → `src/main.js` (router, Vuetify, Vue setup)
 2. **Service Worker**: `public/sw.js` (offline caching, auto-updated on build)
 3. **Web Workers**:
-   - **Classic Worker**: `public/worker.js` (jsAesCrypt operations)
+   - **Classic Worker**: `public/worker.js` (jsAesCrypt operations only)
    - **ES Module Worker**: `src/workers/cryptoWorker.js` (WebCrypto/Age operations)
 4. **Encryption Providers**:
-   - **Classic Worker Providers** (in `public/providers/`):
+   - **Classic Worker Provider** (in `public/providers/`):
      - `JsAesCryptWorkerProvider.js` - AES-256-CBC (.aes files)
-     - `WebCryptoWorkerProvider.js` - AES-256-GCM (not used by classic worker)
-     - `AgeWorkerProvider.js` - Age encryption (not used by classic worker)
    - **ES Module Worker Providers** (in `src/workers/providers/`):
-     - `JsAesCryptWorkerProvider.js` - Not used (classic worker only)
      - `WebCryptoWorkerProvider.js` - Browser-native AES-256-GCM (.enc files)
      - `AgeWorkerProvider.js` - Modern age encryption (.age files)
 
