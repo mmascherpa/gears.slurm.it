@@ -719,6 +719,16 @@ export function usePasswordVault() {
   }
 
   /**
+   * Get the master password of the currently unlocked vault.
+   * Only used to wrap the password for biometric (WebAuthn PRF) unlock;
+   * returns null while the vault is locked.
+   * @returns {string|null}
+   */
+  function getMasterPassword() {
+    return masterPassword.value;
+  }
+
+  /**
    * Update activity timestamp
    */
   function updateActivity() {
@@ -793,6 +803,7 @@ export function usePasswordVault() {
     updateActivity,
     getLastActivity,
     getAutoLockMinutes,
+    getMasterPassword,
 
     // Rate limiting
     getRemainingAttempts,

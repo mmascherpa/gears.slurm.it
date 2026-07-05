@@ -131,6 +131,17 @@
             </v-menu>
 
             <v-btn
+              v-if="biometricAvailable"
+              variant="tonal"
+              :color="hasWebAuthnCredential ? 'success' : undefined"
+              :loading="webAuthn.isLoading.value"
+              @click="toggleBiometricUnlock"
+            >
+              <v-icon icon="mdi-fingerprint" class="mr-1"></v-icon>
+              {{ hasWebAuthnCredential ? 'Biometrics On' : 'Enable Biometrics' }}
+            </v-btn>
+
+            <v-btn
               variant="tonal"
               color="warning"
               @click="handleLock"
@@ -294,6 +305,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import { usePasswordVault } from '@/composables/usePasswordVault';
 import { useVaultAutoLock } from '@/composables/useVaultAutoLock';
+import { useWebAuthn } from '@/composables/useWebAuthn';
 import { useSnackbar } from '@/composables/useSnackbar';
 import { exportToCSV, exportToJSON, getExportFilename } from '@/utils/passwordVaultExport';
 import { downloadFile } from '@/utils/fileDownload';
@@ -324,8 +336,11 @@ const {
   searchEntries,
   getEntries,
   getAutoLockMinutes,
+  getMasterPassword,
   deleteVault
 } = usePasswordVault();
+
+const webAuthn = useWebAuthn();
 
 const { snackbar, snackbarText, snackbarColor, showSnackbar } = useSnackbar();
 
@@ -351,8 +366,9 @@ const exportPassword = ref('');
 const showExportPassword = ref(false);
 const pendingExportFormat = ref(null);
 
-// WebAuthn placeholder
-const hasWebAuthnCredential = ref(false);
+// WebAuthn (biometric) unlock state
+const hasWebAuthnCredential = webAuthn.hasCredential;
+const biometricAvailable = ref(false);
 
 // Auto-lock state (from composable)
 const autoLockEnabled = computed(() => autoLock.isActive.value);
@@ -433,11 +449,14 @@ watch(isLocked, (locked) => {
 });
 
 // Lifecycle
-onMounted(() => {
+onMounted(async () => {
   // Auto-open unlock dialog if vault exists
   if (hasVault.value) {
     showUnlockDialog.value = true;
   }
+
+  biometricAvailable.value = webAuthn.isSupported.value &&
+    await webAuthn.isPlatformAuthenticatorAvailable();
 });
 
 onBeforeUnmount(() => {
@@ -467,9 +486,37 @@ async function handleUnlock(password) {
   }
 }
 
-function handleWebAuthn() {
-  // WebAuthn implementation placeholder
-  showSnackbar('Biometric unlock not yet configured', 'info');
+async function handleWebAuthn() {
+  const password = await webAuthn.authenticate();
+  if (!password) {
+    showSnackbar(webAuthn.error.value || 'Biometric unlock failed', 'error');
+    return;
+  }
+
+  const success = await unlockVault(password);
+  if (success) {
+    showUnlockDialog.value = false;
+    showSnackbar('Vault unlocked', 'success');
+  } else {
+    // Stored password no longer opens the vault (master password changed)
+    showSnackbar('Stored biometric password no longer matches - unlock with your password and re-enable biometrics', 'error');
+    webAuthn.removeCredential();
+  }
+}
+
+async function toggleBiometricUnlock() {
+  if (hasWebAuthnCredential.value) {
+    webAuthn.removeCredential();
+    showSnackbar('Biometric unlock disabled', 'info');
+    return;
+  }
+
+  const success = await webAuthn.register(getMasterPassword());
+  if (success) {
+    showSnackbar('Biometric unlock enabled', 'success');
+  } else {
+    showSnackbar(webAuthn.error.value || 'Could not enable biometric unlock', 'error');
+  }
 }
 
 function handleLock() {
@@ -618,6 +665,7 @@ async function performExport(format, password = null) {
 
 function handleDeleteVault() {
   deleteVault();
+  webAuthn.removeCredential();
   showDeleteVaultDialog.value = false;
   showSnackbar('Vault deleted', 'success');
 }

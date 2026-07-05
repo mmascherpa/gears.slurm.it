@@ -1,25 +1,63 @@
 /**
- * Tests for useWebAuthn composable
+ * Tests for useWebAuthn composable (PRF-based biometric unlock)
+ *
+ * Uses real WebCrypto (HKDF + AES-GCM) so register/authenticate round-trips
+ * exercise the actual key derivation and wrapping, with only the WebAuthn
+ * credential API mocked.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { useWebAuthn } from '@/composables/useWebAuthn';
+
+const PRF_STORAGE_KEY = 'slurm-webauthn-prf';
+
+/**
+ * Simulates an authenticator PRF: deterministic 32-byte output per salt,
+ * so create/get assertions agree like a real authenticator would.
+ */
+async function fakePrfOutput(salt) {
+  const digest = await crypto.subtle.digest('SHA-256', new Uint8Array(salt));
+  return digest;
+}
+
+function mockCredential(rawId, prfResult, { enabled = true } = {}) {
+  return {
+    rawId,
+    getClientExtensionResults: () => ({
+      prf: {
+        enabled,
+        ...(prfResult ? { results: { first: prfResult } } : {})
+      }
+    })
+  };
+}
+
+function mockAssertionFor(rawId) {
+  return async (options) => {
+    const salt = options.publicKey.extensions.prf.eval.first;
+    const output = await fakePrfOutput(salt);
+    return {
+      rawId,
+      getClientExtensionResults: () => ({
+        prf: { results: { first: output } }
+      })
+    };
+  };
+}
 
 describe('useWebAuthn', () => {
   let mockCredentialsCreate;
   let mockCredentialsGet;
   let mockIsUserVerifyingPlatformAuthenticatorAvailable;
+  const rawId = new Uint8Array([1, 2, 3, 4]).buffer;
 
   beforeEach(() => {
-    // Clear storage
     localStorage.clear();
     sessionStorage.clear();
 
-    // Mock WebAuthn API
     mockCredentialsCreate = vi.fn();
     mockCredentialsGet = vi.fn();
     mockIsUserVerifyingPlatformAuthenticatorAvailable = vi.fn().mockResolvedValue(true);
 
-    // Setup global mocks using defineProperty for read-only properties
     Object.defineProperty(navigator, 'credentials', {
       value: {
         create: mockCredentialsCreate,
@@ -35,23 +73,6 @@ describe('useWebAuthn', () => {
       },
       writable: true,
       configurable: true
-    });
-
-    // Mock crypto.getRandomValues
-    vi.spyOn(crypto, 'getRandomValues').mockImplementation((arr) => {
-      for (let i = 0; i < arr.length; i++) {
-        arr[i] = Math.floor(Math.random() * 256);
-      }
-      return arr;
-    });
-
-    // Mock crypto.subtle for encryption
-    vi.spyOn(crypto.subtle, 'importKey').mockResolvedValue({ type: 'mock-key' });
-    vi.spyOn(crypto.subtle, 'deriveKey').mockResolvedValue({ type: 'mock-derived-key' });
-    vi.spyOn(crypto.subtle, 'encrypt').mockResolvedValue(new ArrayBuffer(32));
-    vi.spyOn(crypto.subtle, 'decrypt').mockImplementation(async () => {
-      const encoder = new TextEncoder();
-      return encoder.encode('decrypted-password').buffer;
     });
   });
 
@@ -80,9 +101,7 @@ describe('useWebAuthn', () => {
     it('returns true when platform authenticator is available', async () => {
       const { isPlatformAuthenticatorAvailable } = useWebAuthn();
 
-      const result = await isPlatformAuthenticatorAvailable();
-
-      expect(result).toBe(true);
+      expect(await isPlatformAuthenticatorAvailable()).toBe(true);
       expect(mockIsUserVerifyingPlatformAuthenticatorAvailable).toHaveBeenCalled();
     });
 
@@ -91,9 +110,7 @@ describe('useWebAuthn', () => {
 
       const { isPlatformAuthenticatorAvailable } = useWebAuthn();
 
-      const result = await isPlatformAuthenticatorAvailable();
-
-      expect(result).toBe(false);
+      expect(await isPlatformAuthenticatorAvailable()).toBe(false);
     });
 
     it('returns false when WebAuthn is not supported', async () => {
@@ -101,23 +118,30 @@ describe('useWebAuthn', () => {
 
       const { isPlatformAuthenticatorAvailable } = useWebAuthn();
 
-      const result = await isPlatformAuthenticatorAvailable();
-
-      expect(result).toBe(false);
+      expect(await isPlatformAuthenticatorAvailable()).toBe(false);
     });
   });
 
   describe('hasCredential', () => {
-    it('returns false when no credential stored', () => {
+    it('is false when no credential stored', () => {
       const { hasCredential } = useWebAuthn();
       expect(hasCredential.value).toBe(false);
     });
 
-    it('returns true when credential exists in localStorage', () => {
-      localStorage.setItem('slurm-webauthn-credential', 'some-credential-id');
+    it('is true when a complete PRF record exists', () => {
+      localStorage.setItem(PRF_STORAGE_KEY, JSON.stringify({
+        credentialId: 'aWQ=', prfSalt: 'c2FsdA==', iv: 'aXY=', ciphertext: 'Y3Q='
+      }));
 
       const { hasCredential } = useWebAuthn();
       expect(hasCredential.value).toBe(true);
+    });
+
+    it('is false when the stored record is incomplete', () => {
+      localStorage.setItem(PRF_STORAGE_KEY, JSON.stringify({ credentialId: 'aWQ=' }));
+
+      const { hasCredential } = useWebAuthn();
+      expect(hasCredential.value).toBe(false);
     });
   });
 
@@ -127,9 +151,7 @@ describe('useWebAuthn', () => {
 
       const { register, error } = useWebAuthn();
 
-      const result = await register('masterpassword');
-
-      expect(result).toBe(false);
+      expect(await register('masterpassword')).toBe(false);
       expect(error.value).toBe('WebAuthn is not supported in this browser');
     });
 
@@ -138,31 +160,69 @@ describe('useWebAuthn', () => {
 
       const { register, error } = useWebAuthn();
 
-      const result = await register('masterpassword');
-
-      expect(result).toBe(false);
+      expect(await register('masterpassword')).toBe(false);
       expect(error.value).toBe('No biometric authenticator available');
     });
 
-    it('stores credential and encrypted session key on success', async () => {
-      const mockCredential = {
-        rawId: new Uint8Array([1, 2, 3, 4]).buffer,
-        response: {
-          clientDataJSON: new ArrayBuffer(10),
-          attestationObject: new ArrayBuffer(10)
-        }
-      };
-      mockCredentialsCreate.mockResolvedValue(mockCredential);
+    it('returns false without a master password', async () => {
+      const { register, error } = useWebAuthn();
+
+      expect(await register('')).toBe(false);
+      expect(error.value).toBe('Master password is required');
+    });
+
+    it('requests the PRF extension during credential creation', async () => {
+      mockCredentialsCreate.mockImplementation(async (options) => {
+        const salt = options.publicKey.extensions.prf.eval.first;
+        return mockCredential(rawId, await fakePrfOutput(salt));
+      });
+
+      const { register } = useWebAuthn();
+      await register('masterpassword');
+
+      const createOptions = mockCredentialsCreate.mock.calls[0][0];
+      expect(createOptions.publicKey.extensions.prf.eval.first).toBeInstanceOf(Uint8Array);
+    });
+
+    it('stores a wrapped record when PRF output is returned at creation', async () => {
+      mockCredentialsCreate.mockImplementation(async (options) => {
+        const salt = options.publicKey.extensions.prf.eval.first;
+        return mockCredential(rawId, await fakePrfOutput(salt));
+      });
 
       const { register, hasCredential } = useWebAuthn();
 
-      const result = await register('masterpassword');
+      expect(await register('masterpassword')).toBe(true);
+      expect(hasCredential.value).toBe(true);
 
-      expect(result).toBe(true);
-      expect(localStorage.getItem('slurm-webauthn-credential')).not.toBeNull();
-      expect(sessionStorage.getItem('slurm-webauthn-session-key')).not.toBeNull();
-      expect(sessionStorage.getItem('slurm-webauthn-session-salt')).not.toBeNull();
-      expect(sessionStorage.getItem('slurm-webauthn-session-iv')).not.toBeNull();
+      const record = JSON.parse(localStorage.getItem(PRF_STORAGE_KEY));
+      expect(record.credentialId).toBeTruthy();
+      expect(record.prfSalt).toBeTruthy();
+      expect(record.iv).toBeTruthy();
+      expect(record.ciphertext).toBeTruthy();
+      // The record must not contain the master password in any recoverable form
+      expect(JSON.stringify(record)).not.toContain('masterpassword');
+    });
+
+    it('falls back to an assertion when creation returns no PRF output', async () => {
+      mockCredentialsCreate.mockResolvedValue(mockCredential(rawId, null));
+      mockCredentialsGet.mockImplementation(mockAssertionFor(rawId));
+
+      const { register } = useWebAuthn();
+
+      expect(await register('masterpassword')).toBe(true);
+      expect(mockCredentialsGet).toHaveBeenCalled();
+    });
+
+    it('refuses to register when the authenticator lacks PRF support', async () => {
+      mockCredentialsCreate.mockResolvedValue(mockCredential(rawId, null, { enabled: false }));
+
+      const { register, error, hasCredential } = useWebAuthn();
+
+      expect(await register('masterpassword')).toBe(false);
+      expect(error.value).toContain('PRF');
+      expect(hasCredential.value).toBe(false);
+      expect(localStorage.getItem(PRF_STORAGE_KEY)).toBeNull();
     });
 
     it('returns false when credential creation fails', async () => {
@@ -170,9 +230,7 @@ describe('useWebAuthn', () => {
 
       const { register, error } = useWebAuthn();
 
-      const result = await register('masterpassword');
-
-      expect(result).toBe(false);
+      expect(await register('masterpassword')).toBe(false);
       expect(error.value).toBe('Failed to create credential');
     });
 
@@ -183,9 +241,7 @@ describe('useWebAuthn', () => {
 
       const { register, error } = useWebAuthn();
 
-      const result = await register('masterpassword');
-
-      expect(result).toBe(false);
+      expect(await register('masterpassword')).toBe(false);
       expect(error.value).toBe('Registration was cancelled or denied');
     });
 
@@ -196,18 +252,8 @@ describe('useWebAuthn', () => {
 
       const { register, error } = useWebAuthn();
 
-      const result = await register('masterpassword');
-
-      expect(result).toBe(false);
+      expect(await register('masterpassword')).toBe(false);
       expect(error.value).toBe('Security error - HTTPS required');
-    });
-
-    it('exposes isLoading ref for UI state', () => {
-      const { isLoading } = useWebAuthn();
-
-      // isLoading is a ref that UI can use to show loading state
-      expect(isLoading).toBeDefined();
-      expect(isLoading.value).toBe(false);
     });
   });
 
@@ -215,60 +261,64 @@ describe('useWebAuthn', () => {
     it('returns null when no credential stored', async () => {
       const { authenticate, error } = useWebAuthn();
 
-      const result = await authenticate();
-
-      expect(result).toBeNull();
+      expect(await authenticate()).toBeNull();
       expect(error.value).toBe('WebAuthn not available or no credential stored');
     });
 
-    it('returns null when no session key stored', async () => {
-      // Credential must be base64 encoded
-      localStorage.setItem('slurm-webauthn-credential', btoa('credential-id'));
+    it('round-trips the master password through register and authenticate', async () => {
+      mockCredentialsCreate.mockImplementation(async (options) => {
+        const salt = options.publicKey.extensions.prf.eval.first;
+        return mockCredential(rawId, await fakePrfOutput(salt));
+      });
+      mockCredentialsGet.mockImplementation(mockAssertionFor(rawId));
 
-      const mockAssertion = {
-        rawId: new Uint8Array([1, 2, 3, 4]).buffer,
-        response: {
-          authenticatorData: new ArrayBuffer(10),
-          signature: new ArrayBuffer(10)
-        }
-      };
-      mockCredentialsGet.mockResolvedValue(mockAssertion);
+      const { register, authenticate } = useWebAuthn();
 
-      const { authenticate, error } = useWebAuthn();
-
-      const result = await authenticate();
-
-      expect(result).toBeNull();
-      expect(error.value).toBe('Session expired - please enter password');
+      expect(await register('correct horse battery staple')).toBe(true);
+      expect(await authenticate()).toBe('correct horse battery staple');
     });
 
-    it('returns decrypted password on successful authentication', async () => {
-      // Set up stored credential and session with proper base64 encoding
-      localStorage.setItem('slurm-webauthn-credential', btoa('credential-id'));
-      // The session key needs to be valid base64 that can be decoded
-      sessionStorage.setItem('slurm-webauthn-session-key', btoa('encrypted-session-key'));
-      sessionStorage.setItem('slurm-webauthn-session-salt', btoa(String.fromCharCode(...new Uint8Array(16))));
-      sessionStorage.setItem('slurm-webauthn-session-iv', btoa(String.fromCharCode(...new Uint8Array(12))));
+    it('returns null when the assertion has no PRF result', async () => {
+      mockCredentialsCreate.mockImplementation(async (options) => {
+        const salt = options.publicKey.extensions.prf.eval.first;
+        return mockCredential(rawId, await fakePrfOutput(salt));
+      });
+      mockCredentialsGet.mockResolvedValue({
+        rawId,
+        getClientExtensionResults: () => ({})
+      });
 
-      const mockAssertion = {
-        rawId: new Uint8Array([1, 2, 3, 4]).buffer,
-        response: {
-          authenticatorData: new ArrayBuffer(10),
-          signature: new ArrayBuffer(10)
-        }
-      };
-      mockCredentialsGet.mockResolvedValue(mockAssertion);
+      const { register, authenticate, error } = useWebAuthn();
+      await register('masterpassword');
 
-      const { authenticate } = useWebAuthn();
+      expect(await authenticate()).toBeNull();
+      expect(error.value).toBe('Authenticator did not return a PRF result');
+    });
 
-      const result = await authenticate();
+    it('returns null when the PRF output does not unwrap the password', async () => {
+      mockCredentialsCreate.mockImplementation(async (options) => {
+        const salt = options.publicKey.extensions.prf.eval.first;
+        return mockCredential(rawId, await fakePrfOutput(salt));
+      });
+      // A different authenticator producing a different PRF output
+      mockCredentialsGet.mockResolvedValue({
+        rawId,
+        getClientExtensionResults: () => ({
+          prf: { results: { first: crypto.getRandomValues(new Uint8Array(32)).buffer } }
+        })
+      });
 
-      // With mocked crypto.subtle.decrypt returning 'decrypted-password'
-      expect(result).toBe('decrypted-password');
+      const { register, authenticate, error } = useWebAuthn();
+      await register('masterpassword');
+
+      expect(await authenticate()).toBeNull();
+      expect(error.value).toContain('re-enable biometric unlock');
     });
 
     it('handles NotAllowedError during authentication', async () => {
-      localStorage.setItem('slurm-webauthn-credential', btoa('credential-id'));
+      localStorage.setItem(PRF_STORAGE_KEY, JSON.stringify({
+        credentialId: 'aWQ=', prfSalt: 'c2FsdA==', iv: 'aXY=', ciphertext: 'Y3Q='
+      }));
 
       const err = new Error('Not allowed');
       err.name = 'NotAllowedError';
@@ -276,75 +326,48 @@ describe('useWebAuthn', () => {
 
       const { authenticate, error } = useWebAuthn();
 
-      const result = await authenticate();
-
-      expect(result).toBeNull();
+      expect(await authenticate()).toBeNull();
       expect(error.value).toBe('Authentication was cancelled or denied');
     });
 
     it('returns null when assertion is null', async () => {
-      localStorage.setItem('slurm-webauthn-credential', btoa('credential-id'));
+      localStorage.setItem(PRF_STORAGE_KEY, JSON.stringify({
+        credentialId: 'aWQ=', prfSalt: 'c2FsdA==', iv: 'aXY=', ciphertext: 'Y3Q='
+      }));
       mockCredentialsGet.mockResolvedValue(null);
 
       const { authenticate, error } = useWebAuthn();
 
-      const result = await authenticate();
-
-      expect(result).toBeNull();
+      expect(await authenticate()).toBeNull();
       expect(error.value).toBe('Authentication failed');
     });
   });
 
   describe('removeCredential', () => {
-    it('removes credential from localStorage', () => {
-      localStorage.setItem('slurm-webauthn-credential', 'credential');
+    it('removes the PRF record and updates hasCredential', () => {
+      localStorage.setItem(PRF_STORAGE_KEY, JSON.stringify({
+        credentialId: 'aWQ=', prfSalt: 'c2FsdA==', iv: 'aXY=', ciphertext: 'Y3Q='
+      }));
 
       const { removeCredential, hasCredential } = useWebAuthn();
-
       expect(hasCredential.value).toBe(true);
 
       removeCredential();
 
-      expect(localStorage.getItem('slurm-webauthn-credential')).toBeNull();
+      expect(hasCredential.value).toBe(false);
+      expect(localStorage.getItem(PRF_STORAGE_KEY)).toBeNull();
     });
 
-    it('removes session keys from sessionStorage', () => {
+    it('clears legacy pre-PRF storage keys', () => {
+      localStorage.setItem('slurm-webauthn-credential', 'credential');
       sessionStorage.setItem('slurm-webauthn-session-key', 'key');
       sessionStorage.setItem('slurm-webauthn-session-salt', 'salt');
       sessionStorage.setItem('slurm-webauthn-session-iv', 'iv');
 
       const { removeCredential } = useWebAuthn();
-
       removeCredential();
 
-      expect(sessionStorage.getItem('slurm-webauthn-session-key')).toBeNull();
-      expect(sessionStorage.getItem('slurm-webauthn-session-salt')).toBeNull();
-      expect(sessionStorage.getItem('slurm-webauthn-session-iv')).toBeNull();
-    });
-  });
-
-  describe('storeSessionKey', () => {
-    it('stores encrypted session key in sessionStorage', async () => {
-      const { storeSessionKey } = useWebAuthn();
-
-      await storeSessionKey('masterpassword');
-
-      expect(sessionStorage.getItem('slurm-webauthn-session-key')).not.toBeNull();
-      expect(sessionStorage.getItem('slurm-webauthn-session-salt')).not.toBeNull();
-      expect(sessionStorage.getItem('slurm-webauthn-session-iv')).not.toBeNull();
-    });
-  });
-
-  describe('clearSessionKey', () => {
-    it('removes session keys from sessionStorage', () => {
-      sessionStorage.setItem('slurm-webauthn-session-key', 'key');
-      sessionStorage.setItem('slurm-webauthn-session-salt', 'salt');
-      sessionStorage.setItem('slurm-webauthn-session-iv', 'iv');
-
-      const { clearSessionKey } = useWebAuthn();
-
-      clearSessionKey();
-
+      expect(localStorage.getItem('slurm-webauthn-credential')).toBeNull();
       expect(sessionStorage.getItem('slurm-webauthn-session-key')).toBeNull();
       expect(sessionStorage.getItem('slurm-webauthn-session-salt')).toBeNull();
       expect(sessionStorage.getItem('slurm-webauthn-session-iv')).toBeNull();

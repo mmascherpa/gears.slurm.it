@@ -1,21 +1,34 @@
 /**
- * Composable for WebAuthn (biometric) authentication
+ * Composable for WebAuthn (biometric) vault unlock
  *
- * Provides registration and authentication using platform authenticators
- * (fingerprint, Face ID, Windows Hello, etc.)
+ * Uses the WebAuthn PRF extension: the authenticator derives a secret from
+ * a stored random salt, and that secret (available only after successful
+ * user verification) wraps the vault master password via HKDF + AES-GCM.
  *
- * Security: The master password is encrypted using AES-GCM with a key derived
- * from a random salt using PBKDF2. The encrypted password is stored in
- * sessionStorage and can only be accessed after successful WebAuthn verification.
+ * Security model: the wrapped master password, credential id, PRF salt, and
+ * IV are stored in localStorage, but none of them are sufficient to recover
+ * the password. Decryption requires the PRF output, which the authenticator
+ * only releases after biometric/PIN verification for the registered
+ * credential. Devices whose authenticators do not support the PRF extension
+ * cannot use biometric unlock - there is no fallback, because any fallback
+ * that stores a recoverable key alongside the ciphertext would be
+ * obfuscation rather than encryption.
  *
  * @returns {Object} WebAuthn state and operations
  */
 import { ref, computed } from 'vue';
 
-const CREDENTIAL_STORAGE_KEY = 'slurm-webauthn-credential';
-const SESSION_KEY_STORAGE_KEY = 'slurm-webauthn-session-key';
-const SESSION_SALT_STORAGE_KEY = 'slurm-webauthn-session-salt';
-const SESSION_IV_STORAGE_KEY = 'slurm-webauthn-session-iv';
+const PRF_STORAGE_KEY = 'slurm-webauthn-prf';
+
+// Legacy keys from the pre-PRF implementation - cleared on removeCredential
+const LEGACY_STORAGE_KEYS = {
+  local: ['slurm-webauthn-credential'],
+  session: [
+    'slurm-webauthn-session-key',
+    'slurm-webauthn-session-salt',
+    'slurm-webauthn-session-iv'
+  ]
+};
 
 // Relying party info (your app)
 const RP_ID = window.location.hostname || 'localhost';
@@ -35,6 +48,11 @@ export function useWebAuthn() {
   });
 
   /**
+   * Whether a PRF credential is registered (reactive)
+   */
+  const hasCredential = ref(loadRecord() !== null);
+
+  /**
    * Check if a platform authenticator is available
    */
   async function isPlatformAuthenticatorAvailable() {
@@ -48,24 +66,20 @@ export function useWebAuthn() {
   }
 
   /**
-   * Check if user has a stored credential
-   */
-  const hasCredential = computed(() => {
-    try {
-      return localStorage.getItem(CREDENTIAL_STORAGE_KEY) !== null;
-    } catch {
-      return false;
-    }
-  });
-
-  /**
-   * Register a new WebAuthn credential
-   * This should be called after the user has successfully unlocked the vault
+   * Register a new WebAuthn credential and wrap the master password with a
+   * key derived from the authenticator's PRF output.
+   *
+   * Call this after the user has unlocked the vault with their password.
    *
    * @param {string} masterPassword - The master password to protect
    * @returns {Promise<boolean>} Success
    */
   async function register(masterPassword) {
+    if (!masterPassword) {
+      error.value = 'Master password is required';
+      return false;
+    }
+
     if (!isSupported.value) {
       error.value = 'WebAuthn is not supported in this browser';
       return false;
@@ -81,16 +95,11 @@ export function useWebAuthn() {
     error.value = null;
 
     try {
-      // Generate a random user ID
-      const userId = new Uint8Array(16);
-      crypto.getRandomValues(userId);
+      const userId = crypto.getRandomValues(new Uint8Array(16));
+      const challenge = crypto.getRandomValues(new Uint8Array(32));
+      const prfSalt = crypto.getRandomValues(new Uint8Array(32));
 
-      // Generate a challenge
-      const challenge = new Uint8Array(32);
-      crypto.getRandomValues(challenge);
-
-      // Create credential options
-      const createOptions = {
+      const credential = await navigator.credentials.create({
         publicKey: {
           rp: {
             id: RP_ID,
@@ -112,32 +121,50 @@ export function useWebAuthn() {
             residentKey: 'preferred'
           },
           timeout: 60000,
-          attestation: 'none'
+          attestation: 'none',
+          extensions: {
+            prf: { eval: { first: prfSalt } }
+          }
         }
-      };
-
-      // Create credential
-      const credential = await navigator.credentials.create(createOptions);
+      });
 
       if (!credential) {
         error.value = 'Failed to create credential';
         return false;
       }
 
-      // Store credential ID
-      const credentialId = arrayBufferToBase64(credential.rawId);
-      localStorage.setItem(CREDENTIAL_STORAGE_KEY, credentialId);
-
-      // Encrypt and store the master password securely
-      const encrypted = await encryptSessionKey(masterPassword);
-      if (!encrypted) {
-        error.value = 'Failed to encrypt session key';
+      const extensionResults = credential.getClientExtensionResults?.() || {};
+      if (!extensionResults.prf?.enabled) {
+        error.value = 'Biometric unlock is not supported on this device (authenticator lacks the PRF extension)';
         return false;
       }
 
-      sessionStorage.setItem(SESSION_KEY_STORAGE_KEY, encrypted.ciphertext);
-      sessionStorage.setItem(SESSION_SALT_STORAGE_KEY, encrypted.salt);
-      sessionStorage.setItem(SESSION_IV_STORAGE_KEY, encrypted.iv);
+      // Some platforms return the PRF output at creation; others require a
+      // follow-up assertion (which triggers a second verification prompt)
+      let prfOutput = extensionResults.prf.results?.first;
+      if (!prfOutput) {
+        prfOutput = await evaluatePrf(credential.rawId, prfSalt);
+      }
+      if (!prfOutput) {
+        error.value = 'Could not obtain PRF output from authenticator';
+        return false;
+      }
+
+      const key = await deriveWrappingKey(prfOutput);
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const ciphertext = await crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv },
+        key,
+        new TextEncoder().encode(masterPassword)
+      );
+
+      saveRecord({
+        credentialId: arrayBufferToBase64(credential.rawId),
+        prfSalt: arrayBufferToBase64(prfSalt),
+        iv: arrayBufferToBase64(iv),
+        ciphertext: arrayBufferToBase64(ciphertext)
+      });
+      hasCredential.value = true;
 
       return true;
     } catch (err) {
@@ -156,13 +183,14 @@ export function useWebAuthn() {
   }
 
   /**
-   * Authenticate with WebAuthn
-   * Returns the stored session key if successful
+   * Authenticate with WebAuthn and unwrap the master password
    *
    * @returns {Promise<string|null>} The master password if successful, null otherwise
    */
   async function authenticate() {
-    if (!isSupported.value || !hasCredential.value) {
+    const record = loadRecord();
+
+    if (!isSupported.value || !record) {
       error.value = 'WebAuthn not available or no credential stored';
       return null;
     }
@@ -171,63 +199,30 @@ export function useWebAuthn() {
     error.value = null;
 
     try {
-      // Get stored credential ID
-      const credentialId = localStorage.getItem(CREDENTIAL_STORAGE_KEY);
-      if (!credentialId) {
-        error.value = 'No credential found';
+      const prfSalt = new Uint8Array(base64ToArrayBuffer(record.prfSalt));
+      const prfOutput = await evaluatePrf(base64ToArrayBuffer(record.credentialId), prfSalt);
+
+      if (!prfOutput) {
+        error.value = 'Authenticator did not return a PRF result';
         return null;
       }
 
-      // Generate challenge
-      const challenge = new Uint8Array(32);
-      crypto.getRandomValues(challenge);
+      const key = await deriveWrappingKey(prfOutput);
+      const decrypted = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: new Uint8Array(base64ToArrayBuffer(record.iv)) },
+        key,
+        base64ToArrayBuffer(record.ciphertext)
+      );
 
-      // Create assertion options
-      const assertionOptions = {
-        publicKey: {
-          challenge,
-          rpId: RP_ID,
-          allowCredentials: [{
-            type: 'public-key',
-            id: base64ToArrayBuffer(credentialId)
-          }],
-          userVerification: 'required',
-          timeout: 60000
-        }
-      };
-
-      // Get assertion
-      const assertion = await navigator.credentials.get(assertionOptions);
-
-      if (!assertion) {
-        error.value = 'Authentication failed';
-        return null;
-      }
-
-      // Decrypt and return the stored session key
-      const ciphertext = sessionStorage.getItem(SESSION_KEY_STORAGE_KEY);
-      const salt = sessionStorage.getItem(SESSION_SALT_STORAGE_KEY);
-      const iv = sessionStorage.getItem(SESSION_IV_STORAGE_KEY);
-
-      if (!ciphertext || !salt || !iv) {
-        // Session expired - user needs to enter password again
-        error.value = 'Session expired - please enter password';
-        return null;
-      }
-
-      const decrypted = await decryptSessionKey(ciphertext, salt, iv);
-      if (!decrypted) {
-        error.value = 'Failed to decrypt session key';
-        return null;
-      }
-
-      return decrypted;
+      return new TextDecoder().decode(decrypted);
     } catch (err) {
       console.error('WebAuthn authentication error:', err);
       if (err.name === 'NotAllowedError') {
         error.value = 'Authentication was cancelled or denied';
       } else if (err.name === 'SecurityError') {
         error.value = 'Security error - HTTPS required';
+      } else if (err.name === 'OperationError') {
+        error.value = 'Failed to unwrap master password - re-enable biometric unlock';
       } else {
         error.value = err.message || 'Authentication failed';
       }
@@ -238,49 +233,50 @@ export function useWebAuthn() {
   }
 
   /**
-   * Remove the stored credential
+   * Remove the stored credential record (and legacy pre-PRF keys)
    */
   function removeCredential() {
     try {
-      localStorage.removeItem(CREDENTIAL_STORAGE_KEY);
-      sessionStorage.removeItem(SESSION_KEY_STORAGE_KEY);
-      sessionStorage.removeItem(SESSION_SALT_STORAGE_KEY);
-      sessionStorage.removeItem(SESSION_IV_STORAGE_KEY);
+      localStorage.removeItem(PRF_STORAGE_KEY);
+      LEGACY_STORAGE_KEYS.local.forEach(key => localStorage.removeItem(key));
+      LEGACY_STORAGE_KEYS.session.forEach(key => sessionStorage.removeItem(key));
     } catch {
       // Ignore
     }
+    hasCredential.value = false;
   }
 
   /**
-   * Store the session key after successful password unlock
-   * This allows WebAuthn to retrieve it later
-   *
-   * @param {string} masterPassword - The master password
+   * Run a WebAuthn assertion that evaluates the PRF for the given credential
+   * @param {ArrayBuffer} credentialId - Raw credential id
+   * @param {Uint8Array} prfSalt - PRF evaluation input
+   * @returns {Promise<ArrayBuffer|null>} PRF output or null
    */
-  async function storeSessionKey(masterPassword) {
-    try {
-      const encrypted = await encryptSessionKey(masterPassword);
-      if (encrypted) {
-        sessionStorage.setItem(SESSION_KEY_STORAGE_KEY, encrypted.ciphertext);
-        sessionStorage.setItem(SESSION_SALT_STORAGE_KEY, encrypted.salt);
-        sessionStorage.setItem(SESSION_IV_STORAGE_KEY, encrypted.iv);
+  async function evaluatePrf(credentialId, prfSalt) {
+    const challenge = crypto.getRandomValues(new Uint8Array(32));
+
+    const assertion = await navigator.credentials.get({
+      publicKey: {
+        challenge,
+        rpId: RP_ID,
+        allowCredentials: [{
+          type: 'public-key',
+          id: credentialId
+        }],
+        userVerification: 'required',
+        timeout: 60000,
+        extensions: {
+          prf: { eval: { first: prfSalt } }
+        }
       }
-    } catch {
-      // Ignore - WebAuthn will just require password entry
-    }
-  }
+    });
 
-  /**
-   * Clear the session key (on lock)
-   */
-  function clearSessionKey() {
-    try {
-      sessionStorage.removeItem(SESSION_KEY_STORAGE_KEY);
-      sessionStorage.removeItem(SESSION_SALT_STORAGE_KEY);
-      sessionStorage.removeItem(SESSION_IV_STORAGE_KEY);
-    } catch {
-      // Ignore
+    if (!assertion) {
+      throw new Error('Authentication failed');
     }
+
+    const extensionResults = assertion.getClientExtensionResults?.() || {};
+    return extensionResults.prf?.results?.first || null;
   }
 
   return {
@@ -291,15 +287,63 @@ export function useWebAuthn() {
     isPlatformAuthenticatorAvailable,
     register,
     authenticate,
-    removeCredential,
-    storeSessionKey,
-    clearSessionKey
+    removeCredential
   };
 }
 
-// Utility functions
+// Storage helpers
+
+function loadRecord() {
+  try {
+    const stored = localStorage.getItem(PRF_STORAGE_KEY);
+    if (!stored) return null;
+
+    const record = JSON.parse(stored);
+    if (!record.credentialId || !record.prfSalt || !record.iv || !record.ciphertext) {
+      return null;
+    }
+    return record;
+  } catch {
+    return null;
+  }
+}
+
+function saveRecord(record) {
+  localStorage.setItem(PRF_STORAGE_KEY, JSON.stringify(record));
+}
+
+// Crypto helpers
+
+/**
+ * Derives the AES-GCM wrapping key from the authenticator's PRF output
+ * @param {ArrayBuffer|Uint8Array} prfOutput - 32-byte PRF result
+ * @returns {Promise<CryptoKey>}
+ */
+async function deriveWrappingKey(prfOutput) {
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    prfOutput,
+    'HKDF',
+    false,
+    ['deriveKey']
+  );
+
+  return crypto.subtle.deriveKey(
+    {
+      name: 'HKDF',
+      hash: 'SHA-256',
+      salt: new Uint8Array(32),
+      info: new TextEncoder().encode('slurm-vault-master-password-wrap')
+    },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
 function arrayBufferToBase64(buffer) {
-  const bytes = new Uint8Array(buffer);
+  const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
   let binary = '';
   for (let i = 0; i < bytes.byteLength; i++) {
     binary += String.fromCharCode(bytes[i]);
@@ -314,113 +358,4 @@ function base64ToArrayBuffer(base64) {
     bytes[i] = binary.charCodeAt(i);
   }
   return bytes.buffer;
-}
-
-/**
- * Encrypts the session key (master password) using AES-GCM
- * with a key derived from a random salt using PBKDF2.
- *
- * @param {string} plaintext - The master password to encrypt
- * @returns {Promise<Object|null>} Object with ciphertext, salt, iv (all base64) or null on error
- */
-async function encryptSessionKey(plaintext) {
-  try {
-    // Generate random salt and IV
-    const salt = crypto.getRandomValues(new Uint8Array(16));
-    const iv = crypto.getRandomValues(new Uint8Array(12));
-
-    // Derive key from salt using PBKDF2
-    // We use the salt itself as the "password" for key derivation
-    // This provides session-unique encryption without storing any secrets
-    const keyMaterial = await crypto.subtle.importKey(
-      'raw',
-      salt,
-      { name: 'PBKDF2' },
-      false,
-      ['deriveBits', 'deriveKey']
-    );
-
-    const key = await crypto.subtle.deriveKey(
-      {
-        name: 'PBKDF2',
-        salt: salt,
-        iterations: 100000,
-        hash: 'SHA-256'
-      },
-      keyMaterial,
-      { name: 'AES-GCM', length: 256 },
-      false,
-      ['encrypt', 'decrypt']
-    );
-
-    // Encrypt the plaintext
-    const encoder = new TextEncoder();
-    const encoded = encoder.encode(plaintext);
-
-    const ciphertext = await crypto.subtle.encrypt(
-      { name: 'AES-GCM', iv: iv },
-      key,
-      encoded
-    );
-
-    return {
-      ciphertext: arrayBufferToBase64(ciphertext),
-      salt: arrayBufferToBase64(salt),
-      iv: arrayBufferToBase64(iv)
-    };
-  } catch (err) {
-    console.error('Failed to encrypt session key:', err);
-    return null;
-  }
-}
-
-/**
- * Decrypts the session key (master password) using AES-GCM
- *
- * @param {string} ciphertextBase64 - The encrypted ciphertext (base64)
- * @param {string} saltBase64 - The salt used for key derivation (base64)
- * @param {string} ivBase64 - The IV used for encryption (base64)
- * @returns {Promise<string|null>} The decrypted master password or null on error
- */
-async function decryptSessionKey(ciphertextBase64, saltBase64, ivBase64) {
-  try {
-    const ciphertext = base64ToArrayBuffer(ciphertextBase64);
-    const salt = new Uint8Array(base64ToArrayBuffer(saltBase64));
-    const iv = new Uint8Array(base64ToArrayBuffer(ivBase64));
-
-    // Derive the same key from salt
-    const keyMaterial = await crypto.subtle.importKey(
-      'raw',
-      salt,
-      { name: 'PBKDF2' },
-      false,
-      ['deriveBits', 'deriveKey']
-    );
-
-    const key = await crypto.subtle.deriveKey(
-      {
-        name: 'PBKDF2',
-        salt: salt,
-        iterations: 100000,
-        hash: 'SHA-256'
-      },
-      keyMaterial,
-      { name: 'AES-GCM', length: 256 },
-      false,
-      ['encrypt', 'decrypt']
-    );
-
-    // Decrypt
-    const decrypted = await crypto.subtle.decrypt(
-      { name: 'AES-GCM', iv: iv },
-      key,
-      ciphertext
-    );
-
-    const decoder = new TextDecoder();
-    return decoder.decode(decrypted);
-  } catch (err) {
-    console.error('Failed to decrypt session key:', err);
-    return null;
-  }
 }
