@@ -73,6 +73,7 @@ export function usePasswordVault() {
   // Worker for Age encryption
   let worker = null;
   let pendingOperation = null;
+  let operationQueue = Promise.resolve();
   let lockoutTimer = null;
 
   // Track vault existence reactively (not just from localStorage)
@@ -148,30 +149,46 @@ export function usePasswordVault() {
   }
 
   /**
+   * Serializes worker operations. The worker protocol has no request ids
+   * and pendingOperation is a single slot, so only one encrypt/decrypt may
+   * be in flight at a time; overlapping calls would clobber each other's
+   * resolve/reject handlers.
+   * @param {Function} startOperation - Function starting the operation
+   * @returns {Promise<*>} The operation's result
+   */
+  function enqueueOperation(startOperation) {
+    const run = operationQueue.then(startOperation, startOperation);
+    operationQueue = run.then(() => {}, () => {});
+    return run;
+  }
+
+  /**
    * Encrypt data using Age encryption
    * @param {string} plaintext - Data to encrypt
    * @param {string} password - Encryption password
    * @returns {Promise<Uint8Array>} Encrypted data
    */
-  async function encryptData(plaintext, password) {
-    setupWorker();
+  function encryptData(plaintext, password) {
+    return enqueueOperation(() => {
+      setupWorker();
 
-    return new Promise((resolve, reject) => {
-      pendingOperation = { resolve, reject };
+      return new Promise((resolve, reject) => {
+        pendingOperation = { resolve, reject };
 
-      // Convert string to Uint8Array
-      const encoder = new TextEncoder();
-      const data = encoder.encode(plaintext);
+        // Convert string to Uint8Array
+        const encoder = new TextEncoder();
+        const data = encoder.encode(plaintext);
 
-      // Create a Blob for the worker
-      const blob = new Blob([data]);
+        // Create a Blob for the worker
+        const blob = new Blob([data]);
 
-      worker.postMessage(['ENCRYPT', blob, password, 'vault.json', 'age']);
-    }).then(result => {
-      if (result.action === 'ENCRYPT') {
-        return result.data;
-      }
-      throw new Error('Unexpected response');
+        worker.postMessage(['ENCRYPT', blob, password, 'vault.json', 'age']);
+      }).then(result => {
+        if (result.action === 'ENCRYPT') {
+          return result.data;
+        }
+        throw new Error('Unexpected response');
+      });
     });
   }
 
@@ -181,23 +198,25 @@ export function usePasswordVault() {
    * @param {string} password - Decryption password
    * @returns {Promise<string>} Decrypted plaintext
    */
-  async function decryptData(encrypted, password) {
-    setupWorker();
+  function decryptData(encrypted, password) {
+    return enqueueOperation(() => {
+      setupWorker();
 
-    return new Promise((resolve, reject) => {
-      pendingOperation = { resolve, reject };
+      return new Promise((resolve, reject) => {
+        pendingOperation = { resolve, reject };
 
-      // Create a Blob for the worker
-      const blob = new Blob([encrypted]);
+        // Create a Blob for the worker
+        const blob = new Blob([encrypted]);
 
-      worker.postMessage(['DECRYPT', blob, password, 'vault.age', 'age']);
-    }).then(result => {
-      if (result.action === 'DECRYPT') {
-        // Convert Uint8Array to string
-        const decoder = new TextDecoder();
-        return decoder.decode(result.data);
-      }
-      throw new Error('Unexpected response');
+        worker.postMessage(['DECRYPT', blob, password, 'vault.age', 'age']);
+      }).then(result => {
+        if (result.action === 'DECRYPT') {
+          // Convert Uint8Array to string
+          const decoder = new TextDecoder();
+          return decoder.decode(result.data);
+        }
+        throw new Error('Unexpected response');
+      });
     });
   }
 

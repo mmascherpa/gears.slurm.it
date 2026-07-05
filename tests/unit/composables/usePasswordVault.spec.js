@@ -377,6 +377,27 @@ describe('usePasswordVault', () => {
       expect(newEntry.createdAt).toBeDefined();
       expect(newEntry.updatedAt).toBeDefined();
     });
+
+    it('handles concurrent entry additions without losing operations', async () => {
+      localStorage.setItem('slurm-password-vault', btoa('mock-encrypted-vault'));
+
+      const { unlockVault, addEntry, vault } = usePasswordVault();
+
+      await unlockVault('password');
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      // Fire two saves without awaiting the first - with a single
+      // pendingOperation slot and no queue, these clobber each other
+      const [first, second] = await Promise.all([
+        addEntry({ name: 'First Site', username: 'a', password: 'pass1' }),
+        addEntry({ name: 'Second Site', username: 'b', password: 'pass2' })
+      ]);
+
+      expect(first).not.toBeNull();
+      expect(second).not.toBeNull();
+      expect(vault.value.entries.map(e => e.name))
+        .toEqual(expect.arrayContaining(['First Site', 'Second Site']));
+    });
   });
 
   describe('updateEntry', () => {
