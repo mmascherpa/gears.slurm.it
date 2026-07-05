@@ -1,5 +1,8 @@
 import { vi } from 'vitest'
 
+// Provide IndexedDB in the test environment (vault storage)
+import 'fake-indexeddb/auto'
+
 // Mock CSS imports for Vuetify and other CSS files
 vi.mock('*.css', () => ({}))
 vi.mock('*.scss', () => ({}))

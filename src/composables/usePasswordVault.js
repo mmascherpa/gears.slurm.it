@@ -2,14 +2,20 @@
  * Composable for managing the encrypted password vault
  *
  * Provides CRUD operations for password entries with Age encryption.
- * Vault is stored encrypted in localStorage and decrypted in memory when unlocked.
+ * Vault is stored encrypted in IndexedDB (with one-time migration from
+ * the legacy localStorage key) and decrypted in memory when unlocked.
  *
  * @returns {Object} Vault state and operations
  */
 import { ref, computed, onBeforeUnmount } from 'vue';
+import {
+  loadVaultData,
+  saveVaultData,
+  deleteVaultData,
+  vaultDataExists
+} from '@/utils/vaultStorage';
 
 // Storage keys
-const VAULT_STORAGE_KEY = 'slurm-password-vault';
 const ACTIVITY_STORAGE_KEY = 'slurm-vault-last-activity';
 const UNLOCK_ATTEMPTS_KEY = 'slurm-vault-unlock-attempts';
 
@@ -76,15 +82,18 @@ export function usePasswordVault() {
   let operationQueue = Promise.resolve();
   let lockoutTimer = null;
 
-  // Track vault existence reactively (not just from localStorage)
+  // Track vault existence reactively (storage check is async)
   const vaultExists = ref(false);
 
-  // Initialize vault existence check
-  try {
-    vaultExists.value = localStorage.getItem(VAULT_STORAGE_KEY) !== null;
-  } catch {
-    vaultExists.value = false;
-  }
+  // Resolves once the initial existence check completes; views can await
+  // this before deciding whether to auto-open the unlock dialog
+  const ready = vaultDataExists()
+    .then(exists => {
+      vaultExists.value = exists;
+    })
+    .catch(() => {
+      vaultExists.value = false;
+    });
 
   /**
    * Check if a vault exists in storage
@@ -239,9 +248,7 @@ export function usePasswordVault() {
       const plaintext = JSON.stringify(newVault);
       const encrypted = await encryptData(plaintext, password);
 
-      // Store as base64
-      const base64 = arrayBufferToBase64(encrypted);
-      localStorage.setItem(VAULT_STORAGE_KEY, base64);
+      await saveVaultData(encrypted);
 
       // Set state
       vault.value = newVault;
@@ -388,13 +395,12 @@ export function usePasswordVault() {
     error.value = null;
 
     try {
-      const base64 = localStorage.getItem(VAULT_STORAGE_KEY);
-      if (!base64) {
+      const encrypted = await loadVaultData();
+      if (!encrypted) {
         error.value = 'No vault found';
         return false;
       }
 
-      const encrypted = base64ToArrayBuffer(base64);
       const plaintext = await decryptData(encrypted, password);
       const decrypted = JSON.parse(plaintext);
 
@@ -474,15 +480,11 @@ export function usePasswordVault() {
       const plaintext = JSON.stringify(vault.value);
       const encrypted = await encryptData(plaintext, masterPassword.value);
 
-      const base64 = arrayBufferToBase64(encrypted);
-
-      // Handle localStorage quota exceeded
+      // Handle storage quota exceeded
       try {
-        localStorage.setItem(VAULT_STORAGE_KEY, base64);
+        await saveVaultData(encrypted);
       } catch (storageErr) {
-        if (storageErr.name === 'QuotaExceededError' ||
-            storageErr.code === 22 ||
-            storageErr.code === 1014) {
+        if (storageErr?.name === 'QuotaExceededError') {
           error.value = 'Storage quota exceeded. Please export your vault and clear browser data, or remove some entries.';
           return false;
         }
@@ -718,11 +720,11 @@ export function usePasswordVault() {
 
   /**
    * Delete the vault entirely
-   * @returns {boolean} Success
+   * @returns {Promise<boolean>} Success
    */
-  function deleteVault() {
+  async function deleteVault() {
     try {
-      localStorage.removeItem(VAULT_STORAGE_KEY);
+      await deleteVaultData();
       sessionStorage.removeItem(ACTIVITY_STORAGE_KEY);
       vault.value = null;
       masterPassword.value = null;
@@ -801,6 +803,7 @@ export function usePasswordVault() {
     entryCount,
     isLockedOut,
     lockoutRemainingSeconds,
+    ready,
 
     // Vault operations
     createVault,
@@ -828,23 +831,4 @@ export function usePasswordVault() {
     getRemainingAttempts,
     checkLockoutState
   };
-}
-
-// Utility functions for base64 encoding/decoding
-function arrayBufferToBase64(buffer) {
-  const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
-  let binary = '';
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-}
-
-function base64ToArrayBuffer(base64) {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return bytes;
 }

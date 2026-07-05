@@ -337,7 +337,8 @@ const {
   getEntries,
   getAutoLockMinutes,
   getMasterPassword,
-  deleteVault
+  deleteVault,
+  ready: vaultReady
 } = usePasswordVault();
 
 const webAuthn = useWebAuthn();
@@ -450,7 +451,8 @@ watch(isLocked, (locked) => {
 
 // Lifecycle
 onMounted(async () => {
-  // Auto-open unlock dialog if vault exists
+  // Auto-open unlock dialog if vault exists (existence check is async)
+  await vaultReady;
   if (hasVault.value) {
     showUnlockDialog.value = true;
   }
@@ -663,11 +665,11 @@ async function performExport(format, password = null) {
   }
 }
 
-function handleDeleteVault() {
-  deleteVault();
+async function handleDeleteVault() {
+  const success = await deleteVault();
   webAuthn.removeCredential();
   showDeleteVaultDialog.value = false;
-  showSnackbar('Vault deleted', 'success');
+  showSnackbar(success ? 'Vault deleted' : 'Failed to delete vault', success ? 'success' : 'error');
 }
 </script>
 

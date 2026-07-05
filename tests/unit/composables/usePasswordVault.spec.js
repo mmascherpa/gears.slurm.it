@@ -5,6 +5,7 @@
  * the Worker to simulate encryption/decryption responses.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { IDBFactory } from 'fake-indexeddb';
 import { usePasswordVault } from '@/composables/usePasswordVault';
 
 // Mock vault data for testing
@@ -78,9 +79,10 @@ describe('usePasswordVault', () => {
   }
 
   beforeEach(() => {
-    // Clear storage
+    // Clear storage (fresh IndexedDB per test)
     localStorage.clear();
     sessionStorage.clear();
+    global.indexedDB = new IDBFactory();
 
     // Save original Worker
     originalWorker = global.Worker;
@@ -118,17 +120,19 @@ describe('usePasswordVault', () => {
       expect(error.value).toBeNull();
     });
 
-    it('hasVault returns false when no vault in storage', () => {
-      const { hasVault } = usePasswordVault();
+    it('hasVault returns false when no vault in storage', async () => {
+      const { hasVault, ready } = usePasswordVault();
 
+      await ready;
       expect(hasVault.value).toBe(false);
     });
 
-    it('hasVault returns true when vault exists in storage', () => {
+    it('hasVault returns true when a legacy localStorage vault exists', async () => {
       localStorage.setItem('slurm-password-vault', 'encrypted-data');
 
-      const { hasVault } = usePasswordVault();
+      const { hasVault, ready } = usePasswordVault();
 
+      await ready;
       expect(hasVault.value).toBe(true);
     });
 
@@ -734,24 +738,24 @@ describe('usePasswordVault', () => {
   });
 
   describe('deleteVault', () => {
-    it('removes vault from localStorage', () => {
+    it('removes vault from storage including legacy localStorage', async () => {
       localStorage.setItem('slurm-password-vault', 'encrypted-data');
 
-      // Create fresh instance to pick up localStorage state
-      const { deleteVault, hasVault } = usePasswordVault();
+      const { deleteVault, hasVault, ready } = usePasswordVault();
 
+      await ready;
       expect(hasVault.value).toBe(true);
 
-      deleteVault();
+      await deleteVault();
 
-      // Re-check the localStorage directly since hasVault is computed once
       expect(localStorage.getItem('slurm-password-vault')).toBeNull();
+      expect(hasVault.value).toBe(false);
     });
 
-    it('resets state to locked', () => {
+    it('resets state to locked', async () => {
       const { deleteVault, isLocked, vault } = usePasswordVault();
 
-      deleteVault();
+      await deleteVault();
 
       expect(isLocked.value).toBe(true);
       expect(vault.value).toBeNull();
