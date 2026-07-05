@@ -16,13 +16,13 @@
  *   - fileName: Output filename (with provider-specific extension)
  */
 
-let cdnPath = "https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/";
 let libPath = "/libs/";
 
 // Load required crypto libraries (for jsAesCrypt provider)
+// All libraries are vendored locally - no CDN dependency
 self.importScripts(
-	cdnPath + "core.min.js",
-	cdnPath + "enc-utf16.min.js",
+	libPath + "crypto-js-core.min.js",
+	libPath + "crypto-js-enc-utf16.min.js",
 	libPath + "enc-uint8array.min.js",
 	libPath + "aes_crypt.min.js"
 );

@@ -75,16 +75,15 @@ const cacheList = [
     '/icons/icon-192x192.png',
     '/icons/icon-512x512.png',
     '/icons/icon.svg',
-    // Crypto libraries
+    // Crypto libraries (all vendored locally)
+    '/libs/crypto-js-core.min.js',
+    '/libs/crypto-js-enc-utf16.min.js',
     '/libs/enc-uint8array.min.js',
     '/libs/aes_crypt.min.js',
     // Vite-generated assets
     ...jsFiles,
     ...cssFiles,
-    ...fontFiles,
-    // CDN dependencies
-    'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/core.min.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/enc-utf16.min.js'
+    ...fontFiles
 ];
 
 console.log(`\n✅ Total files to cache: ${cacheList.length}\n`);
