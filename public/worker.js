@@ -36,6 +36,19 @@ self.importScripts("/providers/JsAesCryptWorkerProvider.js");
 const provider = new JsAesCryptWorkerProvider(aesCrypt);
 
 /**
+ * Builds a postMessage transfer list so large result buffers move to the
+ * main thread without being copied. Only plain ArrayBuffer-backed
+ * Uint8Arrays are transferable.
+ * @param {*} result - Provider result
+ * @returns {ArrayBuffer[]} Transfer list
+ */
+function transferListFor(result) {
+	return result instanceof Uint8Array && result.buffer instanceof ArrayBuffer
+		? [result.buffer]
+		: [];
+}
+
+/**
  * Handles incoming messages from main thread
  * @param {MessageEvent} e - Message event containing encryption/decryption request
  */
@@ -104,7 +117,7 @@ onmessage = function(e) {
 			provider.encrypt(file, password).then((result) => {
 				// Get file extension from provider info
 				const extension = provider.getInfo().fileExtension;
-				postMessage(["ENCRYPT", result, fileName + extension]);
+				postMessage(["ENCRYPT", result, fileName + extension], transferListFor(result));
 			}).catch((error) => {
 				// Normalize error using provider
 				const normalizedError = provider.normalizeError(error);
@@ -114,7 +127,7 @@ onmessage = function(e) {
 			provider.decrypt(file, password).then((result) => {
 				// Remove file extension (last part after final dot)
 				const outputFileName = fileName.split('.').slice(0, -1).join('.');
-				postMessage(["DECRYPT", result, outputFileName]);
+				postMessage(["DECRYPT", result, outputFileName], transferListFor(result));
 			}).catch((error) => {
 				// Normalize error using provider
 				const normalizedError = provider.normalizeError(error);

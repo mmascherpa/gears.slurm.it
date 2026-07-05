@@ -67,6 +67,19 @@ provider = new WebCryptoWorkerProvider();
 currentProviderType = 'webCrypto';
 
 /**
+ * Builds a postMessage transfer list so large result buffers move to the
+ * main thread without being copied. Only plain ArrayBuffer-backed
+ * Uint8Arrays are transferable.
+ * @param {*} result - Provider result
+ * @returns {ArrayBuffer[]} Transfer list
+ */
+function transferListFor(result) {
+  return result instanceof Uint8Array && result.buffer instanceof ArrayBuffer
+    ? [result.buffer]
+    : [];
+}
+
+/**
  * Handles incoming messages from main thread
  * @param {MessageEvent} e - Message event containing encryption/decryption request
  */
@@ -151,7 +164,7 @@ self.onmessage = function(e) {
       provider.encrypt(file, password).then((result) => {
         // Get file extension from provider info
         const extension = provider.getInfo().fileExtension;
-        self.postMessage(["ENCRYPT", result, fileName + extension]);
+        self.postMessage(["ENCRYPT", result, fileName + extension], transferListFor(result));
       }).catch((error) => {
         // Normalize error using provider
         const normalizedError = provider.normalizeError(error);
@@ -161,7 +174,7 @@ self.onmessage = function(e) {
       provider.decrypt(file, password).then((result) => {
         // Remove file extension (last part after final dot)
         const outputFileName = fileName.split('.').slice(0, -1).join('.');
-        self.postMessage(["DECRYPT", result, outputFileName]);
+        self.postMessage(["DECRYPT", result, outputFileName], transferListFor(result));
       }).catch((error) => {
         // Normalize error using provider
         const normalizedError = provider.normalizeError(error);
