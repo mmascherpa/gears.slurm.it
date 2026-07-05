@@ -1,6 +1,9 @@
 import './assets/global-styles.css'
 import './assets/typography.css'
 
+import { registerServiceWorker } from './registerServiceWorker.js'
+registerServiceWorker()
+
 import { createApp } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
 

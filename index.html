@@ -6,7 +6,7 @@
     <!-- Content Security Policy -->
     <meta http-equiv="Content-Security-Policy"
           content="default-src 'self';
-                   script-src 'self' 'unsafe-inline';
+                   script-src 'self';
                    style-src 'self' 'unsafe-inline';
                    img-src 'self' data: blob: https://icons.duckduckgo.com;
                    connect-src 'self';
@@ -40,10 +40,6 @@
   </head>
   <body>
     <div id="app"></div>
-    <script type="module">
-      import { registerServiceWorker } from '/src/registerServiceWorker.js';
-      registerServiceWorker();
-    </script>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
