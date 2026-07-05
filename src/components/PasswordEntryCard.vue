@@ -2,24 +2,13 @@
   <v-card class="password-entry-card" :elevation="isHovered ? 4 : 2">
     <v-card-text class="pa-3">
       <div class="d-flex align-start">
-        <!-- Favicon/Icon -->
+        <!-- Letter avatar (no remote favicon fetch - entry URLs stay private) -->
         <v-avatar
           :color="avatarColor"
           size="40"
           class="mr-3 flex-shrink-0"
         >
-          <v-img
-            v-if="faviconUrl && !faviconError"
-            :src="faviconUrl"
-            @error="faviconError = true"
-          >
-            <template v-slot:placeholder>
-              <span class="text-h6 font-weight-bold text-white">
-                {{ initial }}
-              </span>
-            </template>
-          </v-img>
-          <span v-else class="text-h6 font-weight-bold text-white">
+          <span class="text-h6 font-weight-bold text-white">
             {{ initial }}
           </span>
         </v-avatar>
@@ -197,7 +186,6 @@ const { copyToClipboard } = useClipboard();
 const showPassword = ref(false);
 const showDeleteDialog = ref(false);
 const isHovered = ref(false);
-const faviconError = ref(false);
 let visibilityTimeout = null;
 
 // Cleanup timeout on unmount
@@ -241,17 +229,6 @@ const normalizedUrl = computed(() => {
     return url;
   }
   return `https://${url}`;
-});
-
-const faviconUrl = computed(() => {
-  if (faviconError.value || !props.entry.url) return null;
-  try {
-    const url = new URL(normalizedUrl.value);
-    // Use DuckDuckGo's favicon service (privacy-friendly, CORS-enabled)
-    return `https://icons.duckduckgo.com/ip3/${url.hostname}.ico`;
-  } catch {
-    return null;
-  }
 });
 
 // Methods

@@ -301,7 +301,6 @@ describe('PasswordEntryCard.vue', () => {
 
   describe('initial generation', () => {
     it('uses first character of name uppercase', () => {
-      // Use entry without URL so favicon doesn't load and initial is shown
       const wrapper = createWrapper({
         entry: { ...mockEntry, name: 'amazon', url: '' }
       });
@@ -312,13 +311,24 @@ describe('PasswordEntryCard.vue', () => {
     });
 
     it('defaults to ? for empty name', () => {
-      // Use entry without URL so favicon doesn't load and initial is shown
       const wrapper = createWrapper({
         entry: { ...mockEntry, name: '', url: '' }
       });
 
       // The '?' is in the avatar span
       expect(wrapper.html()).toContain('>?<');
+      wrapper.unmount();
+    });
+
+    it('shows the letter avatar and no remote image for entries with a URL', () => {
+      const wrapper = createWrapper({
+        entry: { ...mockEntry, name: 'github', url: 'https://github.com' }
+      });
+
+      // Entry domains must never be leaked to third-party favicon services
+      expect(wrapper.html()).toContain('>G<');
+      expect(wrapper.html()).not.toContain('duckduckgo');
+      expect(wrapper.html()).not.toMatch(/img[^>]+src="https?:\/\//);
       wrapper.unmount();
     });
   });
