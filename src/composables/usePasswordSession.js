@@ -1,10 +1,14 @@
 import { ref, watch, onBeforeUnmount } from 'vue';
 
 /**
- * Composable for managing password session storage
+ * Composable for managing password session memory
  *
- * Provides session-based password memory for AES encryption/decryption operations.
- * Passwords are stored in sessionStorage (memory-only, auto-clears on tab close).
+ * Provides session-based password memory for AES encryption/decryption
+ * operations. Passwords are held in a module-level in-memory store - never
+ * in sessionStorage or localStorage - so they cannot be read from browser
+ * storage (by extensions, devtools, or injected script) and vanish on
+ * reload or tab close. Within the SPA the store survives route navigation
+ * because modules persist for the lifetime of the page.
  *
  * @param {string} context - Context for storage key ('encrypt' or 'decrypt')
  * @returns {Object} Password session management functions and state
@@ -18,38 +22,40 @@ import { ref, watch, onBeforeUnmount } from 'vue';
  *   autoLoadPassword
  * } = usePasswordSession('encrypt');
  */
-export function usePasswordSession(context = 'encrypt') {
-  // Storage key for this context (encrypt or decrypt)
-  const STORAGE_KEY = `slurm_aes_${context}_session_password`;
 
+// In-memory password store, shared across all component instances
+const passwordStore = new Map();
+
+/**
+ * Clears every remembered password (all contexts)
+ */
+export function clearAllSessionPasswords() {
+  passwordStore.clear();
+}
+
+export function usePasswordSession(context = 'encrypt') {
   // Reactive state
   const rememberPassword = ref(false);
   const isPasswordRemembered = ref(false);
 
   /**
-   * Check if a password exists in sessionStorage
+   * Check if a password exists in the session store
    * Updates isPasswordRemembered state
    *
    * @returns {string|null} Stored password or null
    */
   const checkSessionPassword = () => {
-    try {
-      const stored = sessionStorage.getItem(STORAGE_KEY);
-      const hasPassword = !!stored;
+    const stored = passwordStore.has(context) ? passwordStore.get(context) : null;
+    const hasPassword = !!stored;
 
-      isPasswordRemembered.value = hasPassword;
-      rememberPassword.value = hasPassword;
+    isPasswordRemembered.value = hasPassword;
+    rememberPassword.value = hasPassword;
 
-      return stored;
-    } catch (error) {
-      console.error('Failed to check session password:', error);
-      isPasswordRemembered.value = false;
-      return null;
-    }
+    return stored;
   };
 
   /**
-   * Save password to sessionStorage
+   * Save password to the session store
    * Only saves if rememberPassword is true and password is provided
    *
    * @param {string} password - Password to save
@@ -61,48 +67,31 @@ export function usePasswordSession(context = 'encrypt') {
       return;
     }
 
-    try {
-      sessionStorage.setItem(STORAGE_KEY, password);
-      isPasswordRemembered.value = true;
-    } catch (error) {
-      console.error('Failed to save session password:', error);
-      // QuotaExceededError or other storage errors
-      isPasswordRemembered.value = false;
-    }
+    passwordStore.set(context, password);
+    isPasswordRemembered.value = true;
   };
 
   /**
-   * Retrieve password from sessionStorage
+   * Retrieve password from the session store
    *
    * @returns {string|null} Stored password or null
    */
   const getSessionPassword = () => {
-    try {
-      return sessionStorage.getItem(STORAGE_KEY);
-    } catch (error) {
-      console.error('Failed to get session password:', error);
-      return null;
-    }
+    return passwordStore.has(context) ? passwordStore.get(context) : null;
   };
 
   /**
-   * Clear password from sessionStorage
+   * Clear password from the session store
    * Resets all related state
    */
   const clearSessionPassword = () => {
-    try {
-      sessionStorage.removeItem(STORAGE_KEY);
-    } catch (error) {
-      console.error('Failed to clear session password:', error);
-    } finally {
-      // Always reset state, even if storage operation fails
-      isPasswordRemembered.value = false;
-      rememberPassword.value = false;
-    }
+    passwordStore.delete(context);
+    isPasswordRemembered.value = false;
+    rememberPassword.value = false;
   };
 
   /**
-   * Auto-load password from sessionStorage on component mount
+   * Auto-load password from the session store on component mount
    *
    * @returns {string} Stored password or empty string
    */
@@ -148,8 +137,8 @@ export function usePasswordSession(context = 'encrypt') {
   });
 
   // Note: We intentionally DON'T clear on component unmount
-  // sessionStorage should persist across navigation within the same tab
-  // Browser automatically clears sessionStorage when tab closes
+  // The in-memory store should persist across navigation within the SPA
+  // Reload or tab close discards the module and the passwords with it
 
   return {
     // State

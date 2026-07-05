@@ -1,14 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { usePasswordSession } from '@/composables/usePasswordSession';
+import { usePasswordSession, clearAllSessionPasswords } from '@/composables/usePasswordSession';
 
 describe('usePasswordSession', () => {
   beforeEach(() => {
-    // Clear sessionStorage before each test
+    clearAllSessionPasswords();
     sessionStorage.clear();
   });
 
   afterEach(() => {
-    // Clean up after each test
+    clearAllSessionPasswords();
     sessionStorage.clear();
   });
 
@@ -21,77 +21,72 @@ describe('usePasswordSession', () => {
     });
 
     it('accepts custom context parameter', () => {
-      const { saveSessionPassword, rememberPassword } = usePasswordSession('decrypt');
+      const { saveSessionPassword, getSessionPassword, rememberPassword } = usePasswordSession('decrypt');
 
       rememberPassword.value = true; // Must set this to true for password to be saved
       saveSessionPassword('test-password');
-      expect(sessionStorage.getItem('slurm_aes_decrypt_session_password')).toBe('test-password');
+      expect(getSessionPassword()).toBe('test-password');
     });
+  });
 
-    it('uses correct storage key for encrypt context', () => {
-      const { saveSessionPassword, rememberPassword } = usePasswordSession('encrypt');
+  describe('security: no browser storage', () => {
+    it('never writes the password to sessionStorage or localStorage', () => {
+      const { saveSessionPassword, rememberPassword } = usePasswordSession();
 
       rememberPassword.value = true;
-      saveSessionPassword('encrypt-pass');
-      expect(sessionStorage.getItem('slurm_aes_encrypt_session_password')).toBe('encrypt-pass');
-    });
+      saveSessionPassword('super-secret-password');
 
-    it('uses correct storage key for decrypt context', () => {
-      const { saveSessionPassword, rememberPassword } = usePasswordSession('decrypt');
+      const storageDump = [
+        ...Object.keys(sessionStorage).map(k => `${k}=${sessionStorage.getItem(k)}`),
+        ...Object.keys(localStorage).map(k => `${k}=${localStorage.getItem(k)}`)
+      ].join('|');
 
-      rememberPassword.value = true;
-      saveSessionPassword('decrypt-pass');
-      expect(sessionStorage.getItem('slurm_aes_decrypt_session_password')).toBe('decrypt-pass');
+      expect(storageDump).not.toContain('super-secret-password');
     });
   });
 
   describe('saveSessionPassword', () => {
     it('saves password when rememberPassword is true', () => {
-      const { saveSessionPassword, rememberPassword, isPasswordRemembered } = usePasswordSession();
+      const { saveSessionPassword, getSessionPassword, rememberPassword, isPasswordRemembered } = usePasswordSession();
 
       rememberPassword.value = true;
       saveSessionPassword('my-password');
 
-      expect(sessionStorage.getItem('slurm_aes_encrypt_session_password')).toBe('my-password');
+      expect(getSessionPassword()).toBe('my-password');
       expect(isPasswordRemembered.value).toBe(true);
     });
 
     it('does not save password when rememberPassword is false', () => {
-      const { saveSessionPassword, rememberPassword } = usePasswordSession();
+      const { saveSessionPassword, getSessionPassword, rememberPassword } = usePasswordSession();
 
       rememberPassword.value = false;
       saveSessionPassword('my-password');
 
-      expect(sessionStorage.getItem('slurm_aes_encrypt_session_password')).toBeNull();
+      expect(getSessionPassword()).toBeNull();
     });
 
     it('clears password when rememberPassword is false', () => {
-      const { saveSessionPassword, rememberPassword } = usePasswordSession();
+      const { saveSessionPassword, getSessionPassword, rememberPassword } = usePasswordSession();
 
       // First save a password
       rememberPassword.value = true;
       saveSessionPassword('my-password');
-      expect(sessionStorage.getItem('slurm_aes_encrypt_session_password')).toBe('my-password');
+      expect(getSessionPassword()).toBe('my-password');
 
       // Then uncheck remember and try to save
       rememberPassword.value = false;
       saveSessionPassword('different-password');
-      expect(sessionStorage.getItem('slurm_aes_encrypt_session_password')).toBeNull();
+      expect(getSessionPassword()).toBeNull();
     });
 
     it('does not save empty password', () => {
-      const { saveSessionPassword, rememberPassword } = usePasswordSession();
+      const { saveSessionPassword, getSessionPassword, rememberPassword } = usePasswordSession();
 
       rememberPassword.value = true;
       saveSessionPassword('');
 
-      expect(sessionStorage.getItem('slurm_aes_encrypt_session_password')).toBeNull();
+      expect(getSessionPassword()).toBeNull();
     });
-
-    // Note: These error handling tests cannot be reliably tested in jsdom because
-    // jsdom's sessionStorage implementation doesn't use overridable methods.
-    // Error handling is verified through code review - see src/composables/usePasswordSession.js:64-71
-    // The try/catch block properly catches errors and sets isPasswordRemembered.value = false
   });
 
   describe('getSessionPassword', () => {
@@ -109,34 +104,18 @@ describe('usePasswordSession', () => {
 
       expect(getSessionPassword()).toBeNull();
     });
-
-    it('handles sessionStorage read errors', () => {
-      const { getSessionPassword } = usePasswordSession();
-
-      // Mock sessionStorage.getItem to throw error
-      const originalGetItem = sessionStorage.getItem;
-      sessionStorage.getItem = vi.fn(() => {
-        throw new Error('Read error');
-      });
-
-      // Should return null when error occurs
-      expect(getSessionPassword()).toBeNull();
-
-      // Restore
-      sessionStorage.getItem = originalGetItem;
-    });
   });
 
   describe('clearSessionPassword', () => {
-    it('removes password from sessionStorage', () => {
-      const { saveSessionPassword, clearSessionPassword, rememberPassword } = usePasswordSession();
+    it('removes the stored password', () => {
+      const { saveSessionPassword, getSessionPassword, clearSessionPassword, rememberPassword } = usePasswordSession();
 
       rememberPassword.value = true;
       saveSessionPassword('my-password');
-      expect(sessionStorage.getItem('slurm_aes_encrypt_session_password')).toBe('my-password');
+      expect(getSessionPassword()).toBe('my-password');
 
       clearSessionPassword();
-      expect(sessionStorage.getItem('slurm_aes_encrypt_session_password')).toBeNull();
+      expect(getSessionPassword()).toBeNull();
     });
 
     it('resets isPasswordRemembered state', () => {
@@ -160,55 +139,36 @@ describe('usePasswordSession', () => {
       clearSessionPassword();
       expect(rememberPassword.value).toBe(false);
     });
-
-    it('handles sessionStorage removal errors gracefully', () => {
-      const { clearSessionPassword, isPasswordRemembered } = usePasswordSession();
-
-      // Mock sessionStorage.removeItem to throw error
-      const originalRemoveItem = sessionStorage.removeItem;
-      sessionStorage.removeItem = vi.fn(() => {
-        throw new Error('Remove error');
-      });
-
-      clearSessionPassword();
-
-      // State should still be reset even if storage operation fails
-      expect(isPasswordRemembered.value).toBe(false);
-
-      // Restore
-      sessionStorage.removeItem = originalRemoveItem;
-    });
   });
 
   describe('autoLoadPassword', () => {
-    it('loads existing password from sessionStorage', () => {
-      const { autoLoadPassword, rememberPassword } = usePasswordSession();
+    it('loads an existing password saved by another instance', () => {
+      const first = usePasswordSession();
+      first.rememberPassword.value = true;
+      first.saveSessionPassword('stored-password');
 
-      // Manually set password in sessionStorage
-      sessionStorage.setItem('slurm_aes_encrypt_session_password', 'stored-password');
-
-      const loaded = autoLoadPassword();
+      const second = usePasswordSession();
+      const loaded = second.autoLoadPassword();
 
       expect(loaded).toBe('stored-password');
-      expect(rememberPassword.value).toBe(true);
+      expect(second.rememberPassword.value).toBe(true);
     });
 
     it('returns empty string when no password exists', () => {
       const { autoLoadPassword } = usePasswordSession();
 
-      const loaded = autoLoadPassword();
-
-      expect(loaded).toBe('');
+      expect(autoLoadPassword()).toBe('');
     });
 
     it('updates isPasswordRemembered state', () => {
-      const { autoLoadPassword, isPasswordRemembered } = usePasswordSession();
+      const first = usePasswordSession();
+      first.rememberPassword.value = true;
+      first.saveSessionPassword('stored-password');
 
-      sessionStorage.setItem('slurm_aes_encrypt_session_password', 'stored-password');
+      const second = usePasswordSession();
+      second.autoLoadPassword();
 
-      autoLoadPassword();
-
-      expect(isPasswordRemembered.value).toBe(true);
+      expect(second.isPasswordRemembered.value).toBe(true);
     });
   });
 
@@ -216,22 +176,21 @@ describe('usePasswordSession', () => {
     // Note: Vue watchers created in composables outside of component context
     // don't trigger reliably in vitest. The watcher behavior is tested implicitly
     // through clearSessionPassword tests and verified in actual component usage.
-    // See src/composables/usePasswordSession.js:118-122 for watcher implementation.
 
     it('does not save password automatically when checked (requires explicit save)', async () => {
-      const { rememberPassword } = usePasswordSession();
+      const { rememberPassword, getSessionPassword } = usePasswordSession();
 
       rememberPassword.value = true;
 
       await new Promise(resolve => setTimeout(resolve, 0));
 
       // Password should not be saved just by checking the box
-      expect(sessionStorage.getItem('slurm_aes_encrypt_session_password')).toBeNull();
+      expect(getSessionPassword()).toBeNull();
     });
   });
 
   describe('context isolation', () => {
-    it('encrypt and decrypt contexts use separate storage keys', () => {
+    it('encrypt and decrypt contexts store passwords independently', () => {
       const encryptSession = usePasswordSession('encrypt');
       const decryptSession = usePasswordSession('decrypt');
 
@@ -241,8 +200,8 @@ describe('usePasswordSession', () => {
       encryptSession.saveSessionPassword('encrypt-pass');
       decryptSession.saveSessionPassword('decrypt-pass');
 
-      expect(sessionStorage.getItem('slurm_aes_encrypt_session_password')).toBe('encrypt-pass');
-      expect(sessionStorage.getItem('slurm_aes_decrypt_session_password')).toBe('decrypt-pass');
+      expect(encryptSession.getSessionPassword()).toBe('encrypt-pass');
+      expect(decryptSession.getSessionPassword()).toBe('decrypt-pass');
     });
 
     it('clearing one context does not affect the other', () => {
@@ -257,8 +216,25 @@ describe('usePasswordSession', () => {
 
       encryptSession.clearSessionPassword();
 
-      expect(sessionStorage.getItem('slurm_aes_encrypt_session_password')).toBeNull();
-      expect(sessionStorage.getItem('slurm_aes_decrypt_session_password')).toBe('decrypt-pass');
+      expect(encryptSession.getSessionPassword()).toBeNull();
+      expect(decryptSession.getSessionPassword()).toBe('decrypt-pass');
+    });
+  });
+
+  describe('clearAllSessionPasswords', () => {
+    it('clears every context at once', () => {
+      const encryptSession = usePasswordSession('encrypt');
+      const decryptSession = usePasswordSession('decrypt');
+
+      encryptSession.rememberPassword.value = true;
+      decryptSession.rememberPassword.value = true;
+      encryptSession.saveSessionPassword('encrypt-pass');
+      decryptSession.saveSessionPassword('decrypt-pass');
+
+      clearAllSessionPasswords();
+
+      expect(encryptSession.getSessionPassword()).toBeNull();
+      expect(decryptSession.getSessionPassword()).toBeNull();
     });
   });
 });
