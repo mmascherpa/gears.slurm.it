@@ -23,6 +23,14 @@ export function getServiceWorkerRegistration() {
  * Register the service worker and set up update checking
  */
 export function registerServiceWorker() {
+  // Skip in dev: the cache-first service worker would serve stale modules
+  // and index.html, fighting Vite's HMR. Offline support is a build concern.
+  if (import.meta.env.DEV) {
+    debugLog('[SW] Skipping service worker registration in development');
+    registrationPromise = Promise.resolve(null);
+    return;
+  }
+
   if (!('serviceWorker' in navigator)) {
     debugWarn('[SW] Service workers are not supported in this browser');
     registrationPromise = Promise.resolve(null);
