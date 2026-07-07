@@ -296,11 +296,11 @@ export function useServiceWorkerUpdate() {
         return;
       }
 
-      console.log('[SW Update] Waiting for service worker registration...');
       registration = await registrationPromise;
 
       if (!registration) {
-        console.warn('[SW Update] Service worker registration failed');
+        // Registration is intentionally skipped in dev and on unsupported
+        // browsers - nothing to monitor
         return;
       }
 

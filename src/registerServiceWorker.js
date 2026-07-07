@@ -24,9 +24,11 @@ export function getServiceWorkerRegistration() {
  */
 export function registerServiceWorker() {
   // Skip in dev: the cache-first service worker would serve stale modules
-  // and index.html, fighting Vite's HMR. Offline support is a build concern.
-  if (import.meta.env.DEV) {
-    debugLog('[SW] Skipping service worker registration in development');
+  // and index.html, fighting Vite's HMR. Test offline behavior against the
+  // production build (npm run build && npm run preview), or opt in
+  // explicitly with VITE_DEV_SW=1 npm run dev.
+  if (import.meta.env.DEV && !import.meta.env.VITE_DEV_SW) {
+    debugLog('[SW] Skipping service worker registration in development (set VITE_DEV_SW=1 to enable)');
     registrationPromise = Promise.resolve(null);
     return;
   }
