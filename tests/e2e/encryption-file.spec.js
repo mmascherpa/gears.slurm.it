@@ -302,4 +302,34 @@ test.describe('AES File Decryption', () => {
     // Button should be disabled without password
     expect(isDisabled).toBeTruthy();
   });
+
+  test('should accept all three encrypted file extensions', async ({ page }) => {
+    await page.goto('/#/decrypt');
+    await page.waitForLoadState('networkidle');
+
+    const fileInput = page.locator('input[type="file"]');
+    const accept = await fileInput.getAttribute('accept');
+
+    expect(accept).toContain('.aes');
+    expect(accept).toContain('.enc');
+    expect(accept).toContain('.age');
+  });
+
+  test('should auto-select WebCrypto algorithm for .enc files', async ({ page }) => {
+    await page.goto('/#/decrypt');
+    await page.waitForLoadState('networkidle');
+
+    // Upload a .enc file (content is irrelevant for algorithm detection)
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles({
+      name: 'document.enc',
+      mimeType: 'application/octet-stream',
+      buffer: Buffer.from([1, 2, 3, 4])
+    });
+
+    await page.waitForTimeout(500);
+
+    const webCryptoRadio = page.locator('input[type="radio"][value="webCrypto"]');
+    await expect(webCryptoRadio).toBeChecked();
+  });
 });

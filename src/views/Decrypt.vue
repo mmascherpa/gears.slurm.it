@@ -299,8 +299,8 @@
         <v-card-text class="pa-4">
           <FileUploadWithValidation
             v-model="encryptedFile"
-            label="Select encrypted file (.aes or .age)"
-            accept=".aes,.age"
+            label="Select encrypted file (.aes, .enc, or .age)"
+            accept=".aes,.enc,.age"
             button-text="Decrypt"
             button-icon="mdi-lock-open"
             :disabled="isEncryptedTextPopulated"
