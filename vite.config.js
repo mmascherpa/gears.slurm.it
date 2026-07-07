@@ -10,7 +10,13 @@ export default defineConfig({
     vue(),
     webfontDownload([
       'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap'
-    ])
+    ], {
+      // The async media="print" + inline onload trick violates the CSP
+      // (script-src has no 'unsafe-inline'), leaving the stylesheet stuck
+      // on print media. The CSS is small and served locally, so load it
+      // as a normal blocking stylesheet instead.
+      async: false
+    })
   ],
   build: {
     outDir: 'deploy/', // directory to output build files
