@@ -180,8 +180,10 @@ export class AgeWorkerProvider {
     }
 
     // Map rage-specific errors to standard codes
+    // rage-wasm reports a wrong passphrase as plain 'decryption error'
     if (lowerError.includes('wrong password') ||
         lowerError.includes('incorrect passphrase') ||
+        lowerError.includes('decryption error') ||
         lowerError.includes('decryption failed') ||
         lowerError.includes('failed to decrypt')) {
       return {

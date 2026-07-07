@@ -203,6 +203,15 @@ describe('AgeWorkerProvider', () => {
       expect(error.userMessage).toContain('Incorrect password')
     })
 
+    it('should normalize the exact error rage-wasm throws for a wrong passphrase', () => {
+      // rage-wasm rejects with Error('decryption error'), which decrypt()
+      // enhances to 'decrypt failed: decryption error' before normalization
+      const error = provider.normalizeError(new Error('decrypt failed: decryption error'))
+
+      expect(error.code).toBe('WRONG_PASSWORD')
+      expect(error.userMessage).toContain('Incorrect password')
+    })
+
     it('should normalize invalid format error', () => {
       const error = provider.normalizeError('invalid file format')
 
