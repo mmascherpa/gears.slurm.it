@@ -4,10 +4,11 @@
  * Manages Web Worker lifecycle, handles multi-algorithm encryption/decryption operations,
  * and provides consistent error handling across all encryption components.
  *
- * Supports three encryption algorithms:
+ * Supports four encryption algorithms:
  * - jsAesCrypt: AES-256-CBC compatible with AES Crypt format (.aes files)
  * - webCrypto: Browser-native AES-256-GCM (.enc files)
  * - age: Modern age encryption format (.age files)
+ * - openpgp: OpenPGP password-based encryption compatible with GnuPG (.gpg files)
  *
  * Automatically terminates worker on component unmount to prevent memory leaks.
  *
@@ -71,7 +72,7 @@ export function useCryptoWorker(onSuccess, onError, options = {}) {
    */
   const setupWorker = (algorithm) => {
     const needsClassicWorker = algorithm === 'jsAesCrypt';
-    const needsModernWorker = algorithm === 'webCrypto' || algorithm === 'age';
+    const needsModernWorker = algorithm === 'webCrypto' || algorithm === 'age' || algorithm === 'openpgp';
 
     // Determine if we need to switch worker types
     const shouldSwitchWorker = worker.value && (
@@ -93,7 +94,7 @@ export function useCryptoWorker(onSuccess, onError, options = {}) {
         worker.value = new Worker('/worker.js');
         currentWorkerType = 'classic';
       } else {
-        // Use ES module worker for webCrypto and age (supports rage-wasm)
+        // Use ES module worker for webCrypto, age and openpgp (supports rage-wasm)
         worker.value = new Worker(
           new URL('../workers/cryptoWorker.js', import.meta.url),
           { type: 'module' }
@@ -126,7 +127,7 @@ export function useCryptoWorker(onSuccess, onError, options = {}) {
    * @param {Blob|File} fileData - Data to encrypt
    * @param {string} password - Encryption password
    * @param {string} fileName - Original file name
-   * @param {string} algorithm - Algorithm to use ('jsAesCrypt', 'webCrypto', or 'age')
+   * @param {string} algorithm - Algorithm to use ('jsAesCrypt', 'webCrypto', 'age', or 'openpgp')
    */
   const encrypt = (fileData, password, fileName, algorithm = providerType) => {
     if (!fileData || !password) {
@@ -144,7 +145,7 @@ export function useCryptoWorker(onSuccess, onError, options = {}) {
    * @param {Blob|File} fileData - Data to decrypt
    * @param {string} password - Decryption password
    * @param {string} fileName - Encrypted file name
-   * @param {string} algorithm - Algorithm to use ('jsAesCrypt', 'webCrypto', or 'age')
+   * @param {string} algorithm - Algorithm to use ('jsAesCrypt', 'webCrypto', 'age', or 'openpgp')
    */
   const decrypt = (fileData, password, fileName, algorithm = providerType) => {
     if (!fileData || !password) {

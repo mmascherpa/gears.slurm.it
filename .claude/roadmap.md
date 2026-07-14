@@ -11,8 +11,9 @@ This file tracks feature planning, completed work, and future development priori
 - ✅ **Base64 Encoder** - Text and file encoding with clipboard operations
 - ✅ **Base64 Decoder** - Text and file decoding with clipboard operations
 - ✅ **QR Code Generator** - Generate QR codes for text/URLs, WiFi, contacts (vCard), email, and SMS with customizable size and error correction
-- ✅ **File Encryption** - Multi-algorithm encryption (AES-256, Age) with CSV preview
-- ✅ **File Decryption** - Multi-algorithm decryption (AES-256, Age) with text/CSV preview (up to 8MB inline)
+- ✅ **File Encryption** - Multi-algorithm encryption (AES-256, Age, OpenPGP) with CSV preview
+- ✅ **File Decryption** - Multi-algorithm decryption (AES-256, Age, OpenPGP) with text/CSV preview (up to 8MB inline)
+- ✅ **OpenPGP Encryption** (2026-07-13) - gpg-compatible password-based encryption (.gpg) via OpenPGP.js, interoperable with `gpg -c`/`gpg -d`; decrypts binary .gpg/.pgp and ASCII-armored .asc
 - ✅ **Text Encryption** - Quick text encryption with password protection and auto-encrypt
 - ✅ **Text Decryption** - Quick text decryption with password protection
 - ✅ **Password Generator** - Cryptographically secure random password generation with strength indicator
@@ -23,7 +24,7 @@ This file tracks feature planning, completed work, and future development priori
 - ✅ **Three Theme System** - Default (light), Dark, and Slurm (retro cyan) themes with persistence
 
 ### Known Issues
-- None currently identified
+- ⚠️ GnuPG 2.3+ installations that default to GnuPG's proprietary OCB mode produce symmetric files OpenPGP.js cannot decrypt in-browser; workaround (`gpg --rfc4880 -c`) is surfaced in the UI error message and Learn More panels
 
 ### Technical Debt
 - 📝 No automated testing infrastructure (no Jest/Vitest)

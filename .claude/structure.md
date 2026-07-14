@@ -7,7 +7,7 @@ This file documents the file organization, component responsibilities, and archi
 **Total Files**: 105 (+3 from passphrase generation)
 **Total Lines of Code**: ~6,600 lines (+1,200 from passphrase implementation)
 **Tool Components**: 5 (Base64Encode, Base64Decode, Encrypt, Decrypt, PasswordGenerator)
-**Encryption Algorithms**: 3 (jsAesCrypt AES-256-CBC, WebCrypto AES-256-GCM, Age encryption)
+**Encryption Algorithms**: 4 (jsAesCrypt AES-256-CBC, WebCrypto AES-256-GCM, Age encryption, OpenPGP AES-256 SEIPDv1)
 
 ---
 
@@ -87,8 +87,8 @@ src/
 │   └── totp.js              # TOTP code generation utilities (185 lines)
 ├── views/                  # Tool page components (ALL PAGES MOVED HERE)
 │   ├── About.vue            # About page (178 lines)
-│   ├── Decrypt.vue          # Multi-algorithm decryption (jsAesCrypt/WebCrypto/Age) (750 lines)
-│   ├── Encrypt.vue          # Multi-algorithm encryption (jsAesCrypt/WebCrypto/Age) (550 lines)
+│   ├── Decrypt.vue          # Multi-algorithm decryption (jsAesCrypt/WebCrypto/Age/OpenPGP) (750 lines)
+│   ├── Encrypt.vue          # Multi-algorithm encryption (jsAesCrypt/WebCrypto/Age/OpenPGP) (550 lines)
 │   ├── Base64Decode.vue     # Base64 decoder page (226 lines)
 │   ├── Base64Encode.vue     # Base64 encoder page (252 lines)
 │   ├── HexViewer.vue        # Binary file hex viewer (689 lines)
@@ -101,6 +101,7 @@ src/
 │   └── providers/          # ES module provider implementations
 │       ├── AgeWorkerProvider.js        # Age encryption via rage-wasm (200 lines)
 │       ├── JsAesCryptWorkerProvider.js # Fallback jsAesCrypt (not used, 175 lines)
+│       ├── OpenPgpWorkerProvider.js    # OpenPGP via OpenPGP.js, gpg-compatible (280 lines)
 │       └── WebCryptoWorkerProvider.js  # Browser-native AES-GCM (280 lines)
 └── assets/                 # Static assets and utilities
     ├── base.css            # Global CSS variables
@@ -174,7 +175,7 @@ public/
 
 **Worker Architecture**:
 - **Classic Worker** (`public/worker.js`) - For jsAesCrypt (.aes files), uses `importScripts()` to load CDN libraries
-- **ES Module Worker** (`src/workers/cryptoWorker.js`) - For WebCrypto/Age (.enc/.age files), bundled by Vite with rage-wasm
+- **ES Module Worker** (`src/workers/cryptoWorker.js`) - For WebCrypto/Age/OpenPGP (.enc/.age/.gpg files), bundled by Vite with rage-wasm and OpenPGP.js
 - **Auto-switching** - `useAESWorker` composable terminates and recreates workers when switching algorithm types
 
 ### External Library (`/jsAesCrypt-main/`)

@@ -146,6 +146,55 @@
           Decrypts binary and ASCII-armored .age files. Maximum supported work factor: 18 (same as age CLI default).
         </div>
       </template>
+
+      <!-- OpenPGP Content -->
+      <template v-else-if="preferences.selectedAlgorithm === 'openpgp'">
+        <p class="mb-2">
+          <strong>OpenPGP decryption</strong> reverses OpenPGP password-based encryption, converting encrypted
+          .gpg files back to their original form using the passphrase.
+        </p>
+        <ul class="ml-4 mb-2">
+          <li><strong>Password required</strong> - You must use the EXACT same password that was used to encrypt the data</li>
+          <li><strong>Case-sensitive</strong> - "Password123" and "password123" are different passwords</li>
+          <li><strong>GnuPG-compatible</strong> - Decrypts files created with <code>gpg -c</code> (standard CFB+MDC format)</li>
+          <li><strong>Armor format</strong> - Supports both binary (.gpg/.pgp) and ASCII-armored (.asc) files</li>
+        </ul>
+        <EducationalAlert title="GnuPG OCB Mode Limitation" type="info" spacing="mt-3">
+          Some GnuPG 2.3+ installations encrypt with GnuPG's proprietary OCB mode by default, which browsers cannot read.
+          If a gpg-created file fails to decrypt here, re-encrypt it with <code>gpg --rfc4880 -c file</code>
+          to force the standard format.
+        </EducationalAlert>
+        <EducationalAlert title="Password Must Match Exactly" type="warning" spacing="mt-3">
+          The decryption password must be identical to the encryption password. Even a single character
+          difference will result in failed decryption. There is no "close enough" - it must be exact.
+        </EducationalAlert>
+        <p class="mt-3 mb-2">
+          <strong>Common use cases:</strong> Decrypting files received from gpg users, opening PGP-encrypted
+          archives and backups, cross-platform encrypted file exchange.
+        </p>
+
+        <!-- Reference Links -->
+        <div class="text-caption text-medium-emphasis mt-3">
+          <strong>Learn more:</strong>
+          <a href="https://datatracker.ietf.org/doc/html/rfc9580" target="_blank" rel="noopener noreferrer" class="text-info">
+            RFC 9580: OpenPGP
+          </a>
+          •
+          <a href="https://gnupg.org" target="_blank" rel="noopener noreferrer" class="text-info">
+            GnuPG
+          </a>
+          •
+          <a href="https://github.com/openpgpjs/openpgpjs" target="_blank" rel="noopener noreferrer" class="text-info">
+            OpenPGP.js
+          </a>
+        </div>
+
+        <!-- Technical Details -->
+        <div class="text-caption text-medium-emphasis mt-2">
+          <strong>Technical:</strong> Uses OpenPGP.js v6 with AES-256 in CFB mode plus MDC integrity protection (SEIPDv1).
+          Decrypts binary .gpg/.pgp and ASCII-armored .asc files created with gpg -c (standard format).
+        </div>
+      </template>
     </LearnMorePanel>
 
     <!-- Form -->
@@ -191,6 +240,16 @@
                 </div>
               </template>
             </v-radio>
+            <v-radio
+              value="openpgp"
+            >
+              <template #label>
+                <div>
+                  <div class="font-weight-medium">OpenPGP (GnuPG)</div>
+                  <div class="text-caption text-medium-emphasis">Compatible with gpg -c / gpg -d (.gpg files)</div>
+                </div>
+              </template>
+            </v-radio>
           </v-radio-group>
 
           <v-alert
@@ -202,6 +261,18 @@
           >
             Age encrypted files (.age) are compatible with the
             <a href="https://age-encryption.org" target="_blank" class="text-info">age CLI tool</a>
+          </v-alert>
+
+          <v-alert
+            v-if="preferences.selectedAlgorithm === 'openpgp'"
+            type="info"
+            variant="tonal"
+            density="compact"
+            class="mt-2"
+          >
+            Decrypts files created with the
+            <a href="https://gnupg.org" target="_blank" class="text-info">gpg CLI tool</a>
+            (gpg -c, standard format) - binary .gpg/.pgp and armored .asc
           </v-alert>
         </v-card-text>
       </v-card>
@@ -299,8 +370,8 @@
         <v-card-text class="pa-4">
           <FileUploadWithValidation
             v-model="encryptedFile"
-            label="Select encrypted file (.aes, .enc, or .age)"
-            accept=".aes,.enc,.age"
+            label="Select encrypted file (.aes, .enc, .age, .gpg, .pgp, or .asc)"
+            accept=".aes,.enc,.age,.gpg,.pgp,.asc"
             button-text="Decrypt"
             button-icon="mdi-lock-open"
             :disabled="isEncryptedTextPopulated"
@@ -514,7 +585,8 @@ export default {
       const titles = {
         jsAesCrypt: 'How Does AES Decryption Work?',
         webCrypto: 'How Does WebCrypto Decryption Work?',
-        age: 'How Does Age Decryption Work?'
+        age: 'How Does Age Decryption Work?',
+        openpgp: 'How Does OpenPGP Decryption Work?'
       };
       return titles[preferences.selectedAlgorithm] || 'How Does Decryption Work?';
     });
@@ -794,6 +866,8 @@ export default {
           preferences.selectedAlgorithm = 'jsAesCrypt';
         } else if (newVal.name.endsWith('.enc')) {
           preferences.selectedAlgorithm = 'webCrypto';
+        } else if (newVal.name.endsWith('.gpg') || newVal.name.endsWith('.pgp') || newVal.name.endsWith('.asc')) {
+          preferences.selectedAlgorithm = 'openpgp';
         }
       }
 

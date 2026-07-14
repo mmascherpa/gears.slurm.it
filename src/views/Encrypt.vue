@@ -146,6 +146,55 @@
           Produces binary .age files. Fully compatible with age/rage CLI tools (both use work factor 18 default).
         </div>
       </template>
+
+      <!-- OpenPGP Content -->
+      <template v-else-if="preferences.selectedAlgorithm === 'openpgp'">
+        <p class="mb-2">
+          <strong>OpenPGP</strong> is the IETF-standardized encryption format (RFC 9580) used by GnuPG and PGP
+          since the 1990s. This tool uses OpenPGP.js, the JavaScript implementation maintained by Proton.
+        </p>
+        <ul class="ml-4 mb-2">
+          <li><strong>AES-256</strong> - Strong symmetric encryption with integrity protection (MDC)</li>
+          <li><strong>Password-based</strong> - Your password is stretched into a key via S2K derivation</li>
+          <li><strong>GnuPG-compatible</strong> - Decrypt files with <code>gpg -d</code> on Linux, macOS or Windows</li>
+          <li><strong>Standardized</strong> - A widely supported format, ideal for long-term archival</li>
+        </ul>
+        <EducationalAlert title="Important Limitation" type="warning" spacing="mt-3">
+          If you forget your password, your encrypted data <strong>cannot be recovered</strong>.
+          There is no "reset password" option - the password IS the key.
+        </EducationalAlert>
+        <EducationalAlert title="GnuPG Interoperability" type="info" spacing="mt-3">
+          Files encrypted here can be decrypted with any GnuPG 2.x using <code>gpg -d file.gpg</code>.
+          Some GnuPG 2.3+ installations encrypt with GnuPG's proprietary OCB mode by default, which browsers cannot read -
+          if a gpg-created file fails to decrypt here, re-encrypt it with <code>gpg --rfc4880 -c file</code>.
+        </EducationalAlert>
+        <p class="mt-3 mb-2">
+          <strong>Common use cases:</strong> Exchanging encrypted files with gpg users, decrypting on servers
+          in scripts, long-term archival in a standardized format.
+        </p>
+
+        <!-- Reference Links -->
+        <div class="text-caption text-medium-emphasis mt-3">
+          <strong>Learn more:</strong>
+          <a href="https://datatracker.ietf.org/doc/html/rfc9580" target="_blank" rel="noopener noreferrer" class="text-info">
+            RFC 9580: OpenPGP
+          </a>
+          •
+          <a href="https://gnupg.org" target="_blank" rel="noopener noreferrer" class="text-info">
+            GnuPG
+          </a>
+          •
+          <a href="https://github.com/openpgpjs/openpgpjs" target="_blank" rel="noopener noreferrer" class="text-info">
+            OpenPGP.js
+          </a>
+        </div>
+
+        <!-- Technical Details -->
+        <div class="text-caption text-medium-emphasis mt-2">
+          <strong>Technical:</strong> Uses OpenPGP.js v6 with AES-256 in CFB mode plus MDC integrity protection (SEIPDv1)
+          and iterated+salted S2K key derivation. Produces binary .gpg files compatible with gpg -c / gpg -d.
+        </div>
+      </template>
     </LearnMorePanel>
 
     <!-- Error Alert -->
@@ -197,6 +246,16 @@
               </div>
             </template>
           </v-radio>
+          <v-radio
+            value="openpgp"
+          >
+            <template #label>
+              <div>
+                <div class="font-weight-medium">OpenPGP (GnuPG)</div>
+                <div class="text-caption text-medium-emphasis">Compatible with gpg -c / gpg -d (.gpg files)</div>
+              </div>
+            </template>
+          </v-radio>
         </v-radio-group>
 
         <v-alert
@@ -208,6 +267,18 @@
         >
           Age encrypted files (.age) are compatible with the
           <a href="https://age-encryption.org" target="_blank" class="text-info">age CLI tool</a>
+        </v-alert>
+
+        <v-alert
+          v-if="preferences.selectedAlgorithm === 'openpgp'"
+          type="info"
+          variant="tonal"
+          density="compact"
+          class="mt-2"
+        >
+          OpenPGP encrypted files (.gpg) can be decrypted with the
+          <a href="https://gnupg.org" target="_blank" class="text-info">gpg CLI tool</a>
+          (gpg -d file.gpg)
         </v-alert>
       </v-card-text>
     </v-card>
@@ -457,7 +528,8 @@ export default {
       const titles = {
         jsAesCrypt: 'What is AES Encryption?',
         webCrypto: 'What is WebCrypto AES Encryption?',
-        age: 'What is Age Encryption?'
+        age: 'What is Age Encryption?',
+        openpgp: 'What is OpenPGP Encryption?'
       };
       return titles[preferences.selectedAlgorithm] || 'What is Encryption?';
     });

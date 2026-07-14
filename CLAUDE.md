@@ -4,10 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Slurm Tools** - Privacy-focused Progressive Web Application for browser-based cryptography and utilities (Base64 encoding/decoding, QR code generation, AES/Age file encryption/decryption, metadata editing). 100% client-side with full offline functionality.
+**Slurm Tools** - Privacy-focused Progressive Web Application for browser-based cryptography and utilities (Base64 encoding/decoding, QR code generation, AES/Age/OpenPGP file encryption/decryption, metadata editing). 100% client-side with full offline functionality.
 
 **Stack**: Vue 3, Vuetify, Vite
-**Encryption**: Supports AES-256 (via jsAesCrypt/WebCrypto) and Age encryption (via rage-wasm)
+**Encryption**: Supports AES-256 (via jsAesCrypt/WebCrypto), Age encryption (via rage-wasm), and OpenPGP password-based encryption (via OpenPGP.js)
 
 ## Essential Commands
 
@@ -38,7 +38,7 @@ npm run generate-icons     # Generate PNG icons from SVG
 
 **Worker-Based Parallelism**:
 - **Classic Web Worker** (`public/worker.js`) - jsAesCrypt encryption/decryption (locally vendored libraries)
-- **ES Module Web Worker** (`src/workers/cryptoWorker.js`) - WebCrypto/Age encryption (Vite-bundled with rage-wasm)
+- **ES Module Web Worker** (`src/workers/cryptoWorker.js`) - WebCrypto/Age/OpenPGP encryption (Vite-bundled with rage-wasm and OpenPGP.js)
 - **Service Worker** (`public/sw.js`) - Offline caching with cache-first strategy
 
 **Note**: The application uses two different worker types because:
@@ -61,6 +61,7 @@ self.postMessage(["ERROR", errorMessage, operationType])
 - **jsAesCrypt** - AES-256-CBC (.aes files) compatible with AES Crypt format
 - **WebCrypto** - Browser-native AES-256-GCM (.enc files)
 - **Age** - Modern age encryption (.age files) compatible with age CLI tools
+- **OpenPGP** - Password-based OpenPGP encryption (.gpg files) compatible with GnuPG (`gpg -c`/`gpg -d`); also decrypts .pgp and ASCII-armored .asc. Pins SEIPDv1 (no AEAD) for gpg compatibility; GnuPG's proprietary OCB-mode files are not readable in-browser (workaround: `gpg --rfc4880 -c`)
 
 Each provider implements: `encrypt()`, `decrypt()`, `getInfo()`, `normalizeError()`, `validatePassword()`
 
@@ -70,13 +71,14 @@ Each provider implements: `encrypt()`, `decrypt()`, `getInfo()`, `normalizeError
 2. **Service Worker**: `public/sw.js` (offline caching, auto-updated on build)
 3. **Web Workers**:
    - **Classic Worker**: `public/worker.js` (jsAesCrypt operations only)
-   - **ES Module Worker**: `src/workers/cryptoWorker.js` (WebCrypto/Age operations)
+   - **ES Module Worker**: `src/workers/cryptoWorker.js` (WebCrypto/Age/OpenPGP operations)
 4. **Encryption Providers**:
    - **Classic Worker Provider** (in `public/providers/`):
      - `JsAesCryptWorkerProvider.js` - AES-256-CBC (.aes files)
    - **ES Module Worker Providers** (in `src/workers/providers/`):
      - `WebCryptoWorkerProvider.js` - Browser-native AES-256-GCM (.enc files)
      - `AgeWorkerProvider.js` - Modern age encryption (.age files)
+     - `OpenPgpWorkerProvider.js` - OpenPGP password-based encryption (.gpg files, gpg-compatible)
 
 ### Key Constraints
 
@@ -131,4 +133,4 @@ See [roadmap.md](.claude/roadmap.md) for detailed progress and next steps.
 
 ---
 
-**Last Updated**: 2026-01-12 (Completed Age encryption integration with dual-worker architecture)
+**Last Updated**: 2026-07-13 (Added OpenPGP password-based encryption via OpenPGP.js)

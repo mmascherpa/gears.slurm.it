@@ -21,6 +21,7 @@
     "@kanru/rage-wasm": "^0.3.2",
     "exifr": "^7.1.3",
     "lucide-vue-next": "^0.553.0",
+    "openpgp": "^6.3.1",
     "piexifjs": "^1.0.6",
     "qrcode": "^1.5.4",
     "vue": "^3.3.11",

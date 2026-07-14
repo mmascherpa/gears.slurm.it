@@ -1,5 +1,5 @@
 /**
- * Web Worker for AES and Age Encryption/Decryption
+ * Web Worker for AES, Age and OpenPGP Encryption/Decryption
  * Runs crypto operations on background thread to avoid blocking main UI
  *
  * This is an ES module version that Vite can properly bundle with all dependencies.
@@ -21,8 +21,16 @@
 // Import rage-wasm as ES module (Vite will bundle this properly)
 import * as rageWasm from '@kanru/rage-wasm';
 
+// OpenPGP.js (pure JS, no WASM needed for symmetric operations)
+import * as openpgp from 'openpgp';
+
 import { WebCryptoWorkerProvider } from './providers/WebCryptoWorkerProvider.js';
 import { AgeWorkerProvider } from './providers/AgeWorkerProvider.js';
+import { OpenPgpWorkerProvider } from './providers/OpenPgpWorkerProvider.js';
+
+// Provider types accepted from the main thread
+// (jsAesCrypt maps to webCrypto in this ES module worker)
+const SUPPORTED_PROVIDERS = ['jsAesCrypt', 'webCrypto', 'age', 'openpgp'];
 
 // Initialize rage-wasm (should be immediate with bundled WASM)
 let rageWasmReady = true; // In bundled ES modules, imports are synchronous
@@ -34,7 +42,7 @@ let currentProviderType = 'webCrypto'; // Default to webCrypto (AES-256-GCM)
 
 /**
  * Sets the encryption provider
- * @param {string} providerType - Provider type ('age', 'webCrypto')
+ * @param {string} providerType - Provider type ('age', 'webCrypto', 'openpgp')
  * Note: jsAesCrypt is not supported in ES module worker (use webCrypto instead for AES)
  */
 function setProvider(providerType) {
@@ -57,6 +65,9 @@ function setProvider(providerType) {
     }
     provider = new AgeWorkerProvider(rageWasm);
     currentProviderType = 'age';
+  } else if (providerType === 'openpgp') {
+    provider = new OpenPgpWorkerProvider(openpgp);
+    currentProviderType = 'openpgp';
   } else {
     throw new Error(`Unknown provider type: ${providerType}`);
   }
@@ -105,7 +116,7 @@ self.onmessage = function(e) {
     const providerType = data[1] || 'webCrypto';
 
     // SECURITY: Validate provider type (jsAesCrypt maps to webCrypto in ES module worker)
-    if (typeof providerType !== 'string' || !['jsAesCrypt', 'webCrypto', 'age'].includes(providerType)) {
+    if (typeof providerType !== 'string' || !SUPPORTED_PROVIDERS.includes(providerType)) {
       self.postMessage(["INIT_ERROR", "Invalid provider type"]);
       return;
     }
@@ -145,7 +156,7 @@ self.onmessage = function(e) {
     }
 
     // SECURITY: Validate optional provider type (jsAesCrypt maps to webCrypto in ES module worker)
-    if (providerType !== undefined && (typeof providerType !== 'string' || !['jsAesCrypt', 'webCrypto', 'age'].includes(providerType))) {
+    if (providerType !== undefined && (typeof providerType !== 'string' || !SUPPORTED_PROVIDERS.includes(providerType))) {
       self.postMessage(["ERROR", "Invalid provider type", action]);
       return;
     }
