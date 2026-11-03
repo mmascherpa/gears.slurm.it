@@ -525,10 +525,11 @@ This file tracks feature planning, completed work, and future development priori
   - ✅ Automated builds for main branch
   - ✅ Deployment to production (gears.slurm.it) on main push
   - ✅ Lighthouse CI for PWA performance tracking
-  - 📋 Badge displays (to be added to README)
+  - ✅ CI badge in README
+  - ✅ Source pushed to github.com/mmascherpa/gears.slurm.it; Pages deploys `dist/` via GitHub Actions (2026-11-03)
   - **Benefit**: Prevent broken builds, automated deployment, confidence in releases
   - **ROI**: Extremely high - catches bugs before production
-  - **Workflow**: 4 stages: Test & Build → E2E Tests → PWA Quality → Deploy
+  - **Workflow**: Build (unit tests + build) → Deploy; E2E and Lighthouse run alongside, non-blocking
 
 - [x] **E2E Tests with Playwright** (6-8 hours) - Priority 1 🔥 **MOVED FROM PHASE 5**
   - ✅ Install and configure Playwright with production settings
@@ -560,11 +561,11 @@ This file tracks feature planning, completed work, and future development priori
 ### Implementation Details
 
 **GitHub Actions Workflow Structure**:
-- **Trigger Events**: PR, push to main
-- **Stage 1 (Test & Build)**: Unit tests + coverage + build verification
-- **Stage 2 (E2E)**: Playwright tests with 2 retries in CI
-- **Stage 3 (PWA Quality)**: Lighthouse CI (main branch only)
-- **Stage 4 (Deploy)**: Auto-deploy to gears.slurm.it (main branch only)
+- **Trigger Events**: PR, push to main, manual dispatch
+- **Stage 1 (Build)**: Unit tests + production build into `dist/` + Pages artifact upload
+- **Stage 2 (Deploy)**: `actions/deploy-pages` to gears.slurm.it (main branch only)
+- **Stage 3 (E2E)**: Playwright tests with 2 retries in CI (non-blocking until pre-existing failures are fixed)
+- **Stage 4 (PWA Quality)**: Lighthouse CI (main branch only, non-blocking)
 
 **Playwright Configuration**:
 - Production-optimized settings

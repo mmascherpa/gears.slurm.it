@@ -17,7 +17,7 @@ npm install                # Install dependencies
 npm run dev                # Start dev server (port 5173)
 
 # Production
-npm run build              # Build to ./deploy/ + auto-update service worker
+npm run build              # Build to ./dist/ + auto-update service worker
 npm run preview            # Preview production build
 
 # Utilities
@@ -133,4 +133,4 @@ See [roadmap.md](.claude/roadmap.md) for detailed progress and next steps.
 
 ---
 
-**Last Updated**: 2026-07-13 (Added OpenPGP password-based encryption via OpenPGP.js)
+**Last Updated**: 2026-11-03 (Build to dist/, deploy to GitHub Pages via GitHub Actions)

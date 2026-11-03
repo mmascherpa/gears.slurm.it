@@ -5,8 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/preserve-deploy-files.js backup && vite build && node scripts/update-sw-cache.js && node scripts/preserve-deploy-files.js restore",
-    "build:skip-push": "npm run build",
+    "build": "vite build && node scripts/update-sw-cache.js",
     "preview": "vite preview",
     "generate-icons": "node scripts/generate-icons.js",
     "test": "vitest",

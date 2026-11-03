@@ -22,7 +22,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const distPath = path.join(__dirname, '../deploy');
+const distPath = path.join(__dirname, '../dist');
 const swPath = path.join(distPath, 'sw.js');
 const indexPath = path.join(distPath, 'index.html');
 const assetsPath = path.join(distPath, 'assets');

@@ -1389,7 +1389,7 @@ AESEnc.vue/AESDec.vue
 
 **Key Settings**:
 - Vue plugin enabled
-- Output directory: `./deploy/` (external deployment folder)
+- Output directory: `./dist/` (Vite default, gitignored)
 - Path aliases: `@/` → `./src/`
 
 ### Path Aliases
@@ -1479,7 +1479,7 @@ AESEnc.vue/AESDec.vue
 
 ### Production Build
 - Command: `npm run build`
-- Output: `./deploy/` directory (external folder)
+- Output: `./dist/` directory (deployed to GitHub Pages by `.github/workflows/ci-cd.yml`)
 - Minified and optimized assets
 - Service Worker and Web Worker copied to output
 

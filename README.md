@@ -1,8 +1,7 @@
 # Slurm Tools
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests: 470](https://img.shields.io/badge/Tests-470-brightgreen.svg)](https://github.com/mmascherpa/slurm-spa)
-[![Coverage: 95%](https://img.shields.io/badge/Coverage-95.45%-brightgreen.svg)](https://github.com/mmascherpa/slurm-spa)
+[![CI/CD](https://github.com/mmascherpa/gears.slurm.it/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/mmascherpa/gears.slurm.it/actions/workflows/ci-cd.yml)
 
 Privacy-first cryptography tools in your browser. 100% client-side with full offline functionality.
 
@@ -34,7 +33,7 @@ Privacy-first cryptography tools in your browser. 100% client-side with full off
 - **Encryption**: AES-256 (jsAesCrypt, Web Crypto API) + Age (rage-wasm)
 - **PWA**: Service Worker with cache-first strategy
 - **Testing**: Vitest (unit, 423 tests) + Playwright (E2E, 47 tests)
-- **Deployment**: Manual to GitHub Pages (gears.slurm.it repo)
+- **Deployment**: GitHub Actions to GitHub Pages on every push to `main`
 
 ## Getting Started
 
@@ -58,7 +57,7 @@ App will be available at `http://localhost:5173`
 npm run build
 ```
 
-Builds to `./deploy/` directory and auto-updates service worker cache.
+Builds to `./dist/` directory and auto-updates service worker cache.
 
 ### Testing
 
@@ -127,50 +126,22 @@ Service Worker updates automatically on each build:
 
 ## Deployment Workflow
 
-### Pre-Deployment Checklist
+The site is built and deployed by GitHub Actions (`.github/workflows/ci-cd.yml`). Every push to `main`:
 
-Before pushing to gears.slurm.it, run this checklist locally:
+1. Runs the unit tests and builds the production bundle into `./dist/`
+2. Deploys `./dist/` to GitHub Pages at [gears.slurm.it](https://gears.slurm.it)
+3. Runs the E2E tests and Lighthouse CI audits (informational, they don't block the deploy)
+
+Pull requests run the unit tests, build and E2E tests without deploying. The custom domain is set by `public/CNAME` and the GitHub Pages settings; `public/robots.txt` keeps crawlers out.
+
+### Pre-Push Checklist
 
 ```bash
-# 1. Run all tests
-npm run test              # Unit tests (423 tests, ~30 sec)
-npm run test:e2e          # E2E tests (47 tests, ~5-7 min)
-
-# 2. Build for production
-npm run build             # Builds to ./deploy/
-
-# 3. Test the production build locally
-npm run preview           # Test at localhost:4173
-
-# 4. Quick manual spot-check (2 min)
-# - Try one encryption/decryption
-# - Go offline (DevTools → Network → Offline)
-# - Verify offline mode works
-# - Check theme persistence
-
-# 5. If all green, deploy
-cd ./deploy
-git add .
-git commit -m "Deploy: [description of changes]"
-git push origin main
-cd ../
+npm run test -- --run     # Unit tests
+npm run test:e2e          # E2E tests
+npm run build             # Builds to ./dist/
+npm run preview           # Spot-check the production build at localhost:4173
 ```
-
-**Total deployment time**: ~10 minutes (vs 30-40 before Phase 8)
-
-### GitHub Actions (Optional Future Use)
-
-A 4-stage GitHub Actions CI/CD pipeline is configured in `.github/workflows/ci-cd.yml` for future use if you decide to push this repository to GitHub. It will automatically:
-
-1. Run all tests on pull requests
-2. Block merges if tests fail
-3. Auto-deploy to gears.slurm.it on merge to main
-4. Run Lighthouse CI performance audits
-
-**Currently**: This repository is local-only. To activate GitHub Actions:
-1. Push this repo to GitHub
-2. Add `DEPLOY_TOKEN` secret (personal access token)
-3. Tests and deployment run automatically
 
 ## Testing
 
@@ -314,7 +285,7 @@ MIT License - see LICENSE file for details
 ## Support
 
 For issues, feature requests, or questions:
-- GitHub Issues: [mmascherpa/slurm-spa/issues](https://github.com/mmascherpa/slurm-spa/issues)
+- GitHub Issues: [mmascherpa/gears.slurm.it/issues](https://github.com/mmascherpa/gears.slurm.it/issues)
 - Project Documentation: [.claude/roadmap.md](.claude/roadmap.md)
 
 ---
